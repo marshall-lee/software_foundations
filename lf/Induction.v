@@ -3,26 +3,53 @@
 (** Before getting started, we need to import all of our
     definitions from the previous chapter: *)
 
-Require Export Basics.
+From LF Require Export Basics.
 
 (** For the [Require Export] to work, you first need to use
     [coqc] to compile [Basics.v] into [Basics.vo].  This is like
-    making a .class file from a .java file, or a .o file from a .c
-    file.  There are two ways to do it:
+    making a [.class] file from a [.java] file, or a [.o] file from a
+    [.c] file.  There are two ways to do it:
 
      - In CoqIDE:
 
          Open [Basics.v].  In the "Compile" menu, click on "Compile
          Buffer".
 
-     - From the command line:
+     - From the command line: Either
+
+         [make Basics.vo]
+
+       (assuming you've downloaded the whole LF directory and have a
+       working [make] command) or
 
          [coqc Basics.v]
 
-   If you have trouble (e.g., if you get complaints about missing
-   identifiers later in the file), it may be because the "load path"
-   for Coq is not set up correctly.  The [Print LoadPath.] command may
-   be helpful in sorting out such issues. *)
+       (which should work regardless).
+
+    If you have trouble (e.g., if you get complaints about missing
+    identifiers later in the file), it may be because the "load path"
+    for Coq is not set up correctly.  The [Print LoadPath.] command may
+    be helpful in sorting out such issues.
+
+    In particular, if you see a message like
+
+        [Compiled library Foo makes inconsistent assumptions over
+        library Coq.Init.Bar]
+
+    you should check whether you have multiple installations of Coq on
+    your machine.  If so, it may be that commands (like [coqc]) that
+    you execute in a terminal window are getting a different version of
+    Coq than commands executed by Proof General or CoqIDE.
+
+    One more tip for CoqIDE users: If you see messages like [Error:
+    Unable to locate library Basics], a likely reason is
+    inconsistencies between compiling things _within CoqIDE_ vs _using
+    coqc_ from the command line.  This typically happens when there are
+    two incompatible versions of [coqc] installed on your system (one
+    associated with CoqIDE, and one associated with [coqc] from the
+    terminal).  The workaround for this situation is compiling using
+    CoqIDE only (i.e. choosing "make" from the menu), and avoiding
+    using [coqc] directly at all. *)
 
 (* ################################################################# *)
 (** * Proof by Induction *)
@@ -99,14 +126,15 @@ Proof.
 
     In the first subgoal, [n] is replaced by [0].  No new variables
     are introduced (so the first part of the [as...] is empty), and
-    the goal becomes [0 + 0 = 0], which follows by simplification.
+    the goal becomes [0 = 0 + 0], which follows by simplification.
 
     In the second subgoal, [n] is replaced by [S n'], and the
     assumption [n' + 0 = n'] is added to the context with the name
     [IHn'] (i.e., the Induction Hypothesis for [n']).  These two names
     are specified in the second part of the [as...] clause.  The goal
-    in this case becomes [(S n') + 0 = S n'], which simplifies to
-    [S (n' + 0) = S n'], which in turn follows from [IHn']. *)
+    in this case becomes [S n' = (S n') + 0], which simplifies to
+    [S n' = S (n' + 0)], which in turn follows from [IHn']. *)
+
 
 Theorem minus_diag : forall n,
   minus n n = 0.
@@ -145,6 +173,7 @@ Proof.
   - (* n = S n' *)
     simpl. rewrite -> IHn'. reflexivity.
 Qed.
+
 
 Theorem plus_comm : forall n m : nat,
   n + m = m + n.
@@ -194,7 +223,7 @@ Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (evenb_S)  *)
-(** One inconveninent aspect of our definition of [evenb n] is the
+(** One inconvenient aspect of our definition of [evenb n] is the
     recursive call on [n - 2]. This makes proofs about [evenb n]
     harder when done by induction on [n], since we may need an
     induction hypothesis about [n - 2]. The following lemma gives an
@@ -214,12 +243,15 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 1 starM (destruct_induction)  *)
+(** **** Exercise: 1 star (destruct_induction)  *)
 (** Briefly explain the difference between the tactics [destruct]
     and [induction].
 
 (* [induction] adds an Induction Hypothesis to the context which is helpful *)
 *)
+
+(* Do not modify the following line: *)
+Definition manual_grade_for_destruct_induction : option (prod nat string) := None.
 (** [] *)
 
 (* ################################################################# *)
@@ -412,16 +444,19 @@ Proof.
     whereas the informal proof reminds the reader several times where
     things stand). *)
 
-(** **** Exercise: 2 stars, advanced, recommendedM (plus_comm_informal)  *)
+(** **** Exercise: 2 stars, advanced, recommended (plus_comm_informal)  *)
 (** Translate your solution for [plus_comm] into an informal proof:
 
     Theorem: Addition is commutative.
 
     Proof: (* FILL IN HERE *)
 *)
+
+(* Do not modify the following line: *)
+Definition manual_grade_for_plus_comm_informal : option (prod nat string) := None.
 (** [] *)
 
-(** **** Exercise: 2 stars, optionalM (beq_nat_refl_informal)  *)
+(** **** Exercise: 2 stars, optional (beq_nat_refl_informal)  *)
 (** Write an informal proof of the following theorem, using the
     informal proof of [plus_assoc] as a model.  Don't just
     paraphrase the Coq tactics into English!
@@ -429,7 +464,8 @@ Proof.
     Theorem: [true = beq_nat n n] for any [n].
 
     Proof: (* FILL IN HERE *)
-[] *)
+*)
+(** [] *)
 
 (* ################################################################# *)
 (** * More Exercises *)
@@ -483,6 +519,8 @@ Qed.
     down your prediction.  Then fill in the proof.  (There is no need
     to turn in your piece of paper; this is just to encourage you to
     reflect before you hack!) *)
+
+Check leb.
 
 Theorem leb_refl : forall n:nat,
   true = leb n n.
@@ -619,7 +657,7 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 3 stars, recommendedM (binary_commute)  *)
+(** **** Exercise: 3 stars, recommended (binary_commute)  *)
 (** Recall the [incr] and [bin_to_nat] functions that you
     wrote for the [binary] exercise in the [Basics] chapter.  Prove
     that the following diagram commutes:
@@ -666,7 +704,11 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 5 stars, advancedM (binary_inverse)  *)
+(* Do not modify the following line: *)
+Definition manual_grade_for_binary_commute : option (prod nat string) := None.
+(** [] *)
+
+(** **** Exercise: 5 stars, advanced (binary_inverse)  *)
 (** This exercise is a continuation of the previous exercise about
     binary numbers.  You will need your definitions and theorems from
     there to complete this one; please copy them to this file to make
@@ -807,6 +849,9 @@ Proof.
     + rewrite -> nat_to_bin_Sn_Sn.
       simpl. reflexivity.
 Qed.
+
+(* Do not modify the following line: *)
+Definition manual_grade_for_binary_inverse : option (prod nat string) := None.
 (** [] *)
 
-(** $Date: 2016-10-07 14:01:19 -0400 (Fri, 07 Oct 2016) $ *)
+
