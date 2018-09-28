@@ -7,7 +7,6 @@
           #####################################################
 
    (See the [Preface] for why.)
-
 *)
 
 (* ################################################################# *)
@@ -43,7 +42,9 @@
     can be used to prove properties of Coq programs. *)
 
 (* ################################################################# *)
-(** * Enumerated Types *)
+(** * Data and Functions *)
+(* ================================================================= *)
+(** ** Enumerated Types *)
 
 (** One notable aspect of Coq is that its set of built-in
     features is _extremely_ small.  For example, instead of providing
@@ -83,7 +84,6 @@ Inductive day : Type :=
     Having defined [day], we can write functions that operate on
     days. *)
 
-
 Definition next_weekday (d:day) : day :=
   match d with
   | monday    => tuesday
@@ -118,9 +118,9 @@ Compute (next_weekday (next_weekday saturday)).
     Coq interpreter under your favorite IDE -- either CoqIde or Proof
     General -- and try this for yourself.  Load this file, [Basics.v],
     from the book's Coq sources, find the above example, submit it to
-    Coq, and observe the result.)
+    Coq, and observe the result.) *)
 
-    Second, we can record what we _expect_ the result to be in the
+(** Second, we can record what we _expect_ the result to be in the
     form of a Coq example: *)
 
 Example test_next_weekday:
@@ -159,16 +159,20 @@ Proof. simpl. reflexivity.  Qed.
     In order for these scripts to work correctly (so that you get full
     credit for your work!), please be careful to follow these rules:
       - The grading scripts work by extracting marked regions of the
-        .v files that you submit.  It is therefore important that you
-        do not alter the "markup" that delimits exercises: the
+        [.v] files that you submit.  It is therefore important that
+        you do not alter the "markup" that delimits exercises: the
         Exercise header, the name of the exercise, the "empty square
         bracket" marker at the end, etc.  Please leave this markup
         exactly as you find it.
       - Do not delete exercises.  If you skip an exercise (e.g.,
         because it is marked Optional, or because you can't solve it),
-        it is OK to leave a partial proof in your .v file, but in this
-        case please make sure it ends with [Admitted] (not, for
-        example [Abort]). *)
+        it is OK to leave a partial proof in your [.v] file, but in
+        this case please make sure it ends with [Admitted] (not, for
+        example [Abort]).
+      - It is fine to use additional definitions (of helper functions,
+        useful lemmas, etc.) in your solutions.  You can put these
+        between the exercise header and the theorem you are asked to
+        prove. *)
 
 (* ================================================================= *)
 (** ** Booleans *)
@@ -226,11 +230,11 @@ Example test_orb4:  (orb true  true)  = true.
 Proof. simpl. reflexivity.  Qed.
 
 (** We can also introduce some familiar syntax for the boolean
-    operations we have just defined. The [Infix] command defines a new
+    operations we have just defined. The [Notation] command defines a new
     symbolic notation for an existing definition. *)
 
-Infix "&&" := andb.
-Infix "||" := orb.
+Notation "x && y" := (andb x y).
+Notation "x || y" := (orb x y).
 
 Example test_orb5:  false || false || true = true.
 Proof. simpl. reflexivity. Qed.
@@ -238,7 +242,7 @@ Proof. simpl. reflexivity. Qed.
 (** _A note on notation_: In [.v] files, we use square brackets
     to delimit fragments of Coq code within comments; this convention,
     also used by the [coqdoc] documentation tool, keeps them visually
-    separate from the surrounding text.  In the html version of the
+    separate from the surrounding text.  In the HTML version of the
     files, these pieces of text appear in a [different font].
 
     The command [Admitted] can be used as a placeholder for an
@@ -249,10 +253,9 @@ Proof. simpl. reflexivity. Qed.
 (** **** Exercise: 1 star (nandb)  *)
 (** Remove "[Admitted.]" and complete the definition of the following
     function; then make sure that the [Example] assertions below can
-    each be verified by Coq.  (Remove "[Admitted.]" and fill in each
-    proof, following the model of the [orb] tests above.) The function
-    should return [true] if either or both of its inputs are
-    [false]. *)
+    each be verified by Coq.  (I.e., fill in each proof, following the
+    model of the [orb] tests above.) The function should return [true]
+    if either or both of its inputs are [false]. *)
 
 Definition nandb (b1:bool) (b2:bool) : bool
   := negb (b1 && b2).
@@ -312,6 +315,73 @@ Check negb.
     produces an output of type [bool]." *)
 
 (* ================================================================= *)
+(** ** Compound Types *)
+
+(** The types we have defined so far are examples of "enumerated
+    types": their definitions explicitly enumerate a finite set of
+    elements, each of which is just a bare constructor.  Here is a
+    more interesting type definition, where one of the constructors
+    takes an argument: *)
+
+Inductive rgb : Type :=
+  | red : rgb
+  | green : rgb
+  | blue : rgb.
+
+Inductive color : Type :=
+  | black : color
+  | white : color
+  | primary : rgb -> color.
+
+(** Let's look at this in a little more detail.
+
+    Every inductively defined type ([day], [bool], [rgb], [color],
+    etc.) contains a set of _constructor expressions_ built from
+    _constructors_ like [red], [primary], [true], [false], [monday],
+    etc. *)
+(** The definitions of [rgb] and [color] say how expressions in the
+    sets [rgb] and [color] can be built:
+
+    - [red], [green], and [blue] are the constructors of [rgb];
+    - [black], [white], and [primary] are the constructors of [color];
+    - the expression [red] belongs to the set [rgb], as do the
+      expressions [green] and [blue];
+    - the expressions [black] and [white] belong to the set [color];
+    - if [p] is an expression belonging to the set [rgb], then
+      [primary p] (pronounced "the constructor [primary] applied to
+      the argument [p]") is an expression belonging to the set
+      [color]; and
+    - expressions formed in these ways are the _only_ ones belonging
+      to the sets [rgb] and [color]. *)
+
+(** We can define functions on colors using pattern matching just as
+    we have done for [day] and [bool]. *)
+
+Definition monochrome (c : color) : bool :=
+  match c with
+  | black => true
+  | white => true
+  | primary p => false
+  end.
+
+(** Since the [primary] constructor takes an argument, a pattern
+    matching [primary] should include either a variable (as above) or
+    a constant of appropriate type (as below). *)
+
+Definition isred (c : color) : bool :=
+  match c with
+  | black => false
+  | white => false
+  | primary red => true
+  | primary _ => false
+  end.
+
+(** The pattern [primary _] here is shorthand for "[primary] applied
+    to any [rgb] constructor except [red]."  (The wildcard pattern [_]
+    has the same effect as the dummy pattern variable [p] in the
+    definition of [monochrome].) *)
+
+(* ================================================================= *)
 (** ** Modules *)
 
 (** Coq provides a _module system_, to aid in organizing large
@@ -330,11 +400,11 @@ Module NatPlayground.
 (* ================================================================= *)
 (** ** Numbers *)
 
-(** The types we have defined so far are examples of "enumerated
-    types": their definitions explicitly enumerate a finite set of
-    elements.  A more interesting way of defining a type is to give a
-    collection of _inductive rules_ describing its elements.  For
-    example, we can define (a unary representation of) the natural
+(** An even more interesting way of defining a type is to allow its
+    constructors to take arguments from the very same type -- that is,
+    to allow the rules describing its elements to be _inductive_.
+
+    For example, we can define (a unary representation of) natural
     numbers as follows: *)
 
 Inductive nat : Type :=
@@ -344,16 +414,11 @@ Inductive nat : Type :=
 (** The clauses of this definition can be read:
       - [O] is a natural number (note that this is the letter "[O],"
         not the numeral "[0]").
-      - [S] is a "constructor" that takes a natural number and yields
-        another one -- that is, if [n] is a natural number, then [S n]
-        is too. *)
+      - [S] can be put in front of a natural number to yield another
+        one -- if [n] is a natural number, then [S n] is too. *)
 
-(** Let's look at this in a little more detail.
-
-    Every inductively defined set ([day], [nat], [bool], etc.) is
-    actually a set of _expressions_ built from _constructors_
-    like [O], [S], [true], [false], [monday], etc.  The definition of
-    [nat] says how expressions in the set [nat] can be built:
+(** Again, let's look at this in a little more detail.  The definition
+    of [nat] says how expressions in the set [nat] can be built:
 
     - [O] and [S] are constructors;
     - the expression [O] belongs to the set [nat];
@@ -362,10 +427,8 @@ Inductive nat : Type :=
     - expressions formed in these two ways are the only ones belonging
       to the set [nat]. *)
 
-(** The same rules apply for our definitions of [day] and
-    [bool]. (The annotations we used for their constructors are
-    analogous to the one for the [O] constructor, indicating that they
-    don't take any arguments.)
+(** The same rules apply for our definitions of [day], [bool],
+    [color], etc.
 
     The above conditions are the precise force of the [Inductive]
     declaration.  They imply that the expression [O], the expression
@@ -406,13 +469,6 @@ Definition pred (n : nat) : nat :=
 
 End NatPlayground.
 
-Definition minustwo (n : nat) : nat :=
-  match n with
-    | O => O
-    | S O => O
-    | S (S n') => n'
-  end.
-
 (** Because natural numbers are such a pervasive form of data,
     Coq provides a tiny bit of built-in magic for parsing and printing
     them: ordinary arabic numerals can be used as an alternative to
@@ -421,11 +477,19 @@ Definition minustwo (n : nat) : nat :=
 
 Check (S (S (S (S O)))).
   (* ===> 4 : nat *)
+
+Definition minustwo (n : nat) : nat :=
+  match n with
+    | O => O
+    | S O => O
+    | S (S n') => n'
+  end.
+
 Compute (minustwo 4).
   (* ===> 2 : nat *)
 
-(** The constructor [S] has the type [nat -> nat], just like the
-    functions [minustwo] and [pred]: *)
+(** The constructor [S] has the type [nat -> nat], just like
+    [pred] and functions like [minustwo]: *)
 
 Check S.
 Check pred.
@@ -525,10 +589,10 @@ Fixpoint minus (n m:nat) : nat :=
   | S n', S m' => minus n' m'
   end.
 
-(** The _ in the first line is a _wildcard pattern_.  Writing _ in a
-    pattern is the same as writing some variable that doesn't get used
-    on the right-hand side.  This avoids the need to invent a variable
-    name. *)
+(** Again, the [_] in the first line is a _wildcard pattern_.  Writing
+    [_] in a pattern is the same as writing some variable that doesn't
+    get used on the right-hand side.  This avoids the need to invent a
+    variable name. *)
 
 End NatPlayground2.
 
@@ -577,8 +641,8 @@ Check ((0 + 1) + 1).
 (** (The [level], [associativity], and [nat_scope] annotations
     control how these notations are treated by Coq's parser.  The
     details are not important for our purposes, but interested readers
-    can refer to the optional "More on Notation" section at the end of
-    this chapter.)
+    can refer to the "More on Notation" section at the end of this
+    chapter.)
 
     Note that these do not change the definitions we've already made:
     they are simply instructions to the Coq parser to accept [x + y]
@@ -586,11 +650,12 @@ Check ((0 + 1) + 1).
     to display [plus x y] as [x + y]. *)
 
 (** When we say that Coq comes with almost nothing built-in, we really
-    mean it: even equality testing for numbers is a user-defined
-    operation!  We now define a function [beq_nat], which tests
-    [nat]ural numbers for [eq]uality, yielding a [b]oolean.  Note the
-    use of nested [match]es (we could also have used a simultaneous
-    match, as we did in [minus].) *)
+    mean it: even equality testing is a user-defined operation!
+
+    Here is a function [beq_nat], which tests [nat]ural numbers for
+    [eq]uality, yielding a [b]oolean.  Note the use of nested
+    [match]es (we could also have used a simultaneous match, as we did
+    in [minus].) *)
 
 Fixpoint beq_nat (n m : nat) : bool :=
   match n with
@@ -702,9 +767,9 @@ Proof.
     just a few differences.
 
     First, we've used the keyword [Theorem] instead of [Example].
-    This difference is purely a matter of style; the keywords
+    This difference is mostly a matter of style; the keywords
     [Example] and [Theorem] (and a few others, including [Lemma],
-    [Fact], and [Remark]) mean exactly the same thing to Coq.
+    [Fact], and [Remark]) mean pretty much the same thing to Coq.
 
     Second, we've added the quantifier [forall n:nat], so that our
     theorem talks about _all_ natural numbers [n].  Informally, to
@@ -717,9 +782,9 @@ Proof.
     _tactics_.  A tactic is a command that is used between [Proof] and
     [Qed] to guide the process of checking some claim we are making.
     We will see several more tactics in the rest of this chapter and
-    yet more in future chapters.
+    yet more in future chapters. *)
 
-    Other similar theorems can be proved with the same pattern. *)
+(** Other similar theorems can be proved with the same pattern. *)
 
 Theorem plus_1_l : forall n:nat, 1 + n = S n.
 Proof.
@@ -735,26 +800,7 @@ Proof.
 (** It is worth stepping through these proofs to observe how the
     context and the goal change.  You may want to add calls to [simpl]
     before [reflexivity] to see the simplifications that Coq performs
-    on the terms before checking that they are equal.
-
-    Although simplification is powerful enough to prove some fairly
-    general facts, there are many statements that cannot be handled by
-    simplification alone.  For instance, we cannot use it to prove
-    that [0] is also a neutral element for [+] _on the right_. *)
-
-Theorem plus_n_O : forall n, n = n + 0.
-Proof.
-  intros n. simpl. (* Doesn't do anything! *)
-(** (Can you explain why this happens?  Step through both proofs
-    with Coq and notice how the goal and context change.)
-
-    When stuck in the middle of a proof, we can use the [Abort]
-    command to give up on it for the moment. *)
-Abort.
-
-(** The next chapter will introduce _induction_, a powerful
-    technique that can be used for proving this goal.  For the moment,
-    though, let's look at a few more simple tactics. *)
+    on the terms before checking that they are equal. *)
 
 (* ################################################################# *)
 (** * Proof by Rewriting *)
@@ -852,8 +898,8 @@ Proof.
   rewrite -> H.
   reflexivity.  Qed.
 
-(* (N.b. This proof can actually be completed without using [rewrite],
-   but please do use [rewrite] for the sake of the exercise.) *)
+  (* (N.b. This proof can actually be completed with tactics other than
+     [rewrite], but please do use [rewrite] for the sake of the exercise.) *)
 (** [] *)
 
 (* ################################################################# *)
@@ -863,7 +909,8 @@ Proof.
     calculation and rewriting: In general, unknown, hypothetical
     values (arbitrary numbers, booleans, lists, etc.) can block
     simplification.  For example, if we try to prove the following
-    fact using the [simpl] tactic as above, we get stuck. *)
+    fact using the [simpl] tactic as above, we get stuck.  (We then
+    use the [Abort] command to give up on it for the moment.)*)
 
 Theorem plus_1_neq_0_firsttry : forall n : nat,
   beq_nat (n + 1) 0 = false.
@@ -947,6 +994,7 @@ Proof.
     negation is involutive -- i.e., that negation is its own
     inverse. *)
 
+
 Theorem negb_involutive : forall b : bool,
   negb (negb b) = b.
 Proof.
@@ -967,6 +1015,7 @@ Proof.
     generating yet more proof obligations. In this case, we use
     different kinds of bullets to mark goals on different "levels."
     For example: *)
+
 
 Theorem andb_commutative : forall b c, andb b c = andb c b.
 Proof.
@@ -1024,9 +1073,9 @@ Proof.
       - reflexivity. }
 Qed.
 
-(** Before closing the chapter, let's mention one final
-    convenience.  As you may have noticed, many proofs perform case
-    analysis on a variable right after introducing it:
+(** Before closing the chapter, let's mention one final convenience.
+    As you may have noticed, many proofs perform case analysis on a variable
+    right after introducing it:
 
        intros x y. destruct y as [|y].
 
@@ -1171,7 +1220,12 @@ Fixpoint plus' (n : nat) (m : nat) : nat :=
 (* ################################################################# *)
 (** * More Exercises *)
 
-(** **** Exercise: 2 starsM (boolean_functions)  *)
+(** Each SF chapter comes with a tester file (e.g.  [BasicsTest.v]),
+    containing scripts that check most of the exercises. You can run
+    [make BasicsTest.vo] in a terminal and check its output to make
+    sure you didn't miss anything. *)
+
+(** **** Exercise: 2 stars (boolean_functions)  *)
 (** Use the tactics you have learned so far to prove the following
     theorem about boolean functions. *)
 
@@ -1206,12 +1260,21 @@ Proof.
   - reflexivity.
   - reflexivity.
 Qed.
+(* The [Import] statement on the next line tells Coq to use the
+   standard library String module.  We'll use strings more in later
+   chapters, but for the moment we just need syntax for literal
+   strings for the grader comments. *)
+From Coq Require Export String.
+
+(* Do not modify the following line: *)
+Definition manual_grade_for_negation_fn_applied_twice : option (prod nat string) := None.
 (** [] *)
 
-(** **** Exercise: 2 stars (andb_eq_orb)  *)
-(** Prove the following theorem.  (You may want to first prove a
-    subsidiary lemma or two. Alternatively, remember that you do
-    not have to introduce all hypotheses at the same time.) *)
+(** **** Exercise: 3 stars, optional (andb_eq_orb)  *)
+(** Prove the following theorem.  (Hint: This one can be a bit tricky,
+    depending on how you approach it.  You will probably need both
+    [destruct] and [rewrite], but destructing everything in sight is
+    not the best way.) *)
 
 Theorem andb_eq_orb :
   forall (b c : bool),
@@ -1223,9 +1286,10 @@ Proof.
   - simpl. intros H. rewrite -> H. reflexivity.
   - simpl. intros H. rewrite -> H. reflexivity.
 Qed.
+
 (** [] *)
 
-(** **** Exercise: 3 starsM (binary)  *)
+(** **** Exercise: 3 stars (binary)  *)
 (** Consider a different, more efficient representation of natural
     numbers using a binary rather than unary system.  That is, instead
     of saying that each natural number is either zero or the successor
@@ -1238,18 +1302,24 @@ Qed.
     (a) First, write an inductive definition of the type [bin]
         corresponding to this description of binary numbers.
 
-    (Hint: Recall that the definition of [nat] above,
+        (Hint: Recall that the definition of [nat] above,
 
-         Inductive nat : Type := | O : nat | S : nat -> nat.
+         Inductive nat : Type :=
+           | O : nat
+           | S : nat -> nat.
 
-    says nothing about what [O] and [S] "mean."  It just says "[O] is
-    in the set called [nat], and if [n] is in the set then so is [S
-    n]."  The interpretation of [O] as zero and [S] as successor/plus
-    one comes from the way that we _use_ [nat] values, by writing
-    functions to do things with them, proving things about them, and
-    so on.  Your definition of [bin] should be correspondingly simple;
-    it is the functions you will write next that will give it
-    mathematical meaning.)
+        says nothing about what [O] and [S] "mean."  It just says "[O]
+        is in the set called [nat], and if [n] is in the set then so
+        is [S n]."  The interpretation of [O] as zero and [S] as
+        successor/plus one comes from the way that we _use_ [nat]
+        values, by writing functions to do things with them, proving
+        things about them, and so on.  Your definition of [bin] should
+        be correspondingly simple; it is the functions you will write
+        next that will give it mathematical meaning.)
+
+        One caveat: If you use [O] or [S] as constructor names in your
+        definition, it will confuse the auto-grader script.  Please choose 
+        different names.
 
     (b) Next, write an increment function [incr] for binary numbers,
         and a function [bin_to_nat] to convert binary numbers to unary
@@ -1316,7 +1386,8 @@ Proof. reflexivity.  Qed.
 
 Example test_bin_incr9: (bin_to_nat b9) = 9.
 Proof. reflexivity.  Qed.
-(** [] *)
 
-(** $Date: 2016-11-22 16:39:52 -0500 (Tue, 22 Nov 2016) $ *)
+(* Do not modify the following line: *)
+Definition manual_grade_for_binary : option (prod nat string) := None.
+(** [] *)
 
