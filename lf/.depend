@@ -1,0 +1,38 @@
+Preface.vo Preface.glob Preface.v.beautified: Preface.v
+Preface.vio: Preface.v
+Basics.vo Basics.glob Basics.v.beautified: Basics.v
+Basics.vio: Basics.v
+Induction.vo Induction.glob Induction.v.beautified: Induction.v
+Induction.vio: Induction.v
+Lists.vo Lists.glob Lists.v.beautified: Lists.v
+Lists.vio: Lists.v
+Poly.vo Poly.glob Poly.v.beautified: Poly.v
+Poly.vio: Poly.v
+Tactics.vo Tactics.glob Tactics.v.beautified: Tactics.v
+Tactics.vio: Tactics.v
+Logic.vo Logic.glob Logic.v.beautified: Logic.v
+Logic.vio: Logic.v
+IndProp.vo IndProp.glob IndProp.v.beautified: IndProp.v
+IndProp.vio: IndProp.v
+Maps.vo Maps.glob Maps.v.beautified: Maps.v
+Maps.vio: Maps.v
+ProofObjects.vo ProofObjects.glob ProofObjects.v.beautified: ProofObjects.v
+ProofObjects.vio: ProofObjects.v
+IndPrinciples.vo IndPrinciples.glob IndPrinciples.v.beautified: IndPrinciples.v
+IndPrinciples.vio: IndPrinciples.v
+Rel.vo Rel.glob Rel.v.beautified: Rel.v
+Rel.vio: Rel.v
+Imp.vo Imp.glob Imp.v.beautified: Imp.v
+Imp.vio: Imp.v
+ImpParser.vo ImpParser.glob ImpParser.v.beautified: ImpParser.v
+ImpParser.vio: ImpParser.v
+ImpCEvalFun.vo ImpCEvalFun.glob ImpCEvalFun.v.beautified: ImpCEvalFun.v
+ImpCEvalFun.vio: ImpCEvalFun.v
+Extraction.vo Extraction.glob Extraction.v.beautified: Extraction.v
+Extraction.vio: Extraction.v
+Auto.vo Auto.glob Auto.v.beautified: Auto.v
+Auto.vio: Auto.v
+Postscript.vo Postscript.glob Postscript.v.beautified: Postscript.v
+Postscript.vio: Postscript.v
+Bib.vo Bib.glob Bib.v.beautified: Bib.v
+Bib.vio: Bib.v

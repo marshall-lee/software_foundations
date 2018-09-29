@@ -1,3 +1,4 @@
 *.vo
 *.glob
 *.aux
+/lf/Makefile.conf
