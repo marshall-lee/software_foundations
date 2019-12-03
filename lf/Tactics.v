@@ -1,4 +1,4 @@
-(** * Tactics: More Basic Tactics *)
+
 
 (** This chapter introduces several additional proof strategies
     and tactics that allow us to begin proving more interesting
@@ -65,15 +65,18 @@ Proof.
   intros n m eq1 eq2.
   apply eq2. apply eq1.  Qed.
 
-(** **** Exercise: 2 stars, optional (silly_ex)  *)
-(** Complete the following proof without using [simpl]. *)
+(** **** Exercise: 2 stars, standard, optional (silly_ex)  
+
+    Complete the following proof without using [simpl]. *)
 
 Theorem silly_ex :
      (forall n, evenb n = true -> oddb (S n) = true) ->
      oddb 3 = true ->
      evenb 4 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros eq1 eq2.
+  apply eq2.
+  Qed.
 (** [] *)
 
 (** To use the [apply] tactic, the (conclusion of the) fact
@@ -82,8 +85,8 @@ Proof.
     swapped. *)
 
 Theorem silly3_firsttry : forall (n : nat),
-     true = beq_nat n 5  ->
-     beq_nat (S (S n)) 7 = true.
+     true = (n =? 5)  ->
+     (S (S n)) =? 7 = true.
 Proof.
   intros n H.
 
@@ -96,8 +99,9 @@ Proof.
              simplification first, if needed.) *)
   apply H.  Qed.
 
-(** **** Exercise: 3 stars (apply_exercise1)  *)
-(** (_Hint_: You can use [apply] with previously defined lemmas, not
+(** **** Exercise: 3 stars, standard (apply_exercise1)  
+
+    (_Hint_: You can use [apply] with previously defined lemmas, not
     just hypotheses in the context.  Remember that [Search] is
     your friend.) *)
 
@@ -105,22 +109,30 @@ Theorem rev_exercise1 : forall (l l' : list nat),
      l = rev l' ->
      l' = rev l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l l' eq.
+  rewrite -> eq.
+  symmetry.
+  apply rev_involutive.
+Qed.
 (** [] *)
 
-(** **** Exercise: 1 star, optional (apply_rewrite)  *)
-(** Briefly explain the difference between the tactics [apply] and
+(** **** Exercise: 1 star, standard, optional (apply_rewrite)  
+
+    Briefly explain the difference between the tactics [apply] and
     [rewrite].  What are the situations where both can usefully be
     applied? *)
 
-(* FILL IN HERE *)
+(** - [apply] cannot be applied instead of [rewrite <- H],
+      I should use [symmetry] before.
+    - [apply] automatically solves a goal.
+    - [apply] can work with conditional hypotheses. *)
 (** [] *)
 
 (* ################################################################# *)
 (** * The [apply with] Tactic *)
 
 (** The following silly example uses two rewrites in a row to
-    get from [[a,b]] to [[e,f]]. *)
+    get from [[a;b]] to [[e;f]]. *)
 
 Example trans_eq_example : forall (a b c d e f : nat),
      [a;b] = [c;d] ->
@@ -166,17 +178,19 @@ Proof.
     instantiation we're giving. We could instead write: [apply
     trans_eq with [c;d]]. *)
 
-(** **** Exercise: 3 stars, optional (apply_with_exercise)  *)
+(** **** Exercise: 3 stars, standard, optional (apply_with_exercise)  *)
 Example trans_eq_exercise : forall (n m o p : nat),
      m = (minustwo o) ->
      (n + p) = m ->
      (n + p) = (minustwo o).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m o p eq1 eq2.
+  apply trans_eq with m. apply eq2. apply eq1.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
-(** * The [inversion] Tactic *)
+(** * The [injection] and [discriminate] Tactics *)
 
 (** Recall the definition of natural numbers:
 
@@ -205,134 +219,148 @@ Proof.
     [true] nor [false] take any arguments, their injectivity is not
     interesting.)  And so on. *)
 
-(** Coq provides a tactic called [inversion] that allows us to
-    exploit these principles in proofs. To see how to use it, let's
-    show explicitly that the [S] constructor is injective: *)
+(** For example, we can prove the injectivity of [S] by using the
+    [pred] function defined in [Basics.v]. *)
 
 Theorem S_injective : forall (n m : nat),
   S n = S m ->
   n = m.
 Proof.
-  intros n m H.
-
-(** By writing [inversion H] at this point, we are asking Coq to
-    generate all equations that it can infer from [H] as additional
-    hypotheses, replacing variables in the goal as it goes. In the
-    present example, this amounts to adding a new hypothesis [H1 : n =
-    m] and replacing [n] by [m] in the goal. *)
-
-  inversion H.
-  reflexivity.
+  intros n m H1.
+  assert (H2: n = pred (S n)). { reflexivity. }
+  rewrite H2. rewrite H1. reflexivity.
 Qed.
 
-(** Here's a more interesting example that shows how multiple
-    equations can be derived at once. *)
+(** This technique can be generalized to any constructor by
+    writing the equivalent of [pred] for that constructor -- i.e.,
+    writing a function that "undoes" one application of the
+    constructor. As a more convenient alternative, Coq provides a
+    tactic called [injection] that allows us to exploit the
+    injectivity of any constructor.  Here is an alternate proof of the
+    above theorem using [injection]: *)
 
-Theorem inversion_ex1 : forall (n m o : nat),
+Theorem S_injective' : forall (n m : nat),
+  S n = S m ->
+  n = m.
+Proof.
+  intros n m H.
+
+(** By writing [injection H] at this point, we are asking Coq to
+    generate all equations that it can infer from [H] using the
+    injectivity of constructors. Each such equation is added as a
+    premise to the goal. In the present example, adds the premise
+    [n = m]. *)
+
+  injection H. intros Hnm. apply Hnm.
+Qed.
+
+(** Here's a more interesting example that shows how [injection] can
+    derive multiple equations at once. *)
+
+Theorem injection_ex1 : forall (n m o : nat),
   [n; m] = [o; o] ->
   [n] = [m].
 Proof.
-  intros n m o H. inversion H. reflexivity. Qed.
+  intros n m o H.
+  injection H. intros H1 H2.
+  rewrite H1. rewrite H2. reflexivity.
+Qed.
 
-(** We can name the equations that [inversion] generates with an
-    [as ...] clause: *)
+(** The "[as]" variant of [injection] permits us to choose names for
+    the introduced equations rather than letting Coq do it. *)
 
-Theorem inversion_ex2 : forall (n m : nat),
+Theorem injection_ex2 : forall (n m : nat),
   [n] = [m] ->
   n = m.
 Proof.
-  intros n m H. inversion H as [Hnm]. reflexivity.  Qed.
+  intros n m H.
+  injection H as Hnm. rewrite Hnm.
+  reflexivity. Qed.
 
-(** **** Exercise: 1 star (inversion_ex3)  *)
-Example inversion_ex3 : forall (X : Type) (x y z w : X) (l j : list X),
-  x :: y :: l = w :: z :: j ->
-  x :: l = z :: j ->
+(** **** Exercise: 1 star, standard (injection_ex3)  *)
+Example injection_ex3 : forall (X : Type) (x y z : X) (l j : list X),
+  x :: y :: l = z :: j ->
+  y :: l = x :: j ->
   x = y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x y z l j eq1 eq2.
+  injection eq2 as H. rewrite H. reflexivity.
+Qed.
 (** [] *)
 
-(** When used on a hypothesis involving an equality between
-    _different_ constructors (e.g., [S n = O]), [inversion] solves the
-    goal immediately.  Consider the following proof: *)
+(** So much for injectivity of constructors.  What about disjointness?
 
-Theorem beq_nat_0_l : forall n,
-   beq_nat 0 n = true -> n = 0.
+    The principle of disjointness says that two terms beginning with
+    different constructors (like [O] and [S], or [true] and [false])
+    can never be equal.  This means that, any time we find ourselves
+    working in a context where we've _assumed_ that two such terms are
+    equal, we are justified in concluding anything we want to (because
+    the assumption is nonsensical).
+
+    The [discriminate] tactic embodies this principle: It is used on a
+    hypothesis involving an equality between different
+    constructors (e.g., [S n = O]), and it solves the current goal
+    immediately.  For example: *)
+
+Theorem eqb_0_l : forall n,
+   0 =? n = true -> n = 0.
 Proof.
   intros n.
 
 (** We can proceed by case analysis on [n]. The first case is
     trivial. *)
 
-  destruct n as [| n'].
+  destruct n as [| n'] eqn:E.
   - (* n = 0 *)
     intros H. reflexivity.
 
-(** However, the second one doesn't look so simple: assuming
-    [beq_nat 0 (S n') = true], we must show [S n' = 0], but the latter
-    clearly contradictory!  The way forward lies in the assumption.
-    After simplifying the goal state, we see that [beq_nat 0 (S n') =
-    true] has become [false = true]: *)
+(** However, the second one doesn't look so simple: assuming [0
+    =? (S n') = true], we must show [S n' = 0]!  The way forward is to
+    observe that the assumption itself is nonsensical: *)
 
   - (* n = S n' *)
     simpl.
 
-(** If we use [inversion] on this hypothesis, Coq notices that
-    the subgoal we are working on is impossible, and therefore removes
-    it from further consideration. *)
+(** If we use [discriminate] on this hypothesis, Coq confirms
+    that the subgoal we are working on is impossible and removes it
+    from further consideration. *)
 
-    intros H. inversion H. Qed.
+    intros H. discriminate H.
+Qed.
 
 (** This is an instance of a logical principle known as the _principle
     of explosion_, which asserts that a contradictory hypothesis
     entails anything, even false things! *)
 
-Theorem inversion_ex4 : forall (n : nat),
+Theorem discriminate_ex1 : forall (n : nat),
   S n = O ->
   2 + 2 = 5.
 Proof.
-  intros n contra. inversion contra. Qed.
+  intros n contra. discriminate contra. Qed.
 
-Theorem inversion_ex5 : forall (n m : nat),
+Theorem discriminate_ex2 : forall (n m : nat),
   false = true ->
   [n] = [m].
 Proof.
-  intros n m contra. inversion contra. Qed.
+  intros n m contra. discriminate contra. Qed.
 
 (** If you find the principle of explosion confusing, remember
-    that these proofs are not actually showing that the conclusion of
-    the statement holds.  Rather, they are arguing that, if the
+    that these proofs are _not_ showing that the conclusion of the
+    statement holds.  Rather, they are showing that, if the
     nonsensical situation described by the premise did somehow arise,
     then the nonsensical conclusion would follow.  We'll explore the
     principle of explosion of more detail in the next chapter. *)
 
-(** **** Exercise: 1 star (inversion_ex6)  *)
-Example inversion_ex6 : forall (X : Type)
-                          (x y z : X) (l j : list X),
-  x :: y :: l = [] ->
-  y :: l = z :: j ->
-  x = z.
+(** **** Exercise: 1 star, standard (discriminate_ex3)  *)
+Example discriminate_ex3 :
+  forall (X : Type) (x y z : X) (l j : list X),
+    x :: y :: l = [] ->
+    x = z.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x y z l j contra.
+  discriminate contra.
+Qed.
 (** [] *)
-
-(** To summarize this discussion, suppose [H] is a hypothesis in the
-    context or a previously proven lemma of the form
-
-        c a1 a2 ... an = d b1 b2 ... bm
-
-    for some constructors [c] and [d] and arguments [a1 ... an] and
-    [b1 ... bm].  Then [inversion H] has the following effect:
-
-    - If [c] and [d] are the same constructor, then, by the
-      injectivity of this constructor, we know that [a1 = b1], [a2 =
-      b2], etc.  The [inversion H] adds these facts to the context and
-      tries to use them to rewrite the goal.
-
-    - If [c] and [d] are different constructors, then the hypothesis
-      [H] is contradictory, and the current goal doesn't have to be
-      considered at all.  In this case, [inversion H] marks the
-      current goal as completed and pops it off the goal stack. *)
 
 (** The injectivity of constructors allows us to reason that
     [forall (n m : nat), S n = S m -> n = m].  The converse of this
@@ -355,30 +383,30 @@ Proof. intros A B f x y eq. rewrite eq.  reflexivity.  Qed.
     the hypothesis named [H] in the context. *)
 
 Theorem S_inj : forall (n m : nat) (b : bool),
-     beq_nat (S n) (S m) = b  ->
-     beq_nat n m = b.
+     (S n) =? (S m) = b  ->
+     n =? m = b.
 Proof.
   intros n m b H. simpl in H. apply H.  Qed.
 
 (** Similarly, [apply L in H] matches some conditional statement
-    [L] (of the form [L1 -> L2], say) against a hypothesis [H] in the
+    [L] (of the form [X -> Y], say) against a hypothesis [H] in the
     context.  However, unlike ordinary [apply] (which rewrites a goal
-    matching [L2] into a subgoal [L1]), [apply L in H] matches [H]
-    against [L1] and, if successful, replaces it with [L2].
+    matching [Y] into a subgoal [X]), [apply L in H] matches [H]
+    against [X] and, if successful, replaces it with [Y].
 
     In other words, [apply L in H] gives us a form of "forward
-    reasoning": from [L1 -> L2] and a hypothesis matching [L1], it
-    produces a hypothesis matching [L2].  By contrast, [apply L] is
-    "backward reasoning": it says that if we know [L1->L2] and we are
-    trying to prove [L2], it suffices to prove [L1].
+    reasoning": from [X -> Y] and a hypothesis matching [X], it
+    produces a hypothesis matching [X].  By contrast, [apply L] is
+    "backward reasoning": it says that if we know [X -> Y] and we
+    are trying to prove [Y], it suffices to prove [X].
 
     Here is a variant of a proof from above, using forward reasoning
     throughout instead of backward reasoning. *)
 
 Theorem silly3' : forall (n : nat),
-  (beq_nat n 5 = true -> beq_nat (S (S n)) 7 = true) ->
-  true = beq_nat n 5  ->
-  true = beq_nat (S (S n)) 7.
+  (n =? 5 = true -> (S (S n)) =? 7 = true) ->
+  true = (n =? 5)  ->
+  true = ((S (S n)) =? 7).
 Proof.
   intros n eq H.
   symmetry in H. apply eq in H. symmetry in H.
@@ -389,14 +417,16 @@ Proof.
     them until the goal is reached.  Backward reasoning starts from
     the _goal_, and iteratively reasons about what would imply the
     goal, until premises or previously proven theorems are reached.
+
     If you've seen informal proofs before (for example, in a math or
     computer science class), they probably used forward reasoning.  In
     general, idiomatic use of Coq tends to favor backward reasoning,
     but in some situations the forward style can be easier to think
     about.  *)
 
-(** **** Exercise: 3 stars, recommended (plus_n_n_injective)  *)
-(** Practice using "in" variants in this proof.  (Hint: use
+(** **** Exercise: 3 stars, standard, recommended (plus_n_n_injective)  
+
+    Practice using "in" variants in this proof.  (Hint: use
     [plus_n_Sm].) *)
 
 Theorem plus_n_n_injective : forall n m,
@@ -404,7 +434,22 @@ Theorem plus_n_n_injective : forall n m,
      n = m.
 Proof.
   intros n. induction n as [| n'].
-  (* FILL IN HERE *) Admitted.
+  - (* n = 0 *)
+    destruct m.
+    + reflexivity.
+    + intros contra.
+      discriminate contra.
+  - (* n = S n' *)
+    destruct m.
+    + intros contra. discriminate contra.
+    + intros H.
+      rewrite <- plus_n_Sm in H.
+      rewrite <- plus_n_Sm in H.
+      injection H as H1.
+      apply IHn' in H1.
+      rewrite <- H1.
+      reflexivity.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -415,19 +460,19 @@ Proof.
     In particular, we need to be careful about which of the
     assumptions we move (using [intros]) from the goal to the context
     before invoking the [induction] tactic.  For example, suppose
-    we want to show that the [double] function is injective -- i.e.,
-    that it maps different arguments to different results:
+    we want to show that [double] is injective -- i.e., that it maps
+    different arguments to different results:
 
-    Theorem double_injective: forall n m,
-      double n = double m -> n = m.
+       Theorem double_injective: forall n m,
+         double n = double m -> n = m.
 
     The way we _start_ this proof is a bit delicate: if we begin with
 
-      intros n. induction n.
+       intros n. induction n.
 
     all is well.  But if we begin it with
 
-      intros n m. induction n.
+       intros n m. induction n.
 
     we get stuck in the middle of the inductive case... *)
 
@@ -436,11 +481,11 @@ Theorem double_injective_FAILED : forall n m,
      n = m.
 Proof.
   intros n m. induction n as [| n'].
-  - (* n = O *) simpl. intros eq. destruct m as [| m'].
+  - (* n = O *) simpl. intros eq. destruct m as [| m'] eqn:E.
     + (* m = O *) reflexivity.
-    + (* m = S m' *) inversion eq.
-  - (* n = S n' *) intros eq. destruct m as [| m'].
-    + (* m = O *) inversion eq.
+    + (* m = S m' *) discriminate eq.
+  - (* n = S n' *) intros eq. destruct m as [| m'] eqn:E.
+    + (* m = O *) discriminate eq.
     + (* m = S m' *) apply f_equal.
 
 (** At this point, the induction hypothesis, [IHn'], does _not_ give us
@@ -500,7 +545,7 @@ Proof.
 
 (** Trying to carry out this proof by induction on [n] when [m] is
     already in the context doesn't work because we are then trying to
-    prove a relation involving _every_ [n] but just a _single_ [m]. *)
+    prove a statement involving _every_ [n] but just a _single_ [m]. *)
 
 (** The successful proof of [double_injective] leaves [m] in the goal
     statement at the point where the [induction] tactic is invoked on
@@ -511,9 +556,9 @@ Theorem double_injective : forall n m,
      n = m.
 Proof.
   intros n. induction n as [| n'].
-  - (* n = O *) simpl. intros m eq. destruct m as [| m'].
+  - (* n = O *) simpl. intros m eq. destruct m as [| m'] eqn:E.
     + (* m = O *) reflexivity.
-    + (* m = S m' *) inversion eq.
+    + (* m = S m' *) discriminate eq.
 
   - (* n = S n' *) simpl.
 
@@ -529,12 +574,12 @@ Proof.
     that [double n = double m].  Since we are doing a case analysis on
     [n], we also need a case analysis on [m] to keep the two "in sync." *)
 
-    destruct m as [| m'].
+    destruct m as [| m'] eqn:E.
     + (* m = O *) simpl.
 
 (** The 0 case is trivial: *)
 
-      inversion eq.
+      discriminate eq.
 
     + (* m = S m' *)
       apply f_equal.
@@ -547,30 +592,42 @@ Proof.
     performed automatically by the [apply] in the next step), then
     [IHn'] gives us exactly what we need to finish the proof. *)
 
-      apply IHn'. inversion eq. reflexivity. Qed.
+      apply IHn'. injection eq as goal. apply goal. Qed.
 
 (** What you should take away from all this is that we need to be
-    careful about using induction to try to prove something too
-    specific: To prove a property of [n] and [m] by induction on [n],
-    it is sometimes important to leave [m] generic. *)
+    careful, when using induction, that we are not trying to prove
+    something too specific: To prove a property of [n] and [m] by
+    induction on [n], it is sometimes important to leave [m]
+    generic. *)
 
 (** The following exercise requires the same pattern. *)
 
-(** **** Exercise: 2 stars (beq_nat_true)  *)
-Theorem beq_nat_true : forall n m,
-    beq_nat n m = true -> n = m.
+(** **** Exercise: 2 stars, standard (eqb_true)  *)
+Theorem eqb_true : forall n m,
+    n =? m = true -> n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n' IHn'].
+  - (* n = O *)
+    destruct m.
+    + reflexivity.
+    + intros contra. discriminate contra.
+  - (* n = S n' *)
+    destruct m.
+    + intros contra. discriminate contra.
+    + intros H. apply IHn' in H.
+      rewrite -> H. reflexivity.
+Qed.
 (** [] *)
 
-(** **** Exercise: 2 stars, advanced (beq_nat_true_informal)  *)
-(** Give a careful informal proof of [beq_nat_true], being as explicit
+(** **** Exercise: 2 stars, advanced (eqb_true_informal)  
+
+    Give a careful informal proof of [eqb_true], being as explicit
     as possible about quantifiers. *)
 
 (* FILL IN HERE *)
 
 (* Do not modify the following line: *)
-Definition manual_grade_for_informal_proof : option (prod nat string) := None.
+Definition manual_grade_for_informal_proof : option (nat*string) := None.
 (** [] *)
 
 (** The strategy of doing fewer [intros] before an [induction] to
@@ -584,11 +641,11 @@ Theorem double_injective_take2_FAILED : forall n m,
      n = m.
 Proof.
   intros n m. induction m as [| m'].
-  - (* m = O *) simpl. intros eq. destruct n as [| n'].
+  - (* m = O *) simpl. intros eq. destruct n as [| n'] eqn:E.
     + (* n = O *) reflexivity.
-    + (* n = S n' *) inversion eq.
-  - (* m = S m' *) intros eq. destruct n as [| n'].
-    + (* n = O *) inversion eq.
+    + (* n = S n' *) discriminate eq.
+  - (* m = S m' *) intros eq. destruct n as [| n'] eqn:E.
+    + (* n = O *) discriminate eq.
     + (* n = S n' *) apply f_equal.
         (* Stuck again here, just like before. *)
 Abort.
@@ -621,13 +678,13 @@ Proof.
   (* Now [n] is back in the goal and we can do induction on
      [m] and get a sufficiently general IH. *)
   induction m as [| m'].
-  - (* m = O *) simpl. intros n eq. destruct n as [| n'].
+  - (* m = O *) simpl. intros n eq. destruct n as [| n'] eqn:E.
     + (* n = O *) reflexivity.
-    + (* n = S n' *) inversion eq.
-  - (* m = S m' *) intros n eq. destruct n as [| n'].
-    + (* n = O *) inversion eq.
+    + (* n = S n' *) discriminate eq.
+  - (* m = S m' *) intros n eq. destruct n as [| n'] eqn:E.
+    + (* n = O *) discriminate eq.
     + (* n = S n' *) apply f_equal.
-      apply IHm'. inversion eq. reflexivity. Qed.
+      apply IHm'. injection eq as goal. apply goal. Qed.
 
 (** Let's look at an informal proof of this theorem.  Note that
     the proposition we prove by induction leaves [n] quantified,
@@ -663,40 +720,48 @@ Proof.
 
         Thus, we may assume that [n = S n'] for some [n'], and again by
         the definition of [double] we have [S (S (double n')) =
-        S (S (double m'))], which implies by inversion that [double n' =
+        S (S (double m'))], which implies by injectivity that [double n' =
         double m'].  Instantiating the induction hypothesis with [n'] thus
         allows us to conclude that [n' = m'], and it follows immediately
         that [S n' = S m'].  Since [S n' = n] and [S m' = m], this is just
         what we wanted to show. [] *)
 
 (** Before we close this section and move on to some exercises,
-    let's digress briefly and use [beq_nat_true] to prove a similar
+    let's digress briefly and use [eqb_true] to prove a similar
     property of identifiers that we'll need in later chapters: *)
 
-Theorem beq_id_true : forall x y,
-  beq_id x y = true -> x = y.
+Theorem eqb_id_true : forall x y,
+  eqb_id x y = true -> x = y.
 Proof.
   intros [m] [n]. simpl. intros H.
-  assert (H' : m = n). { apply beq_nat_true. apply H. }
+  assert (H' : m = n). { apply eqb_true. apply H. }
   rewrite H'. reflexivity.
 Qed.
 
-(** **** Exercise: 3 stars, recommended (gen_dep_practice)  *)
-(** Prove this by induction on [l]. *)
+(** **** Exercise: 3 stars, standard, recommended (gen_dep_practice)  
+
+    Prove this by induction on [l]. *)
 
 Theorem nth_error_after_last: forall (n : nat) (X : Type) (l : list X),
      length l = n ->
      nth_error l n = None.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n X l.
+  generalize dependent n.
+  induction l as [| x l'].
+  - reflexivity.
+  - destruct n.
+    + intros contra. discriminate contra.
+    + intros H. injection H as H1. simpl. apply IHl' in H1. apply H1.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
 (** * Unfolding Definitions *)
 
-(** It sometimes happens that we need to manually unfold a Definition
-    so that we can manipulate its right-hand side.  For example, if we
-    define... *)
+(** It sometimes happens that we need to manually unfold a name that
+    has been introduced by a [Definition] so that we can manipulate
+    its right-hand side.  For example, if we define... *)
 
 Definition square n := n * n.
 
@@ -707,9 +772,9 @@ Proof.
   intros n m.
   simpl.
 
-(** ... we get stuck: [simpl] doesn't simplify anything at this point,
-    and since we haven't proved any other facts about [square], there
-    is nothing we can [apply] or [rewrite] with.
+(** ... we appear to be stuck: [simpl] doesn't simplify anything at
+    this point, and since we haven't proved any other facts about
+    [square], there is nothing we can [apply] or [rewrite] with.
 
     To make progress, we can manually [unfold] the definition of
     [square]: *)
@@ -719,28 +784,29 @@ Proof.
 (** Now we have plenty to work with: both sides of the equality are
     expressions involving multiplication, and we have lots of facts
     about multiplication at our disposal.  In particular, we know that
-    it is commutative and associative, and from these facts it is not
-    hard to finish the proof. *)
+    it is commutative and associative, and from these it is not hard
+    to finish the proof. *)
 
   rewrite mult_assoc.
   assert (H : n * m * n = n * n * m).
-  { rewrite mult_comm. apply mult_assoc. }
+    { rewrite mult_comm. apply mult_assoc. }
   rewrite H. rewrite mult_assoc. reflexivity.
 Qed.
 
-(** At this point, a deeper discussion of unfolding and simplification
-    is in order.
+(** At this point, some discussion of unfolding and simplification is
+    in order.
 
     You may already have observed that tactics like [simpl],
     [reflexivity], and [apply] will often unfold the definitions of
-    functions automatically when this allows them to make progress.  For
-    example, if we define [foo m] to be the constant [5]... *)
+    functions automatically when this allows them to make progress.
+    For example, if we define [foo m] to be the constant [5]... *)
 
 Definition foo (x: nat) := 5.
 
-(** then the [simpl] in the following proof (or the [reflexivity], if
-    we omit the [simpl]) will unfold [foo m] to [(fun x => 5) m] and
-    then further simplify this expression to just [5]. *)
+(** .... then the [simpl] in the following proof (or the
+    [reflexivity], if we omit the [simpl]) will unfold [foo m] to
+    [(fun x => 5) m] and then further simplify this expression to just
+    [5]. *)
 
 Fact silly_fact_1 : forall m, foo m + 1 = foo (m + 1) + 1.
 Proof.
@@ -749,7 +815,7 @@ Proof.
   reflexivity.
 Qed.
 
-(** However, this automatic unfolding is rather conservative.  For
+(** However, this automatic unfolding is somewhat conservative.  For
     example, if we define a slightly more complicated function
     involving a pattern match... *)
 
@@ -774,7 +840,7 @@ Abort.
     two branches of the [match] are identical, so it gives up on
     unfolding [bar m] and leaves it alone.  Similarly, tentatively
     unfolding [bar (m+1)] leaves a [match] whose scrutinee is a
-    function application (that, itself, cannot be simplified, even
+    function application (that cannot itself be simplified, even
     after unfolding the definition of [+]), so [simpl] leaves it
     alone. *)
 
@@ -787,7 +853,7 @@ Abort.
 Fact silly_fact_2 : forall m, bar m + 1 = bar (m + 1) + 1.
 Proof.
   intros m.
-  destruct m.
+  destruct m eqn:E.
   - simpl. reflexivity.
   - simpl. reflexivity.
 Qed.
@@ -808,7 +874,7 @@ Proof.
     both sides of the [=], and we can use [destruct] to finish the
     proof without thinking too hard. *)
 
-  destruct m.
+  destruct m eqn:E.
   - reflexivity.
   - reflexivity.
 Qed.
@@ -824,23 +890,23 @@ Qed.
     Here are some examples: *)
 
 Definition sillyfun (n : nat) : bool :=
-  if beq_nat n 3 then false
-  else if beq_nat n 5 then false
+  if n =? 3 then false
+  else if n =? 5 then false
   else false.
 
 Theorem sillyfun_false : forall (n : nat),
   sillyfun n = false.
 Proof.
   intros n. unfold sillyfun.
-  destruct (beq_nat n 3).
-    - (* beq_nat n 3 = true *) reflexivity.
-    - (* beq_nat n 3 = false *) destruct (beq_nat n 5).
-      + (* beq_nat n 5 = true *) reflexivity.
-      + (* beq_nat n 5 = false *) reflexivity.  Qed.
+  destruct (n =? 3) eqn:E1.
+    - (* n =? 3 = true *) reflexivity.
+    - (* n =? 3 = false *) destruct (n =? 5) eqn:E2.
+      + (* n =? 5 = true *) reflexivity.
+      + (* n =? 5 = false *) reflexivity.  Qed.
 
 (** After unfolding [sillyfun] in the above proof, we find that
-    we are stuck on [if (beq_nat n 3) then ... else ...].  But either
-    [n] is equal to [3] or it isn't, so we can use [destruct (beq_nat
+    we are stuck on [if (n =? 3) then ... else ...].  But either
+    [n] is equal to [3] or it isn't, so we can use [destruct (eqb
     n 3)] to let us reason about the two cases.
 
     In general, the [destruct] tactic can be used to perform case
@@ -850,8 +916,9 @@ Proof.
     in which all occurrences of [e] (in the goal and in the context)
     are replaced by [c]. *)
 
-(** **** Exercise: 3 stars, optional (combine_split)  *)
-(** Here is an implementation of the [split] function mentioned in
+(** **** Exercise: 3 stars, standard, optional (combine_split)  
+
+    Here is an implementation of the [split] function mentioned in
     chapter [Poly]: *)
 
 Fixpoint split {X Y : Type} (l : list (X*Y))
@@ -871,78 +938,112 @@ Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
   split l = (l1, l2) ->
   combine l1 l2 = l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X Y l.
+  induction l.
+  - intros l1 l2 H. simpl in H. injection H as H. rewrite <- H. rewrite <- H0. reflexivity.
+  - destruct x as (x, y).
+    destruct l1 as [| x'].
+    + intros l2 H. simpl in H. destruct (split l) in H. discriminate H.
+    + destruct l2 as [| y'].
+      * intros H. simpl in H. destruct (split l) in H. discriminate H.
+      * intros H.
+        simpl.
+        assert (G: split l = (l1, l2)). {
+          simpl in H. destruct (split l).
+          injection H as H. rewrite -> H0. rewrite -> H2. reflexivity.
+        }
+        apply IHl in G.
+        simpl in H. destruct (split l) in H. injection H as H.
+        rewrite -> G. rewrite <- H. rewrite <- H1. reflexivity.
+Qed.
 (** [] *)
 
-(** However, [destruct]ing compound expressions requires a bit of
-    care, as such [destruct]s can sometimes erase information we need
-    to complete a proof. *)
-(** For example, suppose we define a function [sillyfun1] like
+(** The [eqn:] part of the [destruct] tactic is optional: We've chosen
+    to include it most of the time, just for the sake of
+    documentation, but many Coq proofs omit it.
+
+    When [destruct]ing compound expressions, however, the information
+    recorded by the [eqn:] can actually be critical: if we leave it
+    out, then [destruct] can sometimes erase information we need to
+    complete a proof. 
+
+    For example, suppose we define a function [sillyfun1] like
     this: *)
 
 Definition sillyfun1 (n : nat) : bool :=
-  if beq_nat n 3 then true
-  else if beq_nat n 5 then true
+  if n =? 3 then true
+  else if n =? 5 then true
   else false.
 
 (** Now suppose that we want to convince Coq of the (rather
     obvious) fact that [sillyfun1 n] yields [true] only when [n] is
-    odd.  By analogy with the proofs we did with [sillyfun] above, it
-    is natural to start the proof like this: *)
+    odd.  If we start the proof like this (with no [eqn:] on the
+    destruct)... *)
 
 Theorem sillyfun1_odd_FAILED : forall (n : nat),
      sillyfun1 n = true ->
      oddb n = true.
 Proof.
   intros n eq. unfold sillyfun1 in eq.
-  destruct (beq_nat n 3).
+  destruct (n =? 3).
   (* stuck... *)
 Abort.
 
-(** We get stuck at this point because the context does not
-    contain enough information to prove the goal!  The problem is that
-    the substitution performed by [destruct] is too brutal -- it threw
-    away every occurrence of [beq_nat n 3], but we need to keep some
-    memory of this expression and how it was destructed, because we
-    need to be able to reason that, since [beq_nat n 3 = true] in this
-    branch of the case analysis, it must be that [n = 3], from which
-    it follows that [n] is odd.
+(** ... then we are stuck at this point because the context does
+    not contain enough information to prove the goal!  The problem is
+    that the substitution performed by [destruct] is quite brutal --
+    in this case, it thows away every occurrence of [n =? 3], but we
+    need to keep some memory of this expression and how it was
+    destructed, because we need to be able to reason that, since [n =?
+    3 = true] in this branch of the case analysis, it must be that [n
+    = 3], from which it follows that [n] is odd.
 
-    What we would really like is to substitute away all existing
-    occurences of [beq_nat n 3], but at the same time add an equation
-    to the context that records which case we are in.  The [eqn:]
-    qualifier allows us to introduce such an equation, giving it a
-    name that we choose. *)
+    What we want here is to substitute away all existing occurences of
+    [n =? 3], but at the same time add an equation to the context that
+    records which case we are in.  This is precisely what the [eqn:]
+    qualifier does. *)
 
 Theorem sillyfun1_odd : forall (n : nat),
      sillyfun1 n = true ->
      oddb n = true.
 Proof.
   intros n eq. unfold sillyfun1 in eq.
-  destruct (beq_nat n 3) eqn:Heqe3.
+  destruct (n =? 3) eqn:Heqe3.
   (* Now we have the same state as at the point where we got
      stuck above, except that the context contains an extra
      equality assumption, which is exactly what we need to
      make progress. *)
-    - (* e3 = true *) apply beq_nat_true in Heqe3.
+    - (* e3 = true *) apply eqb_true in Heqe3.
       rewrite -> Heqe3. reflexivity.
     - (* e3 = false *)
      (* When we come to the second equality test in the body
         of the function we are reasoning about, we can use
-        [eqn:] again in the same way, allow us to finish the
+        [eqn:] again in the same way, allowing us to finish the
         proof. *)
-      destruct (beq_nat n 5) eqn:Heqe5.
+      destruct (n =? 5) eqn:Heqe5.
         + (* e5 = true *)
-          apply beq_nat_true in Heqe5.
+          apply eqb_true in Heqe5.
           rewrite -> Heqe5. reflexivity.
-        + (* e5 = false *) inversion eq.  Qed.
+        + (* e5 = false *) discriminate eq.  Qed.
 
-(** **** Exercise: 2 stars (destruct_eqn_practice)  *)
+(** **** Exercise: 2 stars, standard (destruct_eqn_practice)  *)
 Theorem bool_fn_applied_thrice :
   forall (f : bool -> bool) (b : bool),
   f (f (f b)) = f b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros f b.
+  destruct b.
+  + destruct (f true) eqn:T.
+    - rewrite -> T. rewrite -> T. reflexivity.
+    - destruct (f false) eqn:F.
+      * rewrite -> T. reflexivity.
+      * rewrite -> F. reflexivity.
+  + destruct (f false) eqn:F.
+    - destruct (f true) eqn:T.
+      * rewrite -> T. reflexivity.
+      * rewrite -> F. reflexivity.
+    - rewrite -> F. rewrite -> F. reflexivity.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -998,8 +1099,11 @@ Proof.
       - [induction... as...]: induction on values of inductively
         defined types
 
-      - [inversion]: reason by injectivity and distinctness of
-        constructors
+      - [injection]: reason by injectivity on equalities
+        between values of inductively defined types
+
+      - [discriminate]: reason by disjointness of constructors on
+        equalities between values of inductively defined types
 
       - [assert (H: e)] (or [assert (e) as H]): introduce a "local
         lemma" [e] and call it [H]
@@ -1011,34 +1115,54 @@ Proof.
 (* ################################################################# *)
 (** * Additional Exercises *)
 
-(** **** Exercise: 3 stars (beq_nat_sym)  *)
-Theorem beq_nat_sym : forall (n m : nat),
-  beq_nat n m = beq_nat m n.
+(** **** Exercise: 3 stars, standard (eqb_sym)  *)
+Theorem eqb_sym : forall (n m : nat),
+  (n =? m) = (m =? n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m.
+  destruct (n =? m) eqn:E.
+  + (* true *)
+    symmetry. apply eqb_true in E. rewrite -> E. symmetry. apply eqb_refl.
+  + (* false *)
+    generalize dependent m.
+    induction n.
+    - destruct m.
+      * intros E. discriminate E.
+      * reflexivity.
+    - destruct m.
+      * reflexivity.
+      * intros E. simpl in E. apply IHn in E. simpl. rewrite <- E. reflexivity.
+Qed.
 (** [] *)
 
-(** **** Exercise: 3 stars, advanced, optional (beq_nat_sym_informal)  *)
-(** Give an informal proof of this lemma that corresponds to your
+(** **** Exercise: 3 stars, advanced, optional (eqb_sym_informal)  
+
+    Give an informal proof of this lemma that corresponds to your
     formal proof above:
 
-   Theorem: For any [nat]s [n] [m], [beq_nat n m = beq_nat m n].
+   Theorem: For any [nat]s [n] [m], [(n =? m) = (m =? n)].
 
    Proof: *)
-   (* FILL IN HERE *)
-(** [] *)
+   (* FILL IN HERE 
 
-(** **** Exercise: 3 stars, optional (beq_nat_trans)  *)
-Theorem beq_nat_trans : forall n m p,
-  beq_nat n m = true ->
-  beq_nat m p = true ->
-  beq_nat n p = true.
+    [] *)
+
+(** **** Exercise: 3 stars, standard, optional (eqb_trans)  *)
+Theorem eqb_trans : forall n m p,
+  n =? m = true ->
+  m =? p = true ->
+  n =? p = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p eq1 eq2.
+  apply eqb_true in eq1. apply eqb_true in eq2.
+  rewrite -> eq1. rewrite <- eq2.
+  symmetry. apply eqb_refl.
+Qed.
 (** [] *)
 
-(** **** Exercise: 3 stars, advanced (split_combine)  *)
-(** We proved, in an exercise above, that for all lists of pairs,
+(** **** Exercise: 3 stars, advanced (split_combine)  
+
+    We proved, in an exercise above, that for all lists of pairs,
     [combine] is the inverse of [split].  How would you formalize the
     statement that [split] is the inverse of [combine]?  When is this
     property true?
@@ -1053,19 +1177,30 @@ Proof.
 Definition split_combine_statement : Prop
   (* ("[: Prop]" means that we are giving a name to a
      logical proposition here.) *)
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  := forall X Y (l1 : list X) (l2 : list Y), length l1 = length l2 -> split (combine l1 l2) = (l1, l2).
 
 Theorem split_combine : split_combine_statement.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros X Y.
+  induction l1 as [| x].
+  + intros l2 H.
+    destruct l2 as [| y].
+    - reflexivity.
+    - discriminate H.
+  + intros l2 H. destruct l2 as [| y].
+    - discriminate H.
+    - injection H as H. apply IHl1 in H.
+      simpl. rewrite -> H.
+      reflexivity.
+Qed.
 
 (* Do not modify the following line: *)
-Definition manual_grade_for_split_combine : option (prod nat string) := None.
-
+Definition manual_grade_for_split_combine : option (nat*string) := None.
 (** [] *)
 
-(** **** Exercise: 3 stars, advanced (filter_exercise)  *)
-(** This one is a bit challenging.  Pay attention to the form of your
+(** **** Exercise: 3 stars, advanced (filter_exercise)  
+
+    This one is a bit challenging.  Pay attention to the form of your
     induction hypothesis. *)
 
 Theorem filter_exercise : forall (X : Type) (test : X -> bool)
@@ -1073,11 +1208,20 @@ Theorem filter_exercise : forall (X : Type) (test : X -> bool)
      filter test l = x :: lf ->
      test x = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X test x l lf.
+  destruct l as [| x'].
+  + simpl. intros H. discriminate H.
+  + induction (x' :: l).
+    - simpl. intros H. discriminate H.
+    - simpl. destruct (test x0) eqn:T.
+      * intros H. injection H as H. rewrite -> H in T. apply T.
+      * apply IHl0.
+Qed.
 (** [] *)
 
-(** **** Exercise: 4 stars, advanced, recommended (forall_exists_challenge)  *)
-(** Define two recursive [Fixpoints], [forallb] and [existsb].  The
+(** **** Exercise: 4 stars, advanced, recommended (forall_exists_challenge)  
+
+    Define two recursive [Fixpoints], [forallb] and [existsb].  The
     first checks whether every element in a list satisfies a given
     predicate:
 
@@ -1087,12 +1231,12 @@ Proof.
 
       forallb evenb [0;2;4;5] = false
 
-      forallb (beq_nat 5) [] = true
+      forallb (eqb 5) [] = true
 
     The second checks whether there exists an element in the list that
     satisfies a given predicate:
 
-      existsb (beq_nat 5) [0;2;3;6] = false
+      existsb (eqb 5) [0;2;3;6] = false
 
       existsb (andb true) [true;true;false] = true
 
@@ -1106,11 +1250,58 @@ Proof.
     Finally, prove a theorem [existsb_existsb'] stating that
     [existsb'] and [existsb] have the same behavior. *)
 
-(* FILL IN HERE *)
+Fixpoint forallb {X : Type} (test : X -> bool) (l : list X) : bool
+  := match l with
+     | [] => true
+     | x :: l' => if test x then forallb test l' else false
+     end.
 
-(* Do not modify the following line: *)
-Definition manual_grade_for_forall_exists_challenge : option (prod nat string) := None.
+Example test_forallb_1 : forallb oddb [1;3;5;7;9] = true.
+Proof. reflexivity. Qed.
+
+Example test_forallb_2 : forallb negb [false;false] = true.
+Proof. reflexivity. Qed.
+
+Example test_forallb_3 : forallb evenb [0;2;4;5] = false.
+Proof. reflexivity. Qed.
+
+Example test_forallb_4 : forallb (eqb 5) [] = true.
+Proof. reflexivity. Qed.
+
+Fixpoint existsb {X : Type} (test : X -> bool) (l : list X) : bool
+  := match l with
+     | [] => false
+     | x :: l' => if test x then true else existsb test l'
+     end.
+
+Example test_existsb_1 : existsb (eqb 5) [0;2;3;6] = false.
+Proof. reflexivity. Qed.
+
+Example test_existsb_2 : existsb (andb true) [true;true;false] = true.
+Proof. reflexivity. Qed.
+
+Example test_existsb_3 : existsb oddb [1;0;0;0;0;3] = true.
+Proof. reflexivity. Qed.
+
+Example test_existsb_4 : existsb evenb [] = false.
+Proof. reflexivity. Qed.
+
+Definition existsb' {X : Type} (test : X -> bool) (l : list X) : bool
+  := negb (forallb (fun x => negb (test x)) l).
+
+Theorem existsb_existsb' : forall (X : Type) (test : X -> bool) (l : list X),
+  existsb test l = existsb' test l.
+Proof. intros X test.
+  induction l.
+  + reflexivity.
+  + simpl.
+    unfold existsb'.
+    destruct (test x) eqn:T.
+    - simpl. rewrite -> T. reflexivity.
+    - simpl. rewrite -> T. rewrite -> IHl. reflexivity.
+Qed.
 (** [] *)
 
 
 
+(* Wed Jan 9 12:02:44 EST 2019 *)
