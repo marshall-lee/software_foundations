@@ -16,8 +16,9 @@ Extraction Language OCaml.
 (** Now we load up the Coq environment with some definitions, either
     directly or by importing them from other modules. *)
 
-Require Import Coq.Arith.Arith.
-Require Import Coq.Arith.EqNat.
+From Coq Require Import Arith.Arith.
+From Coq Require Import Init.Nat.
+From Coq Require Import Arith.EqNat.
 From LF Require Import ImpCEvalFun.
 
 (** Finally, we tell Coq the name of a definition to extract and the
@@ -54,7 +55,7 @@ Extract Inductive nat => "int"
 
 Extract Constant plus => "( + )".
 Extract Constant mult => "( * )".
-Extract Constant beq_nat => "( = )".
+Extract Constant eqb => "( = )".
 
 (** Important: It is entirely _your responsibility_ to make sure that
     the translations you're proving make sense.  For example, it might
@@ -98,8 +99,7 @@ From LF Require Import Imp.
 From LF Require Import ImpParser.
 
 From LF Require Import Maps.
-Definition empty_state := { --> 0 }.
-Extraction "imp.ml" empty_state ceval_step parse.
+Extraction "imp.ml" empty_st ceval_step parse.
 
 (** Now let's run our generated Imp evaluator.  First, have a look at
     [impdriver.ml].  (This was written by hand, not extracted.)
@@ -129,3 +129,4 @@ Extraction "imp.ml" empty_state ceval_step parse.
     chapter in _Verified Functional Algorithms_ (_Software
     Foundations_ volume 3). *)
 
+(* Wed Jan 9 12:02:46 EST 2019 *)

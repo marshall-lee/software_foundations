@@ -1,7 +1,7 @@
 (** * Auto: More Automation *)
 
 Set Warnings "-notation-overridden,-parsing".
-Require Import Coq.omega.Omega.
+From Coq Require Import omega.Omega.
 From LF Require Import Maps.
 From LF Require Import Imp.
 
@@ -31,9 +31,9 @@ From LF Require Import Imp.
 Ltac inv H := inversion H; subst; clear H.
 
 Theorem ceval_deterministic: forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1  ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2;
   generalize dependent st2;
@@ -130,7 +130,6 @@ Proof.
   auto 6.
 Qed.
 
-
 (** When searching for potential proofs of the current goal,
     [auto] considers the hypotheses in the current context together
     with a _hint database_ of other lemmas and constructors.  Some
@@ -214,9 +213,9 @@ Proof. auto. Qed.
     proof script. *)
 
 Theorem ceval_deterministic': forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1  ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -251,9 +250,9 @@ Qed.
     version of the previous proof, using [Proof with auto]. *)
 
 Theorem ceval_deterministic'_alt: forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1 ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof with auto.
   intros c st st1 st2 E1 E2;
   generalize dependent st2;
@@ -307,11 +306,10 @@ Qed.
 
 Ltac rwinv H1 H2 := rewrite H1 in H2; inv H2.
 
-
 Theorem ceval_deterministic'': forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1  ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -358,9 +356,9 @@ Ltac find_rwinv :=
     induction handles all of the contradictory cases. *)
 
 Theorem ceval_deterministic''': forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1  ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -383,9 +381,9 @@ Proof.
     hypotheses to use and then [rewrite] with them, as follows: *)
 
 Theorem ceval_deterministic'''': forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1  ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -429,11 +427,10 @@ Ltac find_eqn :=
     - we can wrap the whole thing in a [repeat], which will keep doing
       useful rewrites until only trivial ones are left. *)
 
-
 Theorem ceval_deterministic''''': forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1  ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -443,18 +440,17 @@ Qed.
 
 (** The big payoff in this approach is that our proof script should be
     more robust in the face of modest changes to our language.  To
-    test whether it really is, let's try adding a [REPEAT] command to
-    the language. *)
+    test this, let's try adding a [REPEAT] command to the language. *)
 
 Module Repeat.
 
 Inductive com : Type :=
-  | CSkip : com
-  | CAsgn : string -> aexp -> com
-  | CSeq : com -> com -> com
-  | CIf : bexp -> com -> com -> com
-  | CWhile : bexp -> com -> com
-  | CRepeat : com -> bexp -> com.
+  | CSkip
+  | CAsgn (x : string) (a : aexp)
+  | CSeq (c1 c2 : com)
+  | CIf (b : bexp) (c1 c2 : com)
+  | CWhile (b : bexp) (c : com)
+  | CRepeat (c : com) (b : bexp).
 
 (** [REPEAT] behaves like [WHILE], except that the loop guard is
     checked _after_ each execution of the body, with the loop
@@ -469,7 +465,7 @@ Notation "X '::=' a" :=
   (CAsgn X a) (at level 60).
 Notation "'WHILE' b 'DO' c 'END'" :=
   (CWhile b c) (at level 80, right associativity).
-Notation "'IFB' e1 'THEN' e2 'ELSE' e3 'FI'" :=
+Notation "'TEST' e1 'THEN' e2 'ELSE' e3 'FI'" :=
   (CIf e1 e2 e3) (at level 80, right associativity).
 Notation "'REPEAT' e1 'UNTIL' b2 'END'" :=
   (CRepeat e1 b2) (at level 80, right associativity).
@@ -487,11 +483,11 @@ Inductive ceval : state -> com -> state -> Prop :=
   | E_IfTrue : forall st st' b1 c1 c2,
       beval st b1 = true ->
       ceval st c1 st' ->
-      ceval st (IFB b1 THEN c1 ELSE c2 FI) st'
+      ceval st (TEST b1 THEN c1 ELSE c2 FI) st'
   | E_IfFalse : forall st st' b1 c1 c2,
       beval st b1 = false ->
       ceval st c2 st' ->
-      ceval st (IFB b1 THEN c1 ELSE c2 FI) st'
+      ceval st (TEST b1 THEN c1 ELSE c2 FI) st'
   | E_WhileFalse : forall b1 st c1,
       beval st b1 = false ->
       ceval st (WHILE b1 DO c1 END) st
@@ -510,17 +506,17 @@ Inductive ceval : state -> com -> state -> Prop :=
       ceval st' (CRepeat c1 b1) st'' ->
       ceval st (CRepeat c1 b1) st''.
 
-Notation "c1 '/' st '\\' st'" := (ceval st c1 st')
-                                 (at level 40, st at level 39).
+Notation "st '=[' c ']=>' st'" := (ceval st c st')
+                                 (at level 40).
 
 (** Our first attempt at the determinacy proof does not quite succeed:
     the [E_RepeatEnd] and [E_RepeatLoop] cases are not handled by our
     previous automation. *)
 
 Theorem ceval_deterministic: forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1  ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -540,9 +536,9 @@ Qed.
     [find_eqn] and [find_rwinv]. *)
 
 Theorem ceval_deterministic': forall c st st1 st2,
-     c / st \\ st1  ->
-     c / st \\ st2 ->
-     st1 = st2.
+    st =[ c ]=> st1  ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -567,20 +563,19 @@ End Repeat.
     chapter: *)
 
 Example ceval_example1:
-    (X ::= 2;;
-     IFB X <= 1
-       THEN Y ::= 3
-       ELSE Z ::= 4
-     FI)
-   / { --> 0 }
-   \\ { X --> 2 ; Z --> 4 }.
+  empty_st =[
+    X ::= 2;;
+    TEST X <= 1
+      THEN Y ::= 3
+      ELSE Z ::= 4
+    FI
+  ]=> (Z !-> 4 ; X !-> 2).
 Proof.
   (* We supply the intermediate state [st']... *)
-  apply E_Seq with { X --> 2 }.
+  apply E_Seq with (X !-> 2).
   - apply E_Ass. reflexivity.
   - apply E_IfFalse. reflexivity. apply E_Ass. reflexivity.
 Qed.
-
 
 (** In the first step of the proof, we had to explicitly provide a
     longish expression to help Coq instantiate a "hidden" argument to
@@ -588,9 +583,9 @@ Qed.
     of [E_Seq]...
 
           E_Seq : forall c1 c2 st st' st'',
-            c1 / st  \\ st' ->
-            c2 / st' \\ st'' ->
-            (c1 ;; c2) / st \\ st''
+            st  =[ c1 ]=> st'  ->
+            st' =[ c2 ]=> st'' ->
+            st  =[ c1 ;; c2 ]=> st''
 
    is quantified over a variable, [st'], that does not appear in its
    conclusion, so unifying its conclusion with the goal state doesn't
@@ -605,13 +600,13 @@ Qed.
    the [eapply] tactic gives us: *)
 
 Example ceval'_example1:
-    (X ::= 2;;
-     IFB X <= 1
-       THEN Y ::= 3
-       ELSE Z ::= 4
-     FI)
-   / { --> 0 }
-   \\ { X --> 2 ; Z --> 4 }.
+  empty_st =[
+    X ::= 2;;
+    TEST X <= 1
+      THEN Y ::= 3
+      ELSE Z ::= 4
+    FI
+  ]=> (Z !-> 4 ; X !-> 2).
 Proof.
   eapply E_Seq. (* 1 *)
   - apply E_Ass. (* 2 *)
@@ -637,21 +632,23 @@ Qed.
     during the first subgoal. *)
 
 (** Several of the tactics that we've seen so far, including [exists],
-    [constructor], and [auto], have [e...] variants.  For example,
+    [constructor], and [auto], have similar variants.  For example,
     here's a proof using [eauto]: *)
 
 Hint Constructors ceval.
 Hint Transparent state.
 Hint Transparent total_map.
 
-Definition st12 := { X --> 1 ; Y --> 2 }.
-Definition st21 := { X --> 2 ; Y --> 1 }.
+Definition st12 := (Y !-> 2 ; X !-> 1).
+Definition st21 := (Y !-> 1 ; X !-> 2).
 
 Example eauto_example : exists s',
-  (IFB X <= Y
-    THEN Z ::= Y - X
-    ELSE Y ::= X + Z
-  FI) / st21 \\ s'.
+  st21 =[
+    TEST X <= Y
+      THEN Z ::= Y - X
+      ELSE Y ::= X + Z
+    FI
+  ]=> s'.
 Proof. eauto. Qed.
 
 (** The [eauto] tactic works just like [auto], except that it uses
@@ -665,3 +662,4 @@ Proof. eauto. Qed.
     the ordinary variants don't do the job. *)
 
 
+(* Wed Jan 9 12:02:47 EST 2019 *)

@@ -8,7 +8,7 @@ From LF Require Export IndProp.
 (** We have seen that Coq has mechanisms both for _programming_,
     using inductive data types like [nat] or [list] and functions over
     these types, and for _proving_ properties of these programs, using
-    inductive propositions (like [ev]), implication, universal
+    inductive propositions (like [even]), implication, universal
     quantification, and the like.  So far, we have mostly treated
     these mechanisms as if they were quite separate, and for many
     purposes this is a good way to think.  But we have also seen hints
@@ -34,20 +34,20 @@ From LF Require Export IndProp.
 
     Answer: They are types! *)
 
-(** Look again at the formal definition of the [ev] property.  *)
+(** Look again at the formal definition of the [even] property.  *)
 
-Print ev.
+Print even.
 (* ==>
-  Inductive ev : nat -> Prop :=
-    | ev_0 : ev 0
-    | ev_SS : forall n, ev n -> ev (S (S n)).
+  Inductive even : nat -> Prop :=
+    | ev_0 : even 0
+    | ev_SS : forall n, even n -> even (S (S n)).
 *)
 
 (** Suppose we introduce an alternative pronunciation of "[:]".
     Instead of "has type," we can say "is a proof of."  For example,
-    the second line in the definition of [ev] declares that [ev_0 : ev
-    0].  Instead of "[ev_0] has type [ev 0]," we can say that "[ev_0]
-    is a proof of [ev 0]." *)
+    the second line in the definition of [even] declares that [ev_0 : even
+    0].  Instead of "[ev_0] has type [even 0]," we can say that "[ev_0]
+    is a proof of [even 0]." *)
 
 (** This pun between types and propositions -- between [:] as "has type"
     and [:] as "is a proof of" or "is evidence for" -- is called the
@@ -65,16 +65,16 @@ Print ev.
 
 Check ev_SS.
 (* ===> ev_SS : forall n,
-                  ev n ->
-                  ev (S (S n)) *)
+                  even n ->
+                  even (S (S n)) *)
 
 (** This can be read "[ev_SS] is a constructor that takes two
-    arguments -- a number [n] and evidence for the proposition [ev
-    n] -- and yields evidence for the proposition [ev (S (S n))]." *)
+    arguments -- a number [n] and evidence for the proposition [even
+    n] -- and yields evidence for the proposition [even (S (S n))]." *)
 
-(** Now let's look again at a previous proof involving [ev]. *)
+(** Now let's look again at a previous proof involving [even]. *)
 
-Theorem ev_4 : ev 4.
+Theorem ev_4 : even 4.
 Proof.
   apply ev_SS. apply ev_SS. apply ev_0. Qed.
 
@@ -84,23 +84,23 @@ Proof.
 
 Print ev_4.
 (* ===> ev_4 = ev_SS 2 (ev_SS 0 ev_0)
-     : ev 4  *)
+     : even 4  *)
 
 (** Indeed, we can also write down this proof object _directly_,
     without the need for a separate proof script: *)
 
 Check (ev_SS 2 (ev_SS 0 ev_0)).
-(* ===> ev 4 *)
+(* ===> even 4 *)
 
 (** The expression [ev_SS 2 (ev_SS 0 ev_0)] can be thought of as
     instantiating the parameterized constructor [ev_SS] with the
     specific arguments [2] and [0] plus the corresponding proof
-    objects for its premises [ev 2] and [ev 0].  Alternatively, we can
+    objects for its premises [even 2] and [even 0].  Alternatively, we can
     think of [ev_SS] as a primitive "evidence constructor" that, when
     applied to a particular number, wants to be further applied to
     evidence that that number is even; its type,
 
-      forall n, ev n -> ev (S (S n)),
+      forall n, even n -> even (S (S n)),
 
     expresses this functionality, in the same way that the polymorphic
     type [forall X, list X] expresses the fact that the constructor
@@ -112,7 +112,7 @@ Check (ev_SS 2 (ev_SS 0 ev_0)).
     in lemmas, as well as to supply evidence for assumptions that
     these lemmas impose.  For instance: *)
 
-Theorem ev_4': ev 4.
+Theorem ev_4': even 4.
 Proof.
   apply (ev_SS 2 (ev_SS 0 ev_0)).
 Qed.
@@ -129,7 +129,7 @@ Qed.
     the [Show Proof] command to display the current state of the proof
     tree at various points in the following tactic proof. *)
 
-Theorem ev_4'' : ev 4.
+Theorem ev_4'' : even 4.
 Proof.
   Show Proof.
   apply ev_SS.
@@ -142,7 +142,7 @@ Qed.
 
 (** At any given moment, Coq has constructed a term with a
     "hole" (indicated by [?Goal] here, and so on), and it knows what
-    type of evidence is needed to fill this hole.  
+    type of evidence is needed to fill this hole. 
 
     Each hole corresponds to a subgoal, and the proof is
     finished when there are no more subgoals.  At this point, the
@@ -155,29 +155,30 @@ Qed.
     (rather than [Theorem]) to give a global name directly to this
     evidence. *)
 
-Definition ev_4''' : ev 4 :=
+Definition ev_4''' : even 4 :=
   ev_SS 2 (ev_SS 0 ev_0).
 
 (** All these different ways of building the proof lead to exactly the
     same evidence being saved in the global environment. *)
 
 Print ev_4.
-(* ===> ev_4    =   ev_SS 2 (ev_SS 0 ev_0) : ev 4 *)
+(* ===> ev_4    =   ev_SS 2 (ev_SS 0 ev_0) : even 4 *)
 Print ev_4'.
-(* ===> ev_4'   =   ev_SS 2 (ev_SS 0 ev_0) : ev 4 *)
+(* ===> ev_4'   =   ev_SS 2 (ev_SS 0 ev_0) : even 4 *)
 Print ev_4''.
-(* ===> ev_4''  =   ev_SS 2 (ev_SS 0 ev_0) : ev 4 *)
+(* ===> ev_4''  =   ev_SS 2 (ev_SS 0 ev_0) : even 4 *)
 Print ev_4'''.
-(* ===> ev_4''' =   ev_SS 2 (ev_SS 0 ev_0) : ev 4 *)
+(* ===> ev_4''' =   ev_SS 2 (ev_SS 0 ev_0) : even 4 *)
 
-(** **** Exercise: 2 stars (eight_is_even)  *)
-(** Give a tactic proof and a proof object showing that [ev 8]. *)
+(** **** Exercise: 2 stars, standard (eight_is_even)  
 
-Theorem ev_8 : ev 8.
+    Give a tactic proof and a proof object showing that [even 8]. *)
+
+Theorem ev_8 : even 8.
 Proof.
   (* FILL IN HERE *) Admitted.
 
-Definition ev_8' : ev 8 
+Definition ev_8' : even 8
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 (** [] *)
 
@@ -196,7 +197,7 @@ Definition ev_8' : ev 8
 
 (** For example, consider this statement: *)
 
-Theorem ev_plus4 : forall n, ev n -> ev (4 + n).
+Theorem ev_plus4 : forall n, even n -> even (4 + n).
 Proof.
   intros n H. simpl.
   apply ev_SS.
@@ -206,31 +207,31 @@ Qed.
 
 (** What is the proof object corresponding to [ev_plus4]?
 
-    We're looking for an expression whose _type_ is [forall n, ev n ->
-    ev (4 + n)] -- that is, a _function_ that takes two arguments (one
+    We're looking for an expression whose _type_ is [forall n, even n ->
+    even (4 + n)] -- that is, a _function_ that takes two arguments (one
     number and a piece of evidence) and returns a piece of evidence!
 
     Here it is: *)
 
-Definition ev_plus4' : forall n, ev n -> ev (4 + n) :=
-  fun (n : nat) => fun (H : ev n) =>
+Definition ev_plus4' : forall n, even n -> even (4 + n) :=
+  fun (n : nat) => fun (H : even n) =>
     ev_SS (S (S n)) (ev_SS n H).
 
 (** Recall that [fun n => blah] means "the function that, given [n],
     yields [blah]," and that Coq treats [4 + n] and [S (S (S (S n)))]
     as synonyms. Another equivalent way to write this definition is: *)
 
-Definition ev_plus4'' (n : nat) (H : ev n)
-                    : ev (4 + n) :=
+Definition ev_plus4'' (n : nat) (H : even n)
+                    : even (4 + n) :=
   ev_SS (S (S n)) (ev_SS n H).
 
 Check ev_plus4''.
-(* ===> 
-     : forall n : nat, ev n -> ev (4 + n) *)
+(* ===>
+     : forall n : nat, even n -> even (4 + n) *)
 
 (** When we view the proposition being proved by [ev_plus4] as a
     function type, one interesting point becomes apparent: The second
-    argument's type, [ev n], mentions the _value_ of the first
+    argument's type, [even n], mentions the _value_ of the first
     argument, [n].
 
     While such _dependent types_ are not found in conventional
@@ -244,16 +245,15 @@ Check ev_plus4''.
     [forall] where there is no dependency, i.e., no need to give a
     name to the type on the left-hand side of the arrow:
 
-           forall (x:nat), nat  
-        =  forall (_:nat), nat  
+           forall (x:nat), nat 
+        =  forall (_:nat), nat 
         =  nat -> nat
 *)
-
 
 (** For example, consider this proposition: *)
 
 Definition ev_plus2 : Prop :=
-  forall n, forall (E : ev n), ev (n + 2).
+  forall n, forall (E : even n), even (n + 2).
 
 (** A proof term inhabiting this proposition would be a function
     with two arguments: a number [n] and some evidence [E] that [n] is
@@ -263,12 +263,12 @@ Definition ev_plus2 : Prop :=
     using the dummy identifier [_] in place of a real name: *)
 
 Definition ev_plus2' : Prop :=
-  forall n, forall (_ : ev n), ev (n + 2).
+  forall n, forall (_ : even n), even (n + 2).
 
 (** Or, equivalently, we can write it in more familiar notation: *)
 
 Definition ev_plus2'' : Prop :=
-  forall n, ev n -> ev (n + 2).
+  forall n, even n -> even (n + 2).
 
 (** In general, "[P -> Q]" is just syntactic sugar for
     "[forall (_:P), Q]". *)
@@ -310,21 +310,21 @@ Compute add1 2.
     does illustrate the uniformity and orthogonality of the basic
     ideas in Coq. *)
 
-
 (* ################################################################# *)
 (** * Logical Connectives as Inductive Types *)
 
 (** Inductive definitions are powerful enough to express most of the
-    connectives and quantifiers we have seen so far.  Indeed, only
-    universal quantification (and thus implication) is built into Coq;
-    all the others are defined inductively.  We'll see these
+    connectives we have seen so far.  Indeed, only universal
+    quantification (with implication as a special case) is built into
+    Coq; all the others are defined inductively.  We'll see these
     definitions in this section. *)
 
 Module Props.
 
-(** ** Conjunction
+(* ================================================================= *)
+(** ** Conjunction *)
 
-    To prove that [P /\ Q] holds, we must present evidence for both
+(** To prove that [P /\ Q] holds, we must present evidence for both
     [P] and [Q].  Thus, it makes sense to define a proof object for [P
     /\ Q] as consisting of a pair of two proofs: one for [P] and
     another one for [Q]. This leads to the following definition. *)
@@ -345,12 +345,14 @@ Print prod.
    Inductive prod (X Y : Type) : Type :=
    | pair : X -> Y -> X * Y. *)
 
-(** This should clarify why [destruct] and [intros] patterns can be
-    used on a conjunctive hypothesis.  Case analysis allows us to
-    consider all possible ways in which [P /\ Q] was proved -- here
-    just one (the [conj] constructor).  Similarly, the [split] tactic
-    actually works for any inductively defined proposition with only
-    one constructor.  In particular, it works for [and]: *)
+(** This similarity should clarify why [destruct] and [intros]
+    patterns can be used on a conjunctive hypothesis.  Case analysis
+    allows us to consider all possible ways in which [P /\ Q] was
+    proved -- here just one (the [conj] constructor).
+
+    Similarly, the [split] tactic actually works for any inductively
+    defined proposition with exactly one constructor.  In particular,
+    it works for [and]: *)
 
 Lemma and_comm : forall P Q : Prop, P /\ Q <-> Q /\ P.
 Proof.
@@ -367,7 +369,7 @@ Qed.
     manipulated by tactics as we've been doing.  We can also use it to
     build proofs directly, using pattern-matching.  For instance: *)
 
-Definition and_comm'_aux P Q (H : P /\ Q) :=
+Definition and_comm'_aux P Q (H : P /\ Q) : Q /\ P :=
   match H with
   | conj HP HQ => conj HQ HP
   end.
@@ -375,18 +377,18 @@ Definition and_comm'_aux P Q (H : P /\ Q) :=
 Definition and_comm' P Q : P /\ Q <-> Q /\ P :=
   conj (and_comm'_aux P Q) (and_comm'_aux Q P).
 
-(** **** Exercise: 2 stars, optional (conj_fact)  *)
-(** Construct a proof object demonstrating the following proposition. *)
+(** **** Exercise: 2 stars, standard, optional (conj_fact)  
 
-Definition conj_fact : forall P Q R, P /\ Q -> Q /\ R -> P /\ R 
+    Construct a proof object demonstrating the following proposition. *)
+
+Definition conj_fact : forall P Q R, P /\ Q -> Q /\ R -> P /\ R
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 (** [] *)
 
+(* ================================================================= *)
+(** ** Disjunction *)
 
-
-(** ** Disjunction
-
-    The inductive definition of disjunction uses two constructors, one
+(** The inductive definition of disjunction uses two constructors, one
     for each side of the disjunct: *)
 
 Module Or.
@@ -404,17 +406,19 @@ End Or.
     Once again, we can also directly write proof objects for theorems
     involving [or], without resorting to tactics. *)
 
-(** **** Exercise: 2 stars, optional (or_commut'')  *)
-(** Try to write down an explicit proof object for [or_commut] (without
+(** **** Exercise: 2 stars, standard, optional (or_commut'')  
+
+    Try to write down an explicit proof object for [or_commut] (without
     using [Print] to peek at the ones we already defined!). *)
 
-Definition or_comm : forall P Q, P \/ Q -> Q \/ P 
+Definition or_comm : forall P Q, P \/ Q -> Q \/ P
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 (** [] *)
 
-(** ** Existential Quantification
+(* ================================================================= *)
+(** ** Existential Quantification *)
 
-    To give evidence for an existential quantifier, we package a
+(** To give evidence for an existential quantifier, we package a
     witness [x] together with a proof that [x] satisfies the property
     [P]: *)
 
@@ -435,19 +439,20 @@ End Ex.
 (** The more familiar form [exists x, P x] desugars to an expression
     involving [ex]: *)
 
-Check ex (fun n => ev n).
-(* ===> exists n : nat, ev n
+Check ex (fun n => even n).
+(* ===> exists n : nat, even n
         : Prop *)
 
 (** Here's how to define an explicit proof object involving [ex]: *)
 
-Definition some_nat_is_even : exists n, ev n :=
-  ex_intro ev 4 (ev_SS 2 (ev_SS 0 ev_0)).
+Definition some_nat_is_even : exists n, even n :=
+  ex_intro even 4 (ev_SS 2 (ev_SS 0 ev_0)).
 
-(** **** Exercise: 2 stars, optional (ex_ev_Sn)  *)
-(** Complete the definition of the following proof object: *)
+(** **** Exercise: 2 stars, standard, optional (ex_ev_Sn)  
 
-Definition ex_ev_Sn : ex (fun n => ev (S n)) 
+    Complete the definition of the following proof object: *)
+
+Definition ex_ev_Sn : ex (fun n => even (S n))
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 (** [] *)
 
@@ -465,7 +470,7 @@ Inductive True : Prop :=
 (** [False] is equally simple -- indeed, so simple it may look
     syntactically wrong at first glance! *)
 
-Inductive False : Prop :=.
+Inductive False : Prop := .
 
 (** That is, [False] is an inductive type with _no_ constructors --
     i.e., no way to build evidence for it. *)
@@ -477,7 +482,7 @@ End Props.
 
 (** Even Coq's equality relation is not built in.  It has the
     following inductive definition.  (Actually, the definition in the
-    standard library is a small variant of this, which gives an
+    standard library is a slight variant of this, which gives an
     induction principle that is slightly easier to use.) *)
 
 Module MyEquality.
@@ -485,16 +490,19 @@ Module MyEquality.
 Inductive eq {X:Type} : X -> X -> Prop :=
 | eq_refl : forall x, eq x x.
 
-Notation "x = y" := (eq x y)
+Notation "x == y" := (eq x y)
                     (at level 70, no associativity)
                     : type_scope.
 
 (** The way to think about this definition is that, given a set [X],
     it defines a _family_ of propositions "[x] is equal to [y],"
     indexed by pairs of values ([x] and [y]) from [X].  There is just
-    one way of constructing evidence for each member of this family:
-    applying the constructor [eq_refl] to a type [X] and a value [x :
-    X] yields evidence that [x] is equal to [x]. *)
+    one way of constructing evidence for members of this family:
+    applying the constructor [eq_refl] to a type [X] and a single
+    value [x : X], which yields evidence that [x] is equal to [x].
+
+    Other types of the form [eq x y] where [x] and [y] are not the
+    same are thus uninhabited. *)
 
 (** We can use [eq_refl] to construct evidence that, for example, [2 =
     2].  Can we also use it to construct evidence that [1 + 1 = 2]?
@@ -507,13 +515,13 @@ Notation "x = y" := (eq x y)
     evaluation of function application, inlining of definitions, and
     simplification of [match]es.  *)
 
-Lemma four: 2 + 2 = 1 + 3.
+Lemma four: 2 + 2 == 1 + 3.
 Proof.
   apply eq_refl.
 Qed.
 
 (** The [reflexivity] tactic that we have used to prove equalities up
-    to now is essentially just short-hand for [apply eq_refl].
+    to now is essentially just shorthand for [apply eq_refl].
 
     In tactic-based proofs of equality, the conversion rules are
     normally hidden in uses of [simpl] (either explicit or implicit in
@@ -522,35 +530,37 @@ Qed.
     But you can see them directly at work in the following explicit
     proof objects: *)
 
-Definition four' : 2 + 2 = 1 + 3 :=
+Definition four' : 2 + 2 == 1 + 3 :=
   eq_refl 4.
 
-Definition singleton : forall (X:Type) (x:X), []++[x] = x::[]  :=
+Definition singleton : forall (X:Type) (x:X), []++[x] == x::[]  :=
   fun (X:Type) (x:X) => eq_refl [x].
 
-End MyEquality.
+(** **** Exercise: 2 stars, standard (equality__leibniz_equality)  
 
-
-(** **** Exercise: 2 stars (equality__leibniz_equality)  *)
-(** The inductive definition of equality implies _Leibniz equality_:
+    The inductive definition of equality implies _Leibniz equality_:
     what we mean when we say "[x] and [y] are equal" is that every
     property on [P] that is true of [x] is also true of [y].  *)
 
 Lemma equality__leibniz_equality : forall (X : Type) (x y: X),
-  x = y -> forall P:X->Prop, P x -> P y.
+  x == y -> forall P:X->Prop, P x -> P y.
 Proof.
 (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 5 stars, optional (leibniz_equality__equality)  *)
-(** Show that, in fact, the inductive definition of equality is
+(** **** Exercise: 5 stars, standard, optional (leibniz_equality__equality)  
+
+    Show that, in fact, the inductive definition of equality is
     _equivalent_ to Leibniz equality: *)
 
 Lemma leibniz_equality__equality : forall (X : Type) (x y: X),
-  (forall P:X->Prop, P x -> P y) -> x = y.
+  (forall P:X->Prop, P x -> P y) -> x == y.
 Proof.
 (* FILL IN HERE *) Admitted.
+
 (** [] *)
+
+End MyEquality.
 
 (* ================================================================= *)
 (** ** Inversion, Again *)
@@ -599,9 +609,10 @@ Proof.
 
 (** _Example_: If we invert a hypothesis built with [eq], there is
     again only one constructor, so only one subgoal gets generated.
-    Now, though, the form of the [refl_equal] constructor does give us
+    Now, though, the form of the [eq_refl] constructor does give us
     some extra information: it tells us that the two arguments to [eq]
     must be the same!  The [inversion] tactic adds this fact to the
     context. *)
 
 
+(* Wed Jan 9 12:02:45 EST 2019 *)

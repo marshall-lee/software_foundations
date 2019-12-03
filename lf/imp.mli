@@ -9,6 +9,10 @@ val mul : int -> int -> int
 
 val sub : int -> int -> int
 
+val eqb : int -> int -> bool
+
+val leb : int -> int -> bool
+
 module Nat :
  sig
   val eqb : int -> int -> bool
@@ -69,7 +73,7 @@ val string_dec : char list -> char list -> bool
 
 val append : char list -> char list -> char list
 
-val beq_string : char list -> char list -> bool
+val eqb_string : char list -> char list -> bool
 
 type 'a total_map = char list -> 'a
 
@@ -97,6 +101,8 @@ type bexp =
 val aeval : state -> aexp -> int
 
 val beval : state -> bexp -> bool
+
+val empty_st : int total_map
 
 type com =
 | CSkip
@@ -173,6 +179,4 @@ val parseSequencedCommand : int -> token list -> (com * token list) optionE
 
 val bignumber : int
 
-val parse : char list -> (com * token list) optionE
-
-val empty_state : int total_map
+val parse : char list -> com optionE

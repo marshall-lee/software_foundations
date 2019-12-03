@@ -21,7 +21,6 @@
         --------------------   ~   ----------------------------
         software engineering       mechanical/civil engineering
 
-
           - inductively defined sets and relations
           - inductive proofs
           - proof objects *)
@@ -88,3 +87,5 @@
          School are a great resource.
          https://deepspec.org/event/dsss17/index.html
 *)
+
+(* Wed Jan 9 12:02:47 EST 2019 *)

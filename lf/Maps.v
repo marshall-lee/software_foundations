@@ -28,11 +28,11 @@
     own definitions and theorems the same as their counterparts in the
     standard library, wherever they overlap. *)
 
-Require Import Coq.Arith.Arith.
-Require Import Coq.Bool.Bool.
+From Coq Require Import Arith.Arith.
+From Coq Require Import Bool.Bool.
 Require Export Coq.Strings.String.
-Require Import Coq.Logic.FunctionalExtensionality.
-Require Import Coq.Lists.List.
+From Coq Require Import Logic.FunctionalExtensionality.
+From Coq Require Import Lists.List.
 Import ListNotations.
 
 (** Documentation for the standard library can be found at
@@ -45,13 +45,15 @@ Import ListNotations.
 (** * Identifiers *)
 
 (** First, we need a type for the keys that we use to index into our
-    maps.  For this purpose, we will simply use plain [string]s. *)
+    maps.  In [Lists.v] we introduced a fresh type [id] for a similar
+    purpose; here and for the rest of _Software Foundations_ we will
+    use the [string] type from Coq's standard library. *)
 
-(** To compare strings, we define the function [beq_string], which
-    internally uses the function [string_dec] from Coq's string library.
-    We then establish its fundamental properties. *)
+(** To compare strings, we define the function [eqb_string], which
+    internally uses the function [string_dec] from Coq's string
+    library. *)
 
-Definition beq_string x y :=
+Definition eqb_string (x y : string) : bool :=
   if string_dec x y then true else false.
 
 (** (The function [string_dec] comes from Coq's string library.
@@ -64,42 +66,42 @@ Definition beq_string x y :=
     which.  But for present purposes you can think of it as just a
     fancy [bool].) *)
 
-Theorem beq_string_refl : forall s, true = beq_string s s.
-Proof. intros s. unfold beq_string. destruct (string_dec s s) as [|Hs].
+(** Now we need a few basic properties of string equality... *)
+Theorem eqb_string_refl : forall s : string, true = eqb_string s s.
+Proof. intros s. unfold eqb_string. destruct (string_dec s s) as [|Hs].
   - reflexivity.
   - destruct Hs. reflexivity.
 Qed.
 
-(** The following useful property of [beq_string] follows from an
-    analogous lemma about strings: *)
+(** The following useful property follows from an analogous
+    lemma about strings: *)
 
-Theorem beq_string_true_iff : forall x y : string,
-  beq_string x y = true <-> x = y.
+Theorem eqb_string_true_iff : forall x y : string,
+    eqb_string x y = true <-> x = y.
 Proof.
    intros x y.
-   unfold beq_string.
+   unfold eqb_string.
    destruct (string_dec x y) as [|Hs].
    - subst. split. reflexivity. reflexivity.
    - split.
-     + intros contra. inversion contra.
-     + intros H. inversion H. subst. destruct Hs. reflexivity.
+     + intros contra. discriminate contra.
+     + intros H. rewrite H in Hs. destruct Hs. reflexivity.
 Qed.
 
 (** Similarly: *)
 
-Theorem beq_string_false_iff : forall x y : string,
-  beq_string x y = false
-  <-> x <> y.
+Theorem eqb_string_false_iff : forall x y : string,
+    eqb_string x y = false <-> x <> y.
 Proof.
-  intros x y. rewrite <- beq_string_true_iff.
+  intros x y. rewrite <- eqb_string_true_iff.
   rewrite not_true_iff_false. reflexivity. Qed.
 
-(** This useful variant follows just by rewriting: *)
+(** This handy variant follows just by rewriting: *)
 
-Theorem false_beq_string : forall x y : string,
-   x <> y -> beq_string x y = false.
+Theorem false_eqb_string : forall x y : string,
+   x <> y -> eqb_string x y = false.
 Proof.
-  intros x y. rewrite beq_string_false_iff.
+  intros x y. rewrite eqb_string_false_iff.
   intros H. apply H. Qed.
 
 (* ################################################################# *)
@@ -121,7 +123,7 @@ Proof.
     _total maps_ that return a default value when we look up a key
     that is not present in the map. *)
 
-Definition total_map (A:Type) := string -> A.
+Definition total_map (A : Type) := string -> A.
 
 (** Intuitively, a total map over an element type [A] is just a
     function that can be used to look up [string]s, yielding [A]s. *)
@@ -130,16 +132,16 @@ Definition total_map (A:Type) := string -> A.
     element; this map always returns the default element when applied
     to any string. *)
 
-Definition t_empty {A:Type} (v : A) : total_map A :=
+Definition t_empty {A : Type} (v : A) : total_map A :=
   (fun _ => v).
 
 (** More interesting is the [update] function, which (as before) takes
     a map [m], a key [x], and a value [v] and returns a new map that
     takes [x] to [v] and takes every other key to whatever [m] does. *)
 
-Definition t_update {A:Type} (m : total_map A)
+Definition t_update {A : Type} (m : total_map A)
                     (x : string) (v : A) :=
-  fun x' => if beq_string x x' then v else m x'.
+  fun x' => if eqb_string x x' then v else m x'.
 
 (** This definition is a nice example of higher-order programming:
     [t_update] takes a _function_ [m] and yields a new function
@@ -156,34 +158,25 @@ Definition examplemap :=
 (** Next, let's introduce some new notations to facilitate working
     with maps. *)
 
-(** First, we will use the following notation to create an empty total map
-    with a default value. *)
-Notation "{ --> d }" := (t_empty d) (at level 0).
+(** First, we will use the following notation to create an empty
+    total map with a default value. *)
+Notation "'_' '!->' v" := (t_empty v)
+  (at level 100, right associativity).
+
+Example example_empty := (_ !-> false).
 
 (** We then introduce a convenient notation for extending an existing
     map with some bindings. *)
-
-(** (The definition of the notation is a bit ugly, but because the
-    notation mechanism of Coq is not very well suited for recursive
-    notations, it's the best we can do.) *)
-
-Notation "m '&' { a --> x }" :=
-  (t_update m a x) (at level 20).
-Notation "m '&' { a --> x ; b --> y }" :=
-  (t_update (m & { a --> x }) b y) (at level 20).
-Notation "m '&' { a --> x ; b --> y ; c --> z }" :=
-  (t_update (m & { a --> x ; b --> y }) c z) (at level 20).
-Notation "m '&' { a --> x ; b --> y ; c --> z ; d --> t }" :=
-    (t_update (m & { a --> x ; b --> y ; c --> z }) d t) (at level 20).
-Notation "m '&' { a --> x ; b --> y ; c --> z ; d --> t ; e --> u }" :=
-    (t_update (m & { a --> x ; b --> y ; c --> z ; d --> t }) e u) (at level 20).
-Notation "m '&' { a --> x ; b --> y ; c --> z ; d --> t ; e --> u ; f --> v }" :=
-    (t_update (m & { a --> x ; b --> y ; c --> z ; d --> t ; e --> u }) f v) (at level 20).
+Notation "x '!->' v ';' m" := (t_update m x v)
+                              (at level 100, v at next level, right associativity).
 
 (** The [examplemap] above can now be defined as follows: *)
 
 Definition examplemap' :=
-  { --> false } & { "foo" --> true ; "bar" --> true }.
+  ( "bar" !-> true;
+    "foo" !-> true;
+    _     !-> false
+  ).
 
 (** This completes the definition of total maps.  Note that we
     don't need to define a [find] operation because it is just
@@ -210,47 +203,51 @@ Proof. reflexivity. Qed.
 (** (Some of the proofs require the functional extensionality axiom,
     which is discussed in the [Logic] chapter.) *)
 
-(** **** Exercise: 1 star, optional (t_apply_empty)  *)
-(** First, the empty map returns its default element for all keys: *)
+(** **** Exercise: 1 star, standard, optional (t_apply_empty)  
 
-Lemma t_apply_empty:  forall (A:Type) (x: string) (v: A), { --> v } x = v.
+    First, the empty map returns its default element for all keys: *)
+
+Lemma t_apply_empty : forall (A : Type) (x : string) (v : A),
+    (_ !-> v) x = v.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (t_update_eq)  *)
-(** Next, if we update a map [m] at a key [x] with a new value [v]
+(** **** Exercise: 2 stars, standard, optional (t_update_eq)  
+
+    Next, if we update a map [m] at a key [x] with a new value [v]
     and then look up [x] in the map resulting from the [update], we
     get back [v]: *)
 
-Lemma t_update_eq : forall A (m: total_map A) x v,
-  (m & {x --> v}) x = v.
+Lemma t_update_eq : forall (A : Type) (m : total_map A) x v,
+    (x !-> v ; m) x = v.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (t_update_neq)  *)
-(** On the other hand, if we update a map [m] at a key [x1] and then
+(** **** Exercise: 2 stars, standard, optional (t_update_neq)  
+
+    On the other hand, if we update a map [m] at a key [x1] and then
     look up a _different_ key [x2] in the resulting map, we get the
     same result that [m] would have given: *)
 
-Theorem t_update_neq : forall (X:Type) v x1 x2
-                         (m : total_map X),
-  x1 <> x2 ->
-  (m & {x1 --> v}) x2 = m x2.
+Theorem t_update_neq : forall (A : Type) (m : total_map A) x1 x2 v,
+    x1 <> x2 ->
+    (x1 !-> v ; m) x2 = m x2.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (t_update_shadow)  *)
-(** If we update a map [m] at a key [x] with a value [v1] and then
+(** **** Exercise: 2 stars, standard, optional (t_update_shadow)  
+
+    If we update a map [m] at a key [x] with a value [v1] and then
     update again with the same key [x] and another value [v2], the
     resulting map behaves the same (gives the same result when applied
     to any key) as the simpler map obtained by performing just
     the second [update] on [m]: *)
 
-Lemma t_update_shadow : forall A (m: total_map A) v1 v2 x,
-    m & {x --> v1 ; x --> v2} = m & {x --> v2}.
+Lemma t_update_shadow : forall (A : Type) (m : total_map A) x v1 v2,
+    (x !-> v2 ; x !-> v1 ; m) = (x !-> v2 ; m).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -258,44 +255,50 @@ Proof.
 (** For the final two lemmas about total maps, it's convenient to use
     the reflection idioms introduced in chapter [IndProp].  We begin
     by proving a fundamental _reflection lemma_ relating the equality
-    proposition on [id]s with the boolean function [beq_id]. *)
+    proposition on [id]s with the boolean function [eqb_id]. *)
 
-(** **** Exercise: 2 stars, optional (beq_stringP)  *)
-(** Use the proof of [beq_natP] in chapter [IndProp] as a template to
+(** **** Exercise: 2 stars, standard, optional (eqb_stringP)  
+
+    Use the proof of [eqbP] in chapter [IndProp] as a template to
     prove the following: *)
 
-Lemma beq_stringP : forall x y, reflect (x = y) (beq_string x y).
+Lemma eqb_stringP : forall x y : string,
+    reflect (x = y) (eqb_string x y).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** Now, given [string]s [x1] and [x2], we can use the [destruct (beq_stringP
-    x1 x2)] to simultaneously perform case analysis on the result of
-    [beq_string x1 x2] and generate hypotheses about the equality (in the
-    sense of [=]) of [x1] and [x2]. *)
+(** Now, given [string]s [x1] and [x2], we can use the tactic
+    [destruct (eqb_stringP x1 x2)] to simultaneously perform case
+    analysis on the result of [eqb_string x1 x2] and generate
+    hypotheses about the equality (in the sense of [=]) of [x1]
+    and [x2]. *)
 
-(** **** Exercise: 2 stars (t_update_same)  *)
-(** With the example in chapter [IndProp] as a template, use
-    [beq_stringP] to prove the following theorem, which states that if we
-    update a map to assign key [x] the same value as it already has in
-    [m], then the result is equal to [m]: *)
+(** **** Exercise: 2 stars, standard (t_update_same)  
 
-Theorem t_update_same : forall X x (m : total_map X),
-    m & { x --> m x } = m.
-  Proof.
+    With the example in chapter [IndProp] as a template, use
+    [eqb_stringP] to prove the following theorem, which states that
+    if we update a map to assign key [x] the same value as it already
+    has in [m], then the result is equal to [m]: *)
+
+Theorem t_update_same : forall (A : Type) (m : total_map A) x,
+    (x !-> m x ; m) = m.
+Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 3 stars, recommended (t_update_permute)  *)
-(** Use [beq_stringP] to prove one final property of the [update]
+(** **** Exercise: 3 stars, standard, recommended (t_update_permute)  
+
+    Use [eqb_stringP] to prove one final property of the [update]
     function: If we update a map [m] at two distinct keys, it doesn't
     matter in which order we do the updates. *)
 
-Theorem t_update_permute : forall (X:Type) v1 v2 x1 x2
-                             (m : total_map X),
-  x2 <> x1 ->
-  m & { x2 --> v2 ; x1 --> v1 }
-  =  m & { x1 --> v1 ; x2 --> v2 }.
+Theorem t_update_permute : forall (A : Type) (m : total_map A)
+                                  v1 v2 x1 x2,
+    x2 <> x1 ->
+    (x1 !-> v1 ; x2 !-> v2 ; m)
+    =
+    (x2 !-> v2 ; x1 !-> v1 ; m).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -307,79 +310,73 @@ Proof.
     map with elements of type [A] is simply a total map with elements
     of type [option A] and default element [None]. *)
 
-Definition partial_map (A:Type) := total_map (option A).
+Definition partial_map (A : Type) := total_map (option A).
 
-Definition empty {A:Type} : partial_map A :=
+Definition empty {A : Type} : partial_map A :=
   t_empty None.
 
-Definition update {A:Type} (m : partial_map A)
+Definition update {A : Type} (m : partial_map A)
            (x : string) (v : A) :=
-  m & { x --> (Some v) }.
+  (x !-> Some v ; m).
 
-(** We introduce a similar notation for partial maps, using double
-    curly-brackets.  **)
+(** We introduce a similar notation for partial maps: *)
+Notation "x '|->' v ';' m" := (update m x v)
+  (at level 100, v at next level, right associativity).
 
-Notation "m '&' {{ a --> x }}" :=
-  (update m a x) (at level 20).
-Notation "m '&' {{ a --> x ; b --> y }}" :=
-  (update (m & {{ a --> x }}) b y) (at level 20).
-Notation "m '&' {{ a --> x ; b --> y ; c --> z }}" :=
-  (update (m & {{ a --> x ; b --> y }}) c z) (at level 20).
-Notation "m '&' {{ a --> x ; b --> y ; c --> z ; d --> t }}" :=
-    (update (m & {{ a --> x ; b --> y ; c --> z }}) d t) (at level 20).
-Notation "m '&' {{ a --> x ; b --> y ; c --> z ; d --> t ; e --> u }}" :=
-    (update (m & {{ a --> x ; b --> y ; c --> z ; d --> t }}) e u) (at level 20).
-Notation "m '&' {{ a --> x ; b --> y ; c --> z ; d --> t ; e --> u ; f --> v }}" :=
-    (update (m & {{ a --> x ; b --> y ; c --> z ; d --> t ; e --> u }}) f v) (at level 20).
+(** We can also hide the last case when it is empty. *)
+Notation "x '|->' v" := (update empty x v)
+  (at level 100).
+
+Example examplepmap :=
+  ("Church" |-> true ; "Turing" |-> false).
 
 (** We now straightforwardly lift all of the basic lemmas about total
     maps to partial maps.  *)
 
-Lemma apply_empty : forall (A: Type) (x: string),  @empty A x = None.
+Lemma apply_empty : forall (A : Type) (x : string),
+    @empty A x = None.
 Proof.
   intros. unfold empty. rewrite t_apply_empty.
   reflexivity.
 Qed.
 
-Lemma update_eq : forall A (m: partial_map A) x v,
-    (m & {{ x --> v }}) x = Some v.
+Lemma update_eq : forall (A : Type) (m : partial_map A) x v,
+    (x |-> v ; m) x = Some v.
 Proof.
   intros. unfold update. rewrite t_update_eq.
   reflexivity.
 Qed.
 
-Theorem update_neq : forall (X:Type) v x1 x2
-                       (m : partial_map X),
-  x2 <> x1 ->
-  (m & {{ x2 --> v }}) x1 = m x1.
+Theorem update_neq : forall (A : Type) (m : partial_map A) x1 x2 v,
+    x2 <> x1 ->
+    (x2 |-> v ; m) x1 = m x1.
 Proof.
-  intros X v x1 x2 m H.
+  intros A m x1 x2 v H.
   unfold update. rewrite t_update_neq. reflexivity.
   apply H. Qed.
 
-Lemma update_shadow : forall A (m: partial_map A) v1 v2 x,
-    m & {{ x --> v1 ; x --> v2 }} = m & {{x --> v2}}.
+Lemma update_shadow : forall (A : Type) (m : partial_map A) x v1 v2,
+    (x |-> v2 ; x |-> v1 ; m) = (x |-> v2 ; m).
 Proof.
-  intros A m v1 v2 x1. unfold update. rewrite t_update_shadow.
+  intros A m x v1 v2. unfold update. rewrite t_update_shadow.
   reflexivity.
 Qed.
 
-Theorem update_same : forall X v x (m : partial_map X),
-  m x = Some v ->
-  m & {{x --> v}} = m.
+Theorem update_same : forall (A : Type) (m : partial_map A) x v,
+    m x = Some v ->
+    (x |-> v ; m) = m.
 Proof.
-  intros X v x m H. unfold update. rewrite <- H.
+  intros A m x v H. unfold update. rewrite <- H.
   apply t_update_same.
 Qed.
 
-Theorem update_permute : forall (X:Type) v1 v2 x1 x2
-                                (m : partial_map X),
-  x2 <> x1 ->
-  m & {{x2 --> v2 ; x1 --> v1}}
-  = m & {{x1 --> v1 ; x2 --> v2}}.
+Theorem update_permute : forall (A : Type) (m : partial_map A)
+                                x1 x2 v1 v2,
+    x2 <> x1 ->
+    (x1 |-> v1 ; x2 |-> v2 ; m) = (x2 |-> v2 ; x1 |-> v1 ; m).
 Proof.
-  intros X v1 v2 x1 x2 m. unfold update.
+  intros A m x1 x2 v1 v2. unfold update.
   apply t_update_permute.
 Qed.
 
-
+(* Wed Jan 9 12:02:45 EST 2019 *)

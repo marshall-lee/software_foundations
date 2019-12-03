@@ -56,8 +56,9 @@ Proof.
     important to realize that, modulo these bits of bookkeeping,
     applying [nat_ind] is what we are really doing. *)
 
-(** **** Exercise: 2 stars, optional (plus_one_r')  *)
-(** Complete this proof without using the [induction] tactic. *)
+(** **** Exercise: 2 stars, standard, optional (plus_one_r')  
+
+    Complete this proof without using the [induction] tactic. *)
 
 Theorem plus_one_r' : forall n:nat,
   n + 1 = S n.
@@ -88,8 +89,8 @@ Proof.
     the constructors take no arguments: *)
 
 Inductive yesno : Type :=
-  | yes : yesno
-  | no : yesno.
+  | yes
+  | no.
 
 Check yesno_ind.
 (* ===> yesno_ind : forall P : yesno -> Prop,
@@ -97,15 +98,16 @@ Check yesno_ind.
                       P no  ->
                       forall y : yesno, P y *)
 
-(** **** Exercise: 1 star, optional (rgb)  *)
-(** Write out the induction principle that Coq will generate for the
+(** **** Exercise: 1 star, standard, optional (rgb)  
+
+    Write out the induction principle that Coq will generate for the
     following datatype.  Write down your answer on paper or type it
     into a comment, and then compare it with what Coq prints. *)
 
 Inductive rgb : Type :=
-  | red : rgb
-  | green : rgb
-  | blue : rgb.
+  | red
+  | green
+  | blue.
 Check rgb_ind.
 (** [] *)
 
@@ -113,8 +115,8 @@ Check rgb_ind.
     taking some arguments. *)
 
 Inductive natlist : Type :=
-  | nnil : natlist
-  | ncons : nat -> natlist -> natlist.
+  | nnil
+  | ncons (n : nat) (l : natlist).
 
 Check natlist_ind.
 (* ===> (modulo a little variable renaming)
@@ -125,16 +127,18 @@ Check natlist_ind.
             P l -> P (ncons n l)) ->
          forall n : natlist, P n *)
 
-(** **** Exercise: 1 star, optional (natlist1)  *)
-(** Suppose we had written the above definition a little
+(** **** Exercise: 1 star, standard, optional (natlist1)  
+
+    Suppose we had written the above definition a little
    differently: *)
 
 Inductive natlist1 : Type :=
-  | nnil1 : natlist1
-  | nsnoc1 : natlist1 -> nat -> natlist1.
+  | nnil1
+  | nsnoc1 (l : natlist1) (n : nat).
 
-(** Now what will the induction principle look like? *)
-(** [] *)
+(** Now what will the induction principle look like? 
+
+    [] *)
 
 (** From these examples, we can extract this general rule:
 
@@ -150,20 +154,22 @@ Inductive natlist1 : Type :=
           [t]), then [P] holds for [c x1 ... xn]".
 *)
 
-(** **** Exercise: 1 star, optional (byntree_ind)  *)
-(** Write out the induction principle that Coq will generate for the
+(** **** Exercise: 1 star, standard, optional (byntree_ind)  
+
+    Write out the induction principle that Coq will generate for the
     following datatype.  (Again, write down your answer on paper or
     type it into a comment, and then compare it with what Coq
     prints.) *)
 
 Inductive byntree : Type :=
- | bempty : byntree
- | bleaf  : yesno -> byntree
- | nbranch : yesno -> byntree -> byntree -> byntree.
+ | bempty
+ | bleaf (yn : yesno)
+ | nbranch (yn : yesno) (t1 t2 : byntree).
 (** [] *)
 
-(** **** Exercise: 1 star, optional (ex_set)  *)
-(** Here is an induction principle for an inductively defined
+(** **** Exercise: 1 star, standard, optional (ex_set)  
+
+    Here is an induction principle for an inductively defined
     set.
 
       ExSet_ind :
@@ -208,19 +214,21 @@ Inductive ExSet : Type :=
     function that, when applied to a type [X], gives us back an
     induction principle specialized to the type [list X]. *)
 
-(** **** Exercise: 1 star, optional (tree)  *)
-(** Write out the induction principle that Coq will generate for
+(** **** Exercise: 1 star, standard, optional (tree)  
+
+    Write out the induction principle that Coq will generate for
    the following datatype.  Compare your answer with what Coq
    prints. *)
 
 Inductive tree (X:Type) : Type :=
-  | leaf : X -> tree X
-  | node : tree X -> tree X -> tree X.
+  | leaf (x : X)
+  | node (t1 t2 : tree X).
 Check tree_ind.
 (** [] *)
 
-(** **** Exercise: 1 star, optional (mytype)  *)
-(** Find an inductive definition that gives rise to the
+(** **** Exercise: 1 star, standard, optional (mytype)  
+
+    Find an inductive definition that gives rise to the
     following induction principle:
 
       mytype_ind :
@@ -233,8 +241,9 @@ Check tree_ind.
 *) 
 (** [] *)
 
-(** **** Exercise: 1 star, optional (foo)  *)
-(** Find an inductive definition that gives rise to the
+(** **** Exercise: 1 star, standard, optional (foo)  
+
+    Find an inductive definition that gives rise to the
     following induction principle:
 
       foo_ind :
@@ -247,12 +256,13 @@ Check tree_ind.
 *) 
 (** [] *)
 
-(** **** Exercise: 1 star, optional (foo')  *)
-(** Consider the following inductive definition: *)
+(** **** Exercise: 1 star, standard, optional (foo')  
+
+    Consider the following inductive definition: *)
 
 Inductive foo' (X:Type) : Type :=
-  | C1 : list X -> foo' X -> foo' X
-  | C2 : foo' X.
+  | C1 (l : list X) (f : foo' X)
+  | C2.
 
 (** What induction principle will Coq generate for [foo']?  Fill
    in the blanks, then check your answer with Coq.)
@@ -398,57 +408,59 @@ Proof.
   - (* m = S m' *) simpl. rewrite <- IHm'.
     rewrite <- plus_n_Sm. reflexivity.  Qed.
 
-(** **** Exercise: 1 star, optional (plus_explicit_prop)  *)
-(** Rewrite both [plus_assoc'] and [plus_comm'] and their proofs in
+(** **** Exercise: 1 star, standard, optional (plus_explicit_prop)  
+
+    Rewrite both [plus_assoc'] and [plus_comm'] and their proofs in
     the same style as [mult_0_r''] above -- that is, for each theorem,
     give an explicit [Definition] of the proposition being proved by
     induction, and state the theorem and proof in terms of this
     defined proposition.  *)
 
-(* FILL IN HERE *)
-(** [] *)
+(* FILL IN HERE 
+
+    [] *)
 
 (* ################################################################# *)
 (** * Induction Principles in [Prop] *)
 
 (** Earlier, we looked in detail at the induction principles that Coq
     generates for inductively defined _sets_.  The induction
-    principles for inductively defined _propositions_ like [ev] are a
+    principles for inductively defined _propositions_ like [even] are a
     tiny bit more complicated.  As with all induction principles, we
-    want to use the induction principle on [ev] to prove things by
-    inductively considering the possible shapes that something in [ev]
+    want to use the induction principle on [even] to prove things by
+    inductively considering the possible shapes that something in [even]
     can have.  Intuitively speaking, however, what we want to prove
     are not statements about _evidence_ but statements about
     _numbers_: accordingly, we want an induction principle that lets
     us prove properties of numbers by induction on evidence.
 
     For example, from what we've said so far, you might expect the
-    inductive definition of [ev]...
+    inductive definition of [even]...
 
-      Inductive ev : nat -> Prop :=
-      | ev_0 : ev 0
-      | ev_SS : forall n : nat, ev n -> ev (S (S n)).
+      Inductive even : nat -> Prop :=
+      | ev_0 : even 0
+      | ev_SS : forall n : nat, even n -> even (S (S n)).
 
     ...to give rise to an induction principle that looks like this...
 
-    ev_ind_max : forall P : (forall n : nat, ev n -> Prop),
+    ev_ind_max : forall P : (forall n : nat, even n -> Prop),
          P O ev_0 ->
-         (forall (m : nat) (E : ev m),
+         (forall (m : nat) (E : even m),
             P m E ->
             P (S (S m)) (ev_SS m E)) ->
-         forall (n : nat) (E : ev n),
+         forall (n : nat) (E : even n),
          P n E
 
      ... because:
 
-     - Since [ev] is indexed by a number [n] (every [ev] object [E] is
+     - Since [even] is indexed by a number [n] (every [even] object [E] is
        a piece of evidence that some particular number [n] is even),
        the proposition [P] is parameterized by both [n] and [E] --
        that is, the induction principle can be used to prove
        assertions involving both an even number and the evidence that
        it is even.
 
-     - Since there are two ways of giving evidence of evenness ([ev]
+     - Since there are two ways of giving evidence of evenness ([even]
        has two constructors), applying the induction principle
        generates two subgoals:
 
@@ -478,15 +490,15 @@ Proof.
        even n -> P n
 
     For this reason, Coq actually generates the following simplified
-    induction principle for [ev]: *)
+    induction principle for [even]: *)
 
-Check ev_ind.
+Check even_ind.
 (* ===> ev_ind
         : forall P : nat -> Prop,
           P 0 ->
-          (forall n : nat, ev n -> P n -> P (S (S n))) ->
+          (forall n : nat, even n -> P n -> P (S (S n))) ->
           forall n : nat,
-          ev n -> P n *)
+          even n -> P n *)
 
 (** In particular, Coq has dropped the evidence term [E] as a
     parameter of the the proposition [P]. *)
@@ -503,19 +515,19 @@ Check ev_ind.
         holds for [S (S n)]. *)
 
 (** As expected, we can apply [ev_ind] directly instead of using
-    [induction].  For example, we can use it to show that [ev'] (the
+    [induction].  For example, we can use it to show that [even'] (the
     slightly awkward alternate definition of evenness that we saw in
     an exercise in the \chap{IndProp} chapter) is equivalent to the
-    cleaner inductive definition [ev]: *)
-Theorem ev_ev' : forall n, ev n -> ev' n.
+    cleaner inductive definition [even]: *)
+Theorem ev_ev' : forall n, even n -> even' n.
 Proof.
-  apply ev_ind.
+  apply even_ind.
   - (* ev_0 *)
-    apply ev'_0.
+    apply even'_0.
   - (* ev_SS *)
     intros m Hm IH.
-    apply (ev'_sum 2 m).
-    + apply ev'_2.
+    apply (even'_sum 2 m).
+    + apply even'_2.
     + apply IH.
 Qed.
 
@@ -535,7 +547,7 @@ Qed.
 
 Inductive le (n:nat) : nat -> Prop :=
   | le_n : le n n
-  | le_S : forall m, (le n m) -> (le n (S m)).
+  | le_S m (H : le n m) : le n (S m).
 
 Notation "m <= n" := (le m n).
 
@@ -699,3 +711,4 @@ Check le_ind.
 
              But then, by [le_S], [n <= S o'].  [] *)
 
+(* Wed Jan 9 12:02:46 EST 2019 *)

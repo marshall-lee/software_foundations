@@ -96,21 +96,25 @@ Proof.
     apply Hc with (x := 0).
     - apply le_n.
     - apply le_S. apply le_n. }
-  inversion Nonsense.   Qed.
+  discriminate Nonsense.   Qed.
 
-(** **** Exercise: 2 stars, optional (total_relation_not_partial)  *)
-(** Show that the [total_relation] defined in earlier is not a partial
-    function. *)
+(** **** Exercise: 2 stars, standard, optional (total_relation_not_partial)  
 
-(* FILL IN HERE *)
-(** [] *)
+    Show that the [total_relation] defined in (an exercise in)
+    [IndProp] is not a partial function. *)
 
-(** **** Exercise: 2 stars, optional (empty_relation_partial)  *)
-(** Show that the [empty_relation] that we defined earlier is a
-    partial function. *)
+(* FILL IN HERE 
 
-(* FILL IN HERE *)
-(** [] *)
+    [] *)
+
+(** **** Exercise: 2 stars, standard, optional (empty_relation_partial)  
+
+    Show that the [empty_relation] defined in (an exercise in)
+    [IndProp] is a partial function. *)
+
+(* FILL IN HERE 
+
+    [] *)
 
 (* ----------------------------------------------------------------- *)
 (** *** Reflexive Relations *)
@@ -153,9 +157,10 @@ Proof.
   apply Hnm.
   apply Hmo. Qed.
 
-(** **** Exercise: 2 stars, optional (le_trans_hard_way)  *)
-(** We can also prove [lt_trans] more laboriously by induction,
-    without using [le_trans].  Do this.*)
+(** **** Exercise: 2 stars, standard, optional (le_trans_hard_way)  
+
+    We can also prove [lt_trans] more laboriously by induction,
+    without using [le_trans].  Do this. *)
 
 Theorem lt_trans' :
   transitive lt.
@@ -167,8 +172,9 @@ Proof.
     (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (lt_trans'')  *)
-(** Prove the same thing again by induction on [o]. *)
+(** **** Exercise: 2 stars, standard, optional (lt_trans'')  
+
+    Prove the same thing again by induction on [o]. *)
 
 Theorem lt_trans'' :
   transitive lt.
@@ -190,15 +196,16 @@ Proof.
   - apply H.
 Qed.
 
-(** **** Exercise: 1 star, optional (le_S_n)  *)
+(** **** Exercise: 1 star, standard, optional (le_S_n)  *)
 Theorem le_S_n : forall n m,
   (S n <= S m) -> (n <= m).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (le_Sn_n_inf)  *)
-(** Provide an informal proof of the following theorem:
+(** **** Exercise: 2 stars, standard, optional (le_Sn_n_inf)  
+
+    Provide an informal proof of the following theorem:
 
     Theorem: For every [n], [~ (S n <= n)]
 
@@ -206,10 +213,11 @@ Proof.
     writing an informal proof without doing the formal proof first.
 
     Proof: *)
-    (* FILL IN HERE *)
-(** [] *)
+    (* FILL IN HERE 
 
-(** **** Exercise: 1 star, optional (le_Sn_n)  *)
+    [] *)
+
+(** **** Exercise: 1 star, standard, optional (le_Sn_n)  *)
 Theorem le_Sn_n : forall n,
   ~ (S n <= n).
 Proof.
@@ -228,7 +236,7 @@ Proof.
 Definition symmetric {X: Type} (R: relation X) :=
   forall a b : X, (R a b) -> (R b a).
 
-(** **** Exercise: 2 stars, optional (le_not_symmetric)  *)
+(** **** Exercise: 2 stars, standard, optional (le_not_symmetric)  *)
 Theorem le_not_symmetric :
   ~ (symmetric le).
 Proof.
@@ -242,14 +250,14 @@ Proof.
 Definition antisymmetric {X: Type} (R: relation X) :=
   forall a b : X, (R a b) -> (R b a) -> a = b.
 
-(** **** Exercise: 2 stars, optional (le_antisymmetric)  *)
+(** **** Exercise: 2 stars, standard, optional (le_antisymmetric)  *)
 Theorem le_antisymmetric :
   antisymmetric le.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (le_step)  *)
+(** **** Exercise: 2 stars, standard, optional (le_step)  *)
 Theorem le_step : forall n m p,
   n < m ->
   m <= S p ->
@@ -301,11 +309,11 @@ Proof.
     module of the Coq standard library: *)
 
 Inductive clos_refl_trans {A: Type} (R: relation A) : relation A :=
-    | rt_step : forall x y, R x y -> clos_refl_trans R x y
-    | rt_refl : forall x, clos_refl_trans R x x
-    | rt_trans : forall x y z,
-          clos_refl_trans R x y ->
-          clos_refl_trans R y z ->
+    | rt_step x y (H : R x y) : clos_refl_trans R x y
+    | rt_refl x : clos_refl_trans R x x
+    | rt_trans x y z
+          (Hxy : clos_refl_trans R x y)
+          (Hyz : clos_refl_trans R y z) :
           clos_refl_trans R x z.
 
 (** For example, the reflexive and transitive closure of the
@@ -342,8 +350,8 @@ Inductive clos_refl_trans_1n {A : Type}
                              (R : relation A) (x : A)
                              : A -> Prop :=
   | rt1n_refl : clos_refl_trans_1n R x x
-  | rt1n_trans (y z : A) :
-      R x y -> clos_refl_trans_1n R y z ->
+  | rt1n_trans (y z : A)
+      (Hxy : R x y) (Hrest : clos_refl_trans_1n R y z) :
       clos_refl_trans_1n R x z.
 
 (** Our new definition of reflexive, transitive closure "bundles"
@@ -364,7 +372,7 @@ Proof.
   intros X R x y H.
   apply rt1n_trans with y. apply H. apply rt1n_refl.   Qed.
 
-(** **** Exercise: 2 stars, optional (rsc_trans)  *)
+(** **** Exercise: 2 stars, standard, optional (rsc_trans)  *)
 Lemma rsc_trans :
   forall (X:Type) (R: relation X) (x y z : X),
       clos_refl_trans_1n R x y  ->
@@ -378,7 +386,7 @@ Proof.
     reflexive, transitive closure do indeed define the same
     relation. *)
 
-(** **** Exercise: 3 stars, optional (rtc_rsc_coincide)  *)
+(** **** Exercise: 3 stars, standard, optional (rtc_rsc_coincide)  *)
 Theorem rtc_rsc_coincide :
          forall (X:Type) (R: relation X) (x y : X),
   clos_refl_trans R x y <-> clos_refl_trans_1n R x y.
@@ -386,3 +394,4 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
+(* Wed Jan 9 12:02:46 EST 2019 *)
