@@ -1,6 +1,6 @@
 Set Warnings "-notation-overridden,-parsing".
 From Coq Require Export String.
-From LF Require Import ImpParser.
+From LF Require Import AltAuto.
 
 Parameter MISSING: Type.
 
@@ -27,15 +27,32 @@ Ltac print_manual_grade A :=
 
 End Check.
 
-From LF Require Import ImpParser.
+From LF Require Import AltAuto.
 Import Check.
 
 Goal True.
 
+idtac "-------------------  re_opt  --------------------".
 idtac " ".
 
-idtac "Max points - standard: 0".
-idtac "Max points - advanced: 0".
+idtac "#> Manually graded: re_opt".
+idtac "Possible points: 3".
+print_manual_grade manual_grade_for_re_opt.
+idtac " ".
+
+idtac "-------------------  pumping_redux  --------------------".
+idtac " ".
+
+idtac "#> Manually graded: pumping_redux".
+idtac "Advanced".
+idtac "Possible points: 3".
+print_manual_grade manual_grade_for_pumping_redux.
+idtac " ".
+
+idtac " ".
+
+idtac "Max points - standard: 3".
+idtac "Max points - advanced: 6".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -53,10 +70,14 @@ idtac "  - A list of pending axioms, containing unproven assumptions. In this ca
 idtac "    the exercise is considered complete, if the axioms are all allowed.".
 idtac "".
 idtac "********** Standard **********".
+idtac "---------- re_opt ---------".
+idtac "MANUAL".
 idtac "".
 idtac "********** Advanced **********".
+idtac "---------- pumping_redux ---------".
+idtac "MANUAL".
 Abort.
 
-(* 2020-08-24 15:40 *)
+(* 2020-08-24 15:39 *)
 
-(* 2020-08-24 15:40 *)
+(* 2020-08-24 15:39 *)
