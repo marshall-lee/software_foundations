@@ -1,6 +1,6 @@
 (** * Auto: More Automation *)
 
-Set Warnings "-notation-overridden,-parsing".
+Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From Coq Require Import Lia.
 From LF Require Import Maps.
 From LF Require Import Imp.
@@ -27,15 +27,15 @@ From LF Require Import Imp.
     this proof in several stages. *)
 
 Theorem ceval_deterministic: forall c st st1 st2,
-    st =[ c ]=> st1  ->
-    st =[ c ]=> st2 ->
-    st1 = st2.
+  st =[ c ]=> st1  ->
+  st =[ c ]=> st2 ->
+  st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2;
   generalize dependent st2;
   induction E1; intros st2 E2; inversion E2; subst.
   - (* E_Skip *) reflexivity.
-  - (* E_Ass *) reflexivity.
+  - (* E_Asgn *) reflexivity.
   - (* E_Seq *)
     rewrite (IHE1_1 st'0 H1) in *.
     apply IHE1_2. assumption.
@@ -65,7 +65,7 @@ Proof.
 (** * The [auto] Tactic *)
 
 (** Thus far, our proof scripts mostly apply relevant hypotheses or
-    lemmas by name, and one at a time. *)
+    lemmas by name, and only one at a time. *)
 
 Example auto_example_1 : forall (P Q R: Prop),
   (P -> Q) -> (Q -> R) -> P -> R.
@@ -98,7 +98,7 @@ Example auto_example_2 : forall P Q R S T U : Prop,
   (P -> R) ->
   (T -> R) ->
   (S -> T -> U) ->
-  ((P->Q) -> (P->S)) ->
+  ((P -> Q) -> (P -> S)) ->
   T ->
   P ->
   U.
@@ -142,11 +142,25 @@ Proof.
   info_auto.
 Qed.
 
+Example auto_example_5' : forall (P Q R S T U W: Prop),
+  (U -> T) ->
+  (W -> U) ->
+  (R -> S) ->
+  (S -> T) ->
+  (P -> R) ->
+  (U -> T) ->
+  P ->
+  T.
+Proof.
+  intros.
+  info_auto.
+Qed.
+
 (** We can extend the hint database just for the purposes of one
     application of [auto] by writing "[auto using ...]". *)
 
 Lemma le_antisym : forall n m: nat, (n <= m /\ m <= n) -> n = m.
-Proof. intros. lia. Qed.
+Proof. lia. Qed.
 
 Example auto_example_6 : forall n m p : nat,
   (n <= p -> (n <= m /\ m <= n)) ->
@@ -179,9 +193,10 @@ Qed.
     of [d], thus enabling further possibilities for applying lemmas that
     it knows about. *)
 
-(** It is also possible to define specialized hint databases that can
-    be activated only when needed.  See the Coq reference manual for
-    details. *)
+(** It is also possible to define specialized hint databases (besides
+    [core]) that can be activated only when needed; indeed, it is good
+    style to create your own hint databases instead of polluting
+    [core].  See the Coq reference manual for details. *)
 
 Hint Resolve le_antisym : core.
 
@@ -213,9 +228,9 @@ Qed.
     proof script. *)
 
 Theorem ceval_deterministic': forall c st st1 st2,
-    st =[ c ]=> st1  ->
-    st =[ c ]=> st2 ->
-    st1 = st2.
+  st =[ c ]=> st1  ->
+  st =[ c ]=> st2 ->
+  st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -248,9 +263,9 @@ Qed.
     version of the previous proof, using [Proof with auto]. *)
 
 Theorem ceval_deterministic'_alt: forall c st st1 st2,
-    st =[ c ]=> st1 ->
-    st =[ c ]=> st2 ->
-    st1 = st2.
+  st =[ c ]=> st1 ->
+  st =[ c ]=> st2 ->
+  st1 = st2.
 Proof with auto.
   intros c st st1 st2 E1 E2;
   generalize dependent st2;
@@ -303,9 +318,9 @@ Qed.
 Ltac rwd H1 H2 := rewrite H1 in H2; discriminate.
 
 Theorem ceval_deterministic'': forall c st st1 st2,
-    st =[ c ]=> st1  ->
-    st =[ c ]=> st2 ->
-    st1 = st2.
+  st =[ c ]=> st1  ->
+  st =[ c ]=> st2 ->
+  st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -350,9 +365,9 @@ Ltac find_rwd :=
     induction handles all of the contradictory cases. *)
 
 Theorem ceval_deterministic''': forall c st st1 st2,
-    st =[ c ]=> st1  ->
-    st =[ c ]=> st2 ->
-    st1 = st2.
+  st =[ c ]=> st1  ->
+  st =[ c ]=> st2 ->
+  st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -366,8 +381,8 @@ Proof.
       auto. Qed.
 
 (** Let's see about the remaining cases. Each of them involves
-    applying rewrting an hypothesis after feeding it with the required
-    condition. We can automate the task of finding the relevant 
+    rewriting a hypothesis after feeding it with the required
+    condition. We can automate the task of finding the relevant
     hypotheses to rewrite with. *)
 
 Ltac find_eqn :=
@@ -390,10 +405,10 @@ Ltac find_eqn :=
 
 
 
-Theorem ceval_deterministic''''': forall c st st1 st2,
-    st =[ c ]=> st1  ->
-    st =[ c ]=> st2 ->
-    st1 = st2.
+Theorem ceval_deterministic'''': forall c st st1 st2,
+  st =[ c ]=> st1  ->
+  st =[ c ]=> st2 ->
+  st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -409,7 +424,7 @@ Module Repeat.
 
 Inductive com : Type :=
   | CSkip
-  | CAss (x : string) (a : aexp)
+  | CAsgn (x : string) (a : aexp)
   | CSeq (c1 c2 : com)
   | CIf (b : bexp) (c1 c2 : com)
   | CWhile (b : bexp) (c : com)
@@ -422,12 +437,12 @@ Inductive com : Type :=
 
 Notation "'repeat' x 'until' y 'end'" :=
          (CRepeat x y)
-            (in custom com at level 0, 
+            (in custom com at level 0,
              x at level 99, y at level 99).
 Notation "'skip'"  :=
          CSkip (in custom com at level 0).
 Notation "x := y"  :=
-         (CAss x y)
+         (CAsgn x y)
             (in custom com at level 0, x constr at level 0,
              y at level 85, no associativity).
 Notation "x ; y" :=
@@ -447,7 +462,7 @@ Reserved Notation "st '=[' c ']=>' st'"
 Inductive ceval : com -> state -> state -> Prop :=
   | E_Skip : forall st,
       st =[ skip ]=> st
-  | E_Ass  : forall st a1 n x,
+  | E_Asgn  : forall st a1 n x,
       aeval st a1 = n ->
       st =[ x := a1 ]=> (x !-> n ; st)
   | E_Seq : forall c1 c2 st st' st'',
@@ -487,9 +502,9 @@ Inductive ceval : com -> state -> state -> Prop :=
     previous automation. *)
 
 Theorem ceval_deterministic: forall c st st1 st2,
-    st =[ c ]=> st1  ->
-    st =[ c ]=> st2 ->
-    st1 = st2.
+  st =[ c ]=> st1  ->
+  st =[ c ]=> st2 ->
+  st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -509,9 +524,9 @@ Qed.
     [find_eqn] and [find_rwd]. *)
 
 Theorem ceval_deterministic': forall c st st1 st2,
-    st =[ c ]=> st1  ->
-    st =[ c ]=> st2 ->
-    st1 = st2.
+  st =[ c ]=> st1  ->
+  st =[ c ]=> st2 ->
+  st1 = st2.
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
@@ -546,8 +561,8 @@ Example ceval_example1:
 Proof.
   (* We supply the intermediate state [st']... *)
   apply E_Seq with (X !-> 2).
-  - apply E_Ass. reflexivity.
-  - apply E_IfFalse. reflexivity. apply E_Ass. reflexivity.
+  - apply E_Asgn. reflexivity.
+  - apply E_IfFalse. reflexivity. apply E_Asgn. reflexivity.
 Qed.
 
 
@@ -559,7 +574,7 @@ Qed.
           E_Seq : forall c1 c2 st st' st'',
             st  =[ c1 ]=> st'  ->
             st' =[ c2 ]=> st'' ->
-            st  =[ c1 ;; c2 ]=> st''
+            st  =[ c1 ; c2 ]=> st''
 
    is quantified over a variable, [st'], that does not appear in its
    conclusion, so unifying its conclusion with the goal state doesn't
@@ -569,7 +584,7 @@ Qed.
 
    What's silly about this error is that the appropriate value for [st']
    will actually become obvious in the very next step, where we apply
-   [E_Ass].  If Coq could just wait until we get to this step, there
+   [E_Asgn].  If Coq could just wait until we get to this step, there
    would be no need to give the value explicitly.  This is exactly what
    the [eapply] tactic gives us: *)
 
@@ -583,9 +598,9 @@ Example ceval'_example1:
   ]=> (Z !-> 4 ; X !-> 2).
 Proof.
   eapply E_Seq. (* 1 *)
-  - apply E_Ass. (* 2 *)
+  - apply E_Asgn. (* 2 *)
     reflexivity. (* 3 *)
-  - (* 4 *) apply E_IfFalse. reflexivity. apply E_Ass. reflexivity.
+  - (* 4 *) apply E_IfFalse. reflexivity. apply E_Asgn. reflexivity.
 Qed.
 
 (** The [eapply H] tactic behaves just like [apply H] except
@@ -655,12 +670,11 @@ Lemma silly1 : forall (P : nat -> nat -> Prop) (Q : nat -> Prop),
   Q 42.
 Proof.
   intros P Q HP HQ. eapply HQ. apply HP.
-Fail Qed.
-(** Coq gives a warning after [apply HP].  ("All the remaining goals
+(** Coq gives a warning after [apply HP]: "All the remaining goals
     are on the shelf," means that we've finished all our top-level
     proof obligations but along the way we've put some aside to be
-    done later, and we have not finished those.)  Trying to close the
-    proof with [Qed] gives an error. *)
+    done later, and we have not finished those.  Trying to close the
+    proof with [Qed] would yield an error. (Try it!) *)
 Abort.
 
 (** An additional constraint is that existential variables cannot be
@@ -724,4 +738,4 @@ Proof.
   intros P Q HP HQ. destruct HP as [y HP']. eauto.
 Qed.
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

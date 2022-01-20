@@ -1,10 +1,10 @@
 (** * ProofObjects: The Curry-Howard Correspondence *)
 
-Set Warnings "-notation-overridden,-parsing".
+Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From LF Require Export IndProp.
 
-(** "_Algorithms are the computational content of proofs_."
-    --Robert Harper *)
+(** "Algorithms are the computational content of proofs."
+    (Robert Harper) *)
 
 (** We have seen that Coq has mechanisms both for _programming_,
     using inductive data types like [nat] or [list] and functions over
@@ -86,9 +86,9 @@ Proof.
 
 Print ev_4.
 (* ===> ev_4 = ev_SS 2 (ev_SS 0 ev_0)
-     : ev 4  *)
+      : ev 4  *)
 
-(** Indeed, we can also write down this proof object _directly_,
+(** Indeed, we can also write down this proof object directly,
     without the need for a separate proof script: *)
 
 Check (ev_SS 2 (ev_SS 0 ev_0))
@@ -172,7 +172,7 @@ Print ev_4''.
 Print ev_4'''.
 (* ===> ev_4''' =   ev_SS 2 (ev_SS 0 ev_0) : ev 4 *)
 
-(** **** Exercise: 2 stars, standard (eight_is_even) 
+(** **** Exercise: 2 stars, standard (eight_is_even)
 
     Give a tactic proof and a proof object showing that [ev 8]. *)
 
@@ -335,7 +335,7 @@ Module Props.
 Module And.
 
 Inductive and (P Q : Prop) : Prop :=
-| conj : P -> Q -> and P Q.
+  | conj : P -> Q -> and P Q.
 
 Arguments conj [P] [Q].
 
@@ -356,7 +356,7 @@ Print prod.
     proved -- here just one (the [conj] constructor). *)
 
 Theorem proj1' : forall P Q,
-    P /\ Q -> P.
+  P /\ Q -> P.
 Proof.
   intros P Q HPQ. destruct HPQ as [HP HQ]. apply HP.
   Show Proof.
@@ -391,7 +391,7 @@ Definition and_comm'_aux P Q (H : P /\ Q) : Q /\ P :=
 Definition and_comm' P Q : P /\ Q <-> Q /\ P :=
   conj (and_comm'_aux P Q) (and_comm'_aux Q P).
 
-(** **** Exercise: 2 stars, standard (conj_fact) 
+(** **** Exercise: 2 stars, standard (conj_fact)
 
     Construct a proof object for the following proposition. *)
 
@@ -408,8 +408,8 @@ Definition conj_fact : forall P Q R, P /\ Q -> Q /\ R -> P /\ R
 Module Or.
 
 Inductive or (P Q : Prop) : Prop :=
-| or_introl : P -> or P Q
-| or_intror : Q -> or P Q.
+  | or_introl : P -> or P Q
+  | or_intror : Q -> or P Q.
 
 Arguments or_introl [P] [Q].
 Arguments or_intror [P] [Q].
@@ -418,9 +418,9 @@ Notation "P \/ Q" := (or P Q) : type_scope.
 
 (** This declaration explains the behavior of the [destruct] tactic on
     a disjunctive hypothesis, since the generated subgoals match the
-    shape of the [or_introl] and [or_intror] constructors.
+    shape of the [or_introl] and [or_intror] constructors. *)
 
-    Once again, we can also directly write proof objects for theorems
+(** Once again, we can also directly write proof objects for theorems
     involving [or], without resorting to tactics. *)
 
 Definition inj_l : forall (P Q : Prop), P -> P \/ Q :=
@@ -448,7 +448,7 @@ Qed.
 
 End Or.
 
-(** **** Exercise: 2 stars, standard (or_commut') 
+(** **** Exercise: 2 stars, standard (or_commut')
 
     Construct a proof object for the following proposition. *)
 
@@ -466,7 +466,7 @@ Definition or_commut' : forall P Q, P \/ Q -> Q \/ P
 Module Ex.
 
 Inductive ex {A : Type} (P : A -> Prop) : Prop :=
-| ex_intro : forall x : A, P x -> ex P.
+  | ex_intro : forall x : A, P x -> ex P.
 
 Notation "'exists' x , p" :=
   (ex (fun x => p))
@@ -494,7 +494,7 @@ Check ex (fun n => ev n) : Prop.
 Definition some_nat_is_even : exists n, ev n :=
   ex_intro ev 4 (ev_SS 2 (ev_SS 0 ev_0)).
 
-(** **** Exercise: 2 stars, standard (ex_ev_Sn) 
+(** **** Exercise: 2 stars, standard (ex_ev_Sn)
 
     Construct a proof object for the following proposition. *)
 
@@ -513,7 +513,7 @@ Inductive True : Prop :=
 (** It has one constructor (so every proof of [True] is the same, so
     being given a proof of [True] is not informative.) *)
 
-(** **** Exercise: 1 star, standard (p_implies_true) 
+(** **** Exercise: 1 star, standard (p_implies_true)
 
     Construct a proof object for the following proposition. *)
 
@@ -548,7 +548,7 @@ Definition false_implies_zero_eq_one : False -> 0 = 1 :=
     because we can never construct a value of type [False] to pass to
     the function. *)
 
-(** **** Exercise: 1 star, standard (ex_falso_quodlibet') 
+(** **** Exercise: 1 star, standard (ex_falso_quodlibet')
 
     Construct a proof object for the following proposition. *)
 
@@ -567,7 +567,7 @@ End Props.
 Module MyEquality.
 
 Inductive eq {X:Type} : X -> X -> Prop :=
-| eq_refl : forall x, eq x x.
+  | eq_refl : forall x, eq x x.
 
 Notation "x == y" := (eq x y)
                        (at level 70, no associativity)
@@ -617,7 +617,7 @@ Definition four' : 2 + 2 == 1 + 3 :=
 Definition singleton : forall (X:Type) (x:X), []++[x] == x::[]  :=
   fun (X:Type) (x:X) => eq_refl [x].
 
-(** **** Exercise: 2 stars, standard (equality__leibniz_equality) 
+(** **** Exercise: 2 stars, standard (equality__leibniz_equality)
 
     The inductive definition of equality implies _Leibniz equality_:
     what we mean when we say "[x] and [y] are equal" is that every
@@ -629,7 +629,7 @@ Proof.
 (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 3 stars, standard, optional (leibniz_equality__equality) 
+(** **** Exercise: 3 stars, standard, optional (leibniz_equality__equality)
 
     Show that, in fact, the inductive definition of equality is
     _equivalent_ to Leibniz equality.  Hint: the proof is quite short;
@@ -765,4 +765,4 @@ Fail Definition falso : False := infinite_loop 0.
     validity from scratch.  Only theorems whose proofs pass the
     type-checker can be used in further proof developments.  *)
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

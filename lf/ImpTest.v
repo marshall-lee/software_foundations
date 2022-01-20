@@ -210,7 +210,7 @@ idtac " ".
 
 idtac "#> BreakImp.while_stops_on_break".
 idtac "Advanced".
-idtac "Possible points: 3".
+idtac "Possible points: 1".
 check_type @BreakImp.while_stops_on_break (
 (forall (b : bexp) (c : BreakImp.com) (st st' : state),
  beval st b = true ->
@@ -219,6 +219,33 @@ check_type @BreakImp.while_stops_on_break (
 idtac "Assumptions:".
 Abort.
 Print Assumptions BreakImp.while_stops_on_break.
+Goal True.
+idtac " ".
+
+idtac "#> BreakImp.seq_continue".
+idtac "Advanced".
+idtac "Possible points: 1".
+check_type @BreakImp.seq_continue (
+(forall (c1 c2 : BreakImp.com) (st st' st'' : state),
+ BreakImp.ceval c1 st BreakImp.SContinue st' ->
+ BreakImp.ceval c2 st' BreakImp.SContinue st'' ->
+ BreakImp.ceval (BreakImp.CSeq c1 c2) st BreakImp.SContinue st'')).
+idtac "Assumptions:".
+Abort.
+Print Assumptions BreakImp.seq_continue.
+Goal True.
+idtac " ".
+
+idtac "#> BreakImp.seq_stops_on_break".
+idtac "Advanced".
+idtac "Possible points: 1".
+check_type @BreakImp.seq_stops_on_break (
+(forall (c1 c2 : BreakImp.com) (st st' : state),
+ BreakImp.ceval c1 st BreakImp.SBreak st' ->
+ BreakImp.ceval (BreakImp.CSeq c1 c2) st BreakImp.SBreak st')).
+idtac "Assumptions:".
+Abort.
+Print Assumptions BreakImp.seq_stops_on_break.
 Goal True.
 idtac " ".
 
@@ -275,8 +302,12 @@ idtac "---------- BreakImp.while_continue ---------".
 Print Assumptions BreakImp.while_continue.
 idtac "---------- BreakImp.while_stops_on_break ---------".
 Print Assumptions BreakImp.while_stops_on_break.
+idtac "---------- BreakImp.seq_continue ---------".
+Print Assumptions BreakImp.seq_continue.
+idtac "---------- BreakImp.seq_stops_on_break ---------".
+Print Assumptions BreakImp.seq_stops_on_break.
 Abort.
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

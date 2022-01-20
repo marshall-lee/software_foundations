@@ -17,14 +17,13 @@
     make out -- but most readers will probably want to just skim down
     to the Examples section at the very end to get the punchline. *)
 
-Set Warnings "-notation-overridden,-parsing".
+Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From Coq Require Import Strings.String.
 From Coq Require Import Strings.Ascii.
 From Coq Require Import Arith.Arith.
 From Coq Require Import Init.Nat.
 From Coq Require Import Arith.EqNat.
-From Coq Require Import Lists.List.
-Import ListNotations.
+From Coq Require Import Lists.List. Import ListNotations.
 From LF Require Import Maps Imp.
 
 (* ################################################################# *)
@@ -461,4 +460,4 @@ Example eg2 : parse "
       "x" := "z" }>.
 Proof. cbv. reflexivity. Qed.
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

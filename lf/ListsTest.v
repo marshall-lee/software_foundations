@@ -374,7 +374,7 @@ idtac " ".
 
 idtac "#> eqb_id_refl".
 idtac "Possible points: 1".
-check_type @eqb_id_refl ((forall x : id, true = eqb_id x x)).
+check_type @eqb_id_refl ((forall x : id, eqb_id x x = true)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions eqb_id_refl.
@@ -493,6 +493,6 @@ idtac "---------- NatList.rev_injective ---------".
 Print Assumptions NatList.rev_injective.
 Abort.
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

@@ -98,7 +98,7 @@ idtac " ".
 
 idtac "#> test_partition1".
 idtac "Possible points: 1".
-check_type @test_partition1 ((@partition nat oddb [1; 2; 3; 4; 5] = ([1; 3; 5], [2; 4]))).
+check_type @test_partition1 ((@partition nat odd [1; 2; 3; 4; 5] = ([1; 3; 5], [2; 4]))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions test_partition1.
@@ -434,6 +434,6 @@ idtac "---------- Exercises.Church.exp_3 ---------".
 Print Assumptions Exercises.Church.exp_3.
 Abort.
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

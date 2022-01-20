@@ -56,15 +56,15 @@ Print Assumptions and_assoc.
 Goal True.
 idtac " ".
 
-idtac "-------------------  mult_eq_0  --------------------".
+idtac "-------------------  mult_is_O  --------------------".
 idtac " ".
 
-idtac "#> mult_eq_0".
+idtac "#> mult_is_O".
 idtac "Possible points: 1".
-check_type @mult_eq_0 ((forall n m : nat, n * m = 0 -> n = 0 \/ m = 0)).
+check_type @mult_is_O ((forall n m : nat, n * m = 0 -> n = 0 \/ m = 0)).
 idtac "Assumptions:".
 Abort.
-Print Assumptions mult_eq_0.
+Print Assumptions mult_is_O.
 Goal True.
 idtac " ".
 
@@ -217,17 +217,17 @@ Print Assumptions tr_rev_correct.
 Goal True.
 idtac " ".
 
-idtac "-------------------  evenb_double_conv  --------------------".
+idtac "-------------------  even_double_conv  --------------------".
 idtac " ".
 
-idtac "#> evenb_double_conv".
+idtac "#> even_double_conv".
 idtac "Possible points: 3".
-check_type @evenb_double_conv (
+check_type @even_double_conv (
 (forall n : nat,
- exists k : nat, n = (if evenb n then double k else S (double k)))).
+ exists k : nat, n = (if even n then double k else S (double k)))).
 idtac "Assumptions:".
 Abort.
-Print Assumptions evenb_double_conv.
+Print Assumptions even_double_conv.
 Goal True.
 idtac " ".
 
@@ -348,8 +348,8 @@ idtac "---------- and_exercise ---------".
 Print Assumptions and_exercise.
 idtac "---------- and_assoc ---------".
 Print Assumptions and_assoc.
-idtac "---------- mult_eq_0 ---------".
-Print Assumptions mult_eq_0.
+idtac "---------- mult_is_O ---------".
+Print Assumptions mult_is_O.
 idtac "---------- or_commut ---------".
 Print Assumptions or_commut.
 idtac "---------- contrapositive ---------".
@@ -370,8 +370,8 @@ idtac "---------- All_In ---------".
 Print Assumptions All_In.
 idtac "---------- tr_rev_correct ---------".
 Print Assumptions tr_rev_correct.
-idtac "---------- evenb_double_conv ---------".
-Print Assumptions evenb_double_conv.
+idtac "---------- even_double_conv ---------".
+Print Assumptions even_double_conv.
 idtac "---------- andb_true_iff ---------".
 Print Assumptions andb_true_iff.
 idtac "---------- orb_true_iff ---------".
@@ -394,6 +394,6 @@ idtac "---------- not_exists_dist ---------".
 Print Assumptions not_exists_dist.
 Abort.
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

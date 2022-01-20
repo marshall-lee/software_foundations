@@ -20,16 +20,14 @@
     _program equivalence_ and introduce _Hoare Logic_, a widely
     used logic for reasoning about imperative programs. *)
 
-Set Warnings "-notation-overridden,-parsing".
+Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From Coq Require Import Bool.Bool.
 From Coq Require Import Init.Nat.
 From Coq Require Import Arith.Arith.
-From Coq Require Import Arith.EqNat.
+From Coq Require Import Arith.EqNat. Import Nat.
 From Coq Require Import Lia.
-From Coq Require Import Lists.List.
+From Coq Require Import Lists.List. Import ListNotations.
 From Coq Require Import Strings.String.
-Import ListNotations.
-
 From LF Require Import Maps.
 
 (* ################################################################# *)
@@ -421,7 +419,7 @@ Qed.
     succeeds (and makes progress), then repeat [T] will loop forever. *)
 
 Theorem repeat_loop : forall (m n : nat),
-    m + n = n + m.
+  m + n = n + m.
 Proof.
   intros m n.
   (* Uncomment the next line to see the infinite loop occur.
@@ -437,7 +435,7 @@ Admitted.
     simply means that we have failed to construct a proof, not that we
     have constructed a wrong one. *)
 
-(** **** Exercise: 3 stars, standard (optimize_0plus_b_sound) 
+(** **** Exercise: 3 stars, standard (optimize_0plus_b_sound)
 
     Since the [optimize_0plus] transformation doesn't change the value
     of [aexp]s, we should be able to apply it to all the [aexp]s that
@@ -455,7 +453,7 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 4 stars, standard, optional (optimize) 
+(** **** Exercise: 4 stars, standard, optional (optimize)
 
     _Design exercise_: The optimization implemented by our
     [optimize_0plus] function is only one of many possible
@@ -463,7 +461,7 @@ Proof.
     sophisticated optimizer and prove it correct.  (You will probably
     find it easiest to start small -- add just a single, simple
     optimization and its correctness proof -- and build up to
-    something more interesting incrementially.)  *)
+    something more interesting incrementally.)  *)
 
 (* FILL IN HERE
 
@@ -506,11 +504,10 @@ Tactic Notation "simpl_and_try" tactic(c) :=
     in a proof will be the same as writing "[simpl; try reflexivity.]" *)
 
 (* ================================================================= *)
-(** ** The [omega] Tactic *)
+(** ** The [lia] Tactic *)
 
-(** The [omega] tactic implements a decision procedure for a subset of
-    first-order logic called _Presburger arithmetic_.  It is based on
-    the Omega algorithm invented by William Pugh [Pugh 1991] (in Bib.v).
+(** The [lia] tactic implements a decision procedure for a subset of
+    first-order logic called _Presburger arithmetic_.
 
     If the goal is a universally quantified formula made out of
 
@@ -522,9 +519,9 @@ Tactic Notation "simpl_and_try" tactic(c) :=
 
       - the logical connectives [/\], [\/], [~], and [->],
 
-    then invoking [omega] will either solve the goal or fail, meaning
+    then invoking [lia] will either solve the goal or fail, meaning
     that the goal is actually false.  (If the goal is _not_ of this
-    form, [omega] will also fail.) *)
+    form, [lia] will also fail.) *)
 
 Example silly_presburger_example : forall m n o p,
   m + n <= n + o /\ o + 3 = p + 3 ->
@@ -533,13 +530,13 @@ Proof.
   intros. lia.
 Qed.
 
-Example plus_comm__omega : forall m n,
+Example add_comm__lia : forall m n,
     m + n = n + m.
 Proof.
   intros. lia.
 Qed.
 
-Example plus_assoc__omega : forall m n p,
+Example add_assoc__lia : forall m n p,
     m + (n + p) = m + n + p.
 Proof.
   intros. lia.
@@ -594,39 +591,39 @@ Qed.
 Module aevalR_first_try.
 
 Inductive aevalR : aexp -> nat -> Prop :=
-  | E_ANum n :
+  | E_ANum (n : nat) :
       aevalR (ANum n) n
-  | E_APlus (e1 e2: aexp) (n1 n2: nat) :
+  | E_APlus (e1 e2 : aexp) (n1 n2 : nat) :
       aevalR e1 n1 ->
       aevalR e2 n2 ->
       aevalR (APlus e1 e2) (n1 + n2)
-  | E_AMinus (e1 e2: aexp) (n1 n2: nat) :
+  | E_AMinus (e1 e2 : aexp) (n1 n2 : nat) :
       aevalR e1 n1 ->
       aevalR e2 n2 ->
       aevalR (AMinus e1 e2) (n1 - n2)
-  | E_AMult (e1 e2: aexp) (n1 n2: nat) :
+  | E_AMult (e1 e2 : aexp) (n1 n2 : nat) :
       aevalR e1 n1 ->
       aevalR e2 n2 ->
       aevalR (AMult e1 e2) (n1 * n2).
 
 Module HypothesisNames.
 
-(* A small notational aside. We could also write the definition of
-   [aevalR] as follow, with explicit names for the hypotheses in each
-   case: *)
+(** A small notational aside. We could also write the definition of
+    [aevalR] as follow, with explicit names for the hypotheses in each
+    case: *)
 
 Inductive aevalR : aexp -> nat -> Prop :=
-  | E_ANum n :
+  | E_ANum (n : nat) :
       aevalR (ANum n) n
-  | E_APlus (e1 e2: aexp) (n1 n2: nat)
+  | E_APlus (e1 e2 : aexp) (n1 n2 : nat)
       (H1 : aevalR e1 n1)
       (H2 : aevalR e2 n2) :
       aevalR (APlus e1 e2) (n1 + n2)
-  | E_AMinus (e1 e2: aexp) (n1 n2: nat)
+  | E_AMinus (e1 e2 : aexp) (n1 n2 : nat)
       (H1 : aevalR e1 n1)
       (H2 : aevalR e2 n2) :
       aevalR (AMinus e1 e2) (n1 - n2)
-  | E_AMult (e1 e2: aexp) (n1 n2: nat)
+  | E_AMult (e1 e2 : aexp) (n1 n2 : nat)
       (H1 : aevalR e1 n1)
       (H2 : aevalR e2 n2) :
       aevalR (AMult e1 e2) (n1 * n2).
@@ -658,11 +655,11 @@ Inductive aevalR : aexp -> nat -> Prop :=
   | E_ANum (n : nat) :
       (ANum n) ==> n
   | E_APlus (e1 e2 : aexp) (n1 n2 : nat) :
-      (e1 ==> n1) -> (e2 ==> n2) -> (APlus e1 e2) ==> (n1 + n2)
+      (e1 ==> n1) -> (e2 ==> n2) -> (APlus e1 e2)  ==> (n1 + n2)
   | E_AMinus (e1 e2 : aexp) (n1 n2 : nat) :
       (e1 ==> n1) -> (e2 ==> n2) -> (AMinus e1 e2) ==> (n1 - n2)
   | E_AMult (e1 e2 : aexp) (n1 n2 : nat) :
-      (e1 ==> n1) -> (e2 ==> n2) -> (AMult e1 e2) ==> (n1 * n2)
+      (e1 ==> n1) -> (e2 ==> n2) -> (AMult e1 e2)  ==> (n1 * n2)
 
   where "e '==>' n" := (aevalR e n) : type_scope.
 
@@ -677,7 +674,7 @@ Inductive aevalR : aexp -> nat -> Prop :=
 
 (** For example, the constructor [E_APlus]...
 
-      | E_APlus : forall (e1 e2: aexp) (n1 n2: nat),
+      | E_APlus : forall (e1 e2 : aexp) (n1 n2 : nat),
           aevalR e1 n1 ->
           aevalR e2 n2 ->
           aevalR (APlus e1 e2) (n1 + n2)
@@ -727,7 +724,7 @@ Inductive aevalR : aexp -> nat -> Prop :=
                          AMult e1 e2 ==> n1*n2
 *)
 
-(** **** Exercise: 1 star, standard, optional (beval_rules) 
+(** **** Exercise: 1 star, standard, optional (beval_rules)
 
     Here, again, is the Coq definition of the [beval] function:
 
@@ -806,7 +803,7 @@ Proof.
        try apply IHa1; try apply IHa2; reflexivity.
 Qed.
 
-(** **** Exercise: 3 stars, standard (bevalR) 
+(** **** Exercise: 3 stars, standard (bevalR)
 
     Write a relation [bevalR] in the same style as
     [aevalR], and prove that it is equivalent to [beval]. *)
@@ -1114,15 +1111,20 @@ Definition empty_st := (_ !-> 0).
 
 (** Now we can add a notation for a "singleton state" with just one
     variable bound to a value. *)
-Notation "x '!->' v" := (t_update empty_st x v) (at level 100).
+Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100).
 
 Example aexp1 :
-    aeval (X !-> 5) <{ (3 + (X * 2))}>
+    aeval (X !-> 5) <{ 3 + (X * 2) }>
   = 13.
 Proof. reflexivity. Qed.
 
+Example aexp2 :
+    aeval (X !-> 5 ; Y !-> 4) <{ Z + (X * Y) }>
+  = 20.
+Proof. reflexivity. Qed.
+
 Example bexp1 :
-    beval (X !-> 5) <{ true && ~(X <= 4)}>
+    beval (X !-> 5) <{ true && ~(X <= 4) }>
   = true.
 Proof. reflexivity. Qed.
 
@@ -1147,7 +1149,7 @@ Proof. reflexivity. Qed.
 
 Inductive com : Type :=
   | CSkip
-  | CAss (x : string) (a : aexp)
+  | CAsgn (x : string) (a : aexp)
   | CSeq (c1 c2 : com)
   | CIf (b : bexp) (c1 c2 : com)
   | CWhile (b : bexp) (c : com).
@@ -1158,7 +1160,7 @@ Inductive com : Type :=
 Notation "'skip'"  :=
          CSkip (in custom com at level 0) : com_scope.
 Notation "x := y"  :=
-         (CAss x y)
+         (CAsgn x y)
             (in custom com at level 0, x constr at level 0,
              y at level 85, no associativity) : com_scope.
 Notation "x ; y" :=
@@ -1207,11 +1209,11 @@ Unset Printing Notations.
 Print fact_in_coq.
 (* ===>
    fact_in_coq =
-   CSeq (CAss Z X)
-        (CSeq (CAss Y (S O))
+   CSeq (CAsgn Z X)
+        (CSeq (CAsgn Y (S O))
               (CWhile (BNot (BEq Z O))
-                      (CSeq (CAss Y (AMult Y Z))
-                            (CAss Z (AMinus Z (S O))))))
+                      (CSeq (CAsgn Y (AMult Y Z))
+                            (CAsgn Z (AMinus Z (S O))))))
         : com *)
 Set Printing Notations.
 
@@ -1325,8 +1327,6 @@ Definition loop : com :=
 (** Here's an attempt at defining an evaluation function for commands,
     omitting the [while] case. *)
 
-(** The following declaration is needed to be able to use the
-    notations in match patterns. *)
 Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
   match c with
     | <{ skip }> =>
@@ -1350,9 +1350,9 @@ Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
         Fixpoint ceval_fun (st : state) (c : com) : state :=
           match c with
             ...
-            | while b do c end =>
+            | <{ while b do c end}> =>
                 if (beval st b)
-                  then ceval_fun st (c ; while b do c end)
+                  then ceval_fun st <{c ; while b do c end}>
                   else st
           end.
 
@@ -1361,22 +1361,22 @@ Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
     define is not guaranteed to terminate. Indeed, it _doesn't_ always
     terminate: for example, the full version of the [ceval_fun]
     function applied to the [loop] program above would never
-    terminate. Since Coq is not just a functional programming
-    language but also a consistent logic, any potentially
-    non-terminating function needs to be rejected. Here is
-    an (invalid!) program showing what would go wrong if Coq
-    allowed non-terminating recursive functions:
+    terminate. Since Coq is not just a functional programming language
+    but also a consistent logic, any potentially non-terminating
+    function needs to be rejected. Here is an (invalid!) program
+    showing what would go wrong if Coq allowed non-terminating
+    recursive functions:
 
          Fixpoint loop_false (n : nat) : False := loop_false n.
 
     That is, propositions like [False] would become provable
-    ([loop_false 0] would be a proof of [False]), which
-    would be a disaster for Coq's logical consistency.
+    ([loop_false 0] would be a proof of [False]), which would be
+    a disaster for Coq's logical consistency.
 
-    Thus, because it doesn't terminate on all inputs,
-    of [ceval_fun] cannot be written in Coq -- at least not without
-    additional tricks and workarounds (see chapter [ImpCEvalFun]
-    if you're curious about what those might be). *)
+    Thus, because it doesn't terminate on all inputs, [ceval_fun]
+    cannot be written in Coq -- at least not without additional tricks
+    and workarounds (see chapter [ImpCEvalFun] if you're curious
+    about what those might be). *)
 
 (* ================================================================= *)
 (** ** Evaluation as a Relation *)
@@ -1407,7 +1407,7 @@ Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
                            st =[ skip ]=> st
 
                            aeval st a = n
-                   -------------------------------                      (E_Ass)
+                   -------------------------------                      (E_Asgn)
                    st =[ x := a ]=> (x !-> n ; st)
 
                            st  =[ c1 ]=> st'
@@ -1447,7 +1447,7 @@ Reserved Notation
 Inductive ceval : com -> state -> state -> Prop :=
   | E_Skip : forall st,
       st =[ skip ]=> st
-  | E_Ass  : forall st a n x,
+  | E_Asgn  : forall st a n x,
       aeval st a = n ->
       st =[ x := a ]=> (x !-> n ; st)
   | E_Seq : forall c1 c2 st st' st'',
@@ -1490,14 +1490,14 @@ Proof.
   (* We must supply the intermediate state *)
   apply E_Seq with (X !-> 2).
   - (* assignment command *)
-    apply E_Ass. reflexivity.
+    apply E_Asgn. reflexivity.
   - (* if command *)
     apply E_IfFalse.
     reflexivity.
-    apply E_Ass. reflexivity.
+    apply E_Asgn. reflexivity.
 Qed.
 
-(** **** Exercise: 2 stars, standard (ceval_example2)  *)
+(** **** Exercise: 2 stars, standard (ceval_example2) *)
 Example ceval_example2:
   empty_st =[
     X := 0;
@@ -1511,7 +1511,7 @@ Proof.
 Set Printing Implicit.
 Check @ceval_example2.
 
-(** **** Exercise: 3 stars, standard, optional (pup_to_n) 
+(** **** Exercise: 3 stars, standard, optional (pup_to_n)
 
     Write an Imp program that sums the numbers from [1] to [X]
     (inclusive: [1 + 2 + ... + X]) in the variable [Y].  Your program
@@ -1553,7 +1553,7 @@ Proof.
   generalize dependent st2.
   induction E1; intros st2 E2; inversion E2; subst.
   - (* E_Skip *) reflexivity.
-  - (* E_Ass *) reflexivity.
+  - (* E_Asgn *) reflexivity.
   - (* E_Seq *)
     rewrite (IHE1_1 st'0 H1) in *.
     apply IHE1_2. assumption.
@@ -1598,7 +1598,7 @@ Proof.
   inversion Heval. subst. clear Heval. simpl.
   apply t_update_eq.  Qed.
 
-(** **** Exercise: 3 stars, standard, optional (XtimesYinZ_spec) 
+(** **** Exercise: 3 stars, standard, optional (XtimesYinZ_spec)
 
     State and prove a specification of [XtimesYinZ]. *)
 
@@ -1608,7 +1608,7 @@ Proof.
 Definition manual_grade_for_XtimesYinZ_spec : option (nat*string) := None.
 (** [] *)
 
-(** **** Exercise: 3 stars, standard, especially useful (loop_never_stops)  *)
+(** **** Exercise: 3 stars, standard, especially useful (loop_never_stops) *)
 Theorem loop_never_stops : forall st st',
   ~(st =[ loop ]=> st').
 Proof.
@@ -1624,7 +1624,7 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 3 stars, standard (no_whiles_eqv) 
+(** **** Exercise: 3 stars, standard (no_whiles_eqv)
 
     Consider the following function: *)
 
@@ -1652,12 +1652,12 @@ Inductive no_whilesR: com -> Prop :=
 .
 
 Theorem no_whiles_eqv:
-   forall c, no_whiles c = true <-> no_whilesR c.
+  forall c, no_whiles c = true <-> no_whilesR c.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 4 stars, standard (no_whiles_terminating) 
+(** **** Exercise: 4 stars, standard (no_whiles_terminating)
 
     Imp programs that don't involve while loops always terminate.
     State and prove a theorem [no_whiles_terminating] that says this.
@@ -1673,7 +1673,7 @@ Definition manual_grade_for_no_whiles_terminating : option (nat*string) := None.
 (* ################################################################# *)
 (** * Additional Exercises *)
 
-(** **** Exercise: 3 stars, standard (stack_compiler) 
+(** **** Exercise: 3 stars, standard (stack_compiler)
 
     Old HP Calculators, programming languages like Forth and Postscript,
     and abstract machines like the Java Virtual Machine all evaluate
@@ -1768,7 +1768,7 @@ Example s_compile1 :
 (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 3 stars, standard (execute_app)  *)
+(** **** Exercise: 3 stars, standard (execute_app) *)
 
 (** Execution can be decomposed in the following sense: executing
     stack program [p1 ++ p2] is the same as executing [p1], taking
@@ -1776,13 +1776,13 @@ Example s_compile1 :
     that fact. *)
 
 Theorem execute_app : forall st p1 p2 stack,
-    s_execute st stack (p1 ++ p2) = s_execute st (s_execute st stack p1) p2.
+  s_execute st stack (p1 ++ p2) = s_execute st (s_execute st stack p1) p2.
 Proof.
   (* FILL IN HERE *) Admitted.
 
 (** [] *)
 
-(** **** Exercise: 3 stars, standard (stack_compiler_correct)  *)
+(** **** Exercise: 3 stars, standard (stack_compiler_correct) *)
 
 (** Now we'll prove the correctness of the compiler implemented in the
     previous exercise.  Begin by proving the following lemma. If it
@@ -1803,7 +1803,7 @@ Proof.
 
 (** [] *)
 
-(** **** Exercise: 3 stars, standard, optional (short_circuit) 
+(** **** Exercise: 3 stars, standard, optional (short_circuit)
 
     Most modern programming languages use a "short-circuit" evaluation
     rule for boolean [and]: to evaluate [BAnd b1 b2], first evaluate
@@ -1825,7 +1825,7 @@ Proof.
     [] *)
 
 Module BreakImp.
-(** **** Exercise: 4 stars, advanced (break_imp) 
+(** **** Exercise: 4 stars, advanced (break_imp)
 
     Imperative languages like C and Java often include a [break] or
     similar statement for interrupting the execution of loops. In this
@@ -1835,7 +1835,7 @@ Module BreakImp.
 Inductive com : Type :=
   | CSkip
   | CBreak                        (* <--- NEW *)
-  | CAss (x : string) (a : aexp)
+  | CAsgn (x : string) (a : aexp)
   | CSeq (c1 c2 : com)
   | CIf (b : bexp) (c1 c2 : com)
   | CWhile (b : bexp) (c : com).
@@ -1844,7 +1844,7 @@ Notation "'break'" := CBreak (in custom com at level 0).
 Notation "'skip'"  :=
          CSkip (in custom com at level 0) : com_scope.
 Notation "x := y"  :=
-         (CAss x y)
+         (CAsgn x y)
             (in custom com at level 0, x constr at level 0,
              y at level 85, no associativity) : com_scope.
 Notation "x ; y" :=
@@ -1941,8 +1941,6 @@ Reserved Notation "st '=[' c ']=>' st' '/' s"
 (** Based on the above description, complete the definition of the
     [ceval] relation. *)
 
-(* FILL IN HERE *)
-
 Inductive ceval : com -> state -> result -> state -> Prop :=
   | E_Skip : forall st,
       st =[ CSkip ]=> st / SContinue
@@ -1970,9 +1968,22 @@ Theorem while_stops_on_break : forall b c st st',
   st =[ while b do c end ]=> st' / SContinue.
 Proof.
   (* FILL IN HERE *) Admitted.
+
+Theorem seq_continue : forall c1 c2 st st' st'',
+  st =[ c1 ]=> st' / SContinue ->
+  st' =[ c2 ]=> st'' / SContinue ->
+  st =[ c1 ; c2 ]=> st'' / SContinue.
+Proof.
+  (* FILL IN HERE *) Admitted.
+
+Theorem seq_stops_on_break : forall c1 c2 st st',
+  st =[ c1 ]=> st' / SBreak ->
+  st =[ c1 ; c2 ]=> st' / SBreak.
+Proof.
+  (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 3 stars, advanced, optional (while_break_true)  *)
+(** **** Exercise: 3 stars, advanced, optional (while_break_true) *)
 Theorem while_break_true : forall b c st st',
   st =[ while b do c end ]=> st' / SContinue ->
   beval st' b = true ->
@@ -1981,7 +1992,7 @@ Proof.
 (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 4 stars, advanced, optional (ceval_deterministic)  *)
+(** **** Exercise: 4 stars, advanced, optional (ceval_deterministic) *)
 Theorem ceval_deterministic: forall (c:com) st st1 st2 s1 s2,
      st =[ c ]=> st1 / s1 ->
      st =[ c ]=> st2 / s2 ->
@@ -1992,7 +2003,7 @@ Proof.
 (** [] *)
 End BreakImp.
 
-(** **** Exercise: 4 stars, standard, optional (add_for_loop) 
+(** **** Exercise: 4 stars, standard, optional (add_for_loop)
 
     Add C-style [for] loops to the language of commands, update the
     [ceval] definition to define the semantics of [for] loops, and add
@@ -2011,4 +2022,4 @@ End BreakImp.
 
     [] *)
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

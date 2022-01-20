@@ -279,8 +279,8 @@
           Users who like CoqIDE should consider running it with the
           "asynchronous" and "error resilience" modes disabled:
 
-              coqide -async-proofs off \
-                     -async-proofs-command-error-resilience off Foo.v &
+          coqide -async-proofs off \
+                 -async-proofs-command-error-resilience off Foo.v &
 *)
 
 (* ================================================================= *)
@@ -331,7 +331,7 @@
 
 (** A tar file containing the full sources for the "release version"
     of this book (as a collection of Coq scripts and HTML files) is
-    available at https://softwarefoundations.cis.upenn.edu.
+    available at {https://softwarefoundations.cis.upenn.edu}.
 
     If you are using the book as part of a class, your professor may
     give you access to a locally modified version of the files; you
@@ -350,15 +350,23 @@
 (** If you want to refer to this volume in your own writing, please
     do so as follows:
 
-   @book            {$FIRSTAUTHOR:SF$VOLUMENUMBER,
-   author       =   {$AUTHORS},
-   title        =   "$VOLUMENAME",
-   series       =   "Software Foundations",
-   volume       =   "$VOLUMENUMBER",
-   year         =   "$VOLUMEYEAR",
-   publisher    =   "Electronic textbook",
-   note         =   {Version $VERSION, \URLhttp://softwarefoundations.cis.upenn.edu },
-   }
+    @book            {Pierce:SF1,
+    author       =   {Benjamin C. Pierce and
+		      Arthur Azevedo de Amorim and
+		      Chris Casinghino and
+		      Marco Gaboardi and
+		      Michael Greenberg and
+		      Cătălin Hriţcu and
+		      Vilhelm Sjöberg and
+		      Brent Yorgey},
+    editor       =   {Benjamin C. Pierce},
+    title        =   "Logical Foundations",
+    series       =   "Software Foundations",
+    volume       =   "1",
+    year         =   "2021",
+    publisher    =   "Electronic textbook",
+    note         =   {Version 6.1, \URL{http://softwarefoundations.cis.upenn.edu}}
+    }
 *)
 
 (* ################################################################# *)
@@ -370,7 +378,7 @@
 (** A large compendium of exams from many offerings of
     CIS500 ("Software Foundations") at the University of Pennsylvania
     can be found at
-    https://www.seas.upenn.edu/~cis500/current/exams/index.html.
+    {https://www.seas.upenn.edu/~cis500/current/exams/index.html}.
     There has been some drift of notations over the years, but most of
     the problems are still relevant to the current text. *)
 
@@ -379,17 +387,18 @@
 
 (** Lectures for two intensive summer courses based on _Logical
     Foundations_ (part of the DeepSpec summer school series) can be
-    found at https://deepspec.org/event/dsss17 and
-    https://deepspec.org/event/dsss18/.  The video quality in the
+    found at {https://deepspec.org/event/dsss17} and
+    {https://deepspec.org/event/dsss18/}.  The video quality in the
     2017 lectures is poor at the beginning but gets better in the
     later lectures. *)
 
 (* ################################################################# *)
-(** * Note for Instructors *)
+(** * Note for Instructors and Contributors *)
 
-(** If you plan to use these materials in your own course, you will
-    undoubtedly find things you'd like to change, improve, or add.
-    Your contributions are welcome!
+(** If you plan to use these materials in your own teaching, or if you
+    are using software foundations for self study and are finding
+    things you'd like to help add or improve, your contributions are
+    welcome!
 
     In order to keep the legalities simple and to have a single point
     of responsibility in case the need should ever arise to adjust the
@@ -407,11 +416,11 @@
         2016 as (respectively) "Logical Foundations" and "Programming
         Foundations," and for Volume 4, "QuickChick: Property-Based
         Testing in Coq," the Author of Record is Benjamin C. Pierce.
-        For Volume 3, "Verified Functional Algorithms", the Author of
-        Record is Andrew W. Appel. For components outside of
-        designated volumes (e.g., typesetting and grading tools and
-        other software infrastructure), the Author of Record is
-        Benjamin Pierce.
+        For Volume 3, "Verified Functional Algorithms," and volume 5,
+        "Verifiable C," the Author of Record is Andrew W. Appel. For
+        components outside of designated volumes (e.g., typesetting
+        and grading tools and other software infrastructure), the
+        Author of Record is Benjamin Pierce.
 
     To get started, please send an email to Benjamin Pierce,
     describing yourself and how you plan to use the materials and
@@ -419,16 +428,16 @@
     github username.
 
     We'll set you up with access to the git repository and developers'
-    mailing lists.  In the repository you'll find a file [INSTRUCTORS]
-    with further instructions. *)
+    mailing lists.  In the repository you'll find the files
+    [INSTRUCTORS] and [CONTRIBUTING] with further instructions. *)
 
 (* ################################################################# *)
 (** * Translations *)
 
 (** Thanks to the efforts of a team of volunteer translators,
     _Software Foundations_ can be enjoyed in Japanese at
-    http://proofcafe.org/sf.  A Chinese translation is also underway;
-    you can preview it at https://coq-zh.github.io/SF-zh/. *)
+    {http://proofcafe.org/sf}.  A Chinese translation is also underway;
+    you can preview it at {https://coq-zh.github.io/SF-zh/}. *)
 
 (* ################################################################# *)
 (** * Thanks *)
@@ -438,4 +447,4 @@
     NSF Expeditions grant 1521523, _The Science of Deep
     Specification_. *)
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)

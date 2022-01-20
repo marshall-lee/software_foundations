@@ -35,12 +35,12 @@ Goal True.
 idtac "-------------------  basic_induction  --------------------".
 idtac " ".
 
-idtac "#> mult_0_r".
+idtac "#> mul_0_r".
 idtac "Possible points: 0.5".
-check_type @mult_0_r ((forall n : nat, n * 0 = 0)).
+check_type @mul_0_r ((forall n : nat, n * 0 = 0)).
 idtac "Assumptions:".
 Abort.
-Print Assumptions mult_0_r.
+Print Assumptions mul_0_r.
 Goal True.
 idtac " ".
 
@@ -53,21 +53,21 @@ Print Assumptions plus_n_Sm.
 Goal True.
 idtac " ".
 
-idtac "#> plus_comm".
+idtac "#> add_comm".
 idtac "Possible points: 0.5".
-check_type @plus_comm ((forall n m : nat, n + m = m + n)).
+check_type @add_comm ((forall n m : nat, n + m = m + n)).
 idtac "Assumptions:".
 Abort.
-Print Assumptions plus_comm.
+Print Assumptions add_comm.
 Goal True.
 idtac " ".
 
-idtac "#> plus_assoc".
+idtac "#> add_assoc".
 idtac "Possible points: 0.5".
-check_type @plus_assoc ((forall n m p : nat, n + (m + p) = n + m + p)).
+check_type @add_assoc ((forall n m p : nat, n + (m + p) = n + m + p)).
 idtac "Assumptions:".
 Abort.
-Print Assumptions plus_assoc.
+Print Assumptions add_assoc.
 Goal True.
 idtac " ".
 
@@ -83,24 +83,24 @@ Print Assumptions double_plus.
 Goal True.
 idtac " ".
 
-idtac "-------------------  plus_comm_informal  --------------------".
+idtac "-------------------  add_comm_informal  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: plus_comm_informal".
+idtac "#> Manually graded: add_comm_informal".
 idtac "Advanced".
 idtac "Possible points: 2".
-print_manual_grade manual_grade_for_plus_comm_informal.
+print_manual_grade manual_grade_for_add_comm_informal.
 idtac " ".
 
-idtac "-------------------  mult_comm  --------------------".
+idtac "-------------------  mul_comm  --------------------".
 idtac " ".
 
-idtac "#> mult_comm".
+idtac "#> mul_comm".
 idtac "Possible points: 3".
-check_type @mult_comm ((forall m n : nat, m * n = n * m)).
+check_type @mul_comm ((forall m n : nat, m * n = n * m)).
 idtac "Assumptions:".
 Abort.
-Print Assumptions mult_comm.
+Print Assumptions mul_comm.
 Goal True.
 idtac " ".
 
@@ -154,23 +154,23 @@ idtac "  - A list of pending axioms, containing unproven assumptions. In this ca
 idtac "    the exercise is considered complete, if the axioms are all allowed.".
 idtac "".
 idtac "********** Standard **********".
-idtac "---------- mult_0_r ---------".
-Print Assumptions mult_0_r.
+idtac "---------- mul_0_r ---------".
+Print Assumptions mul_0_r.
 idtac "---------- plus_n_Sm ---------".
 Print Assumptions plus_n_Sm.
-idtac "---------- plus_comm ---------".
-Print Assumptions plus_comm.
-idtac "---------- plus_assoc ---------".
-Print Assumptions plus_assoc.
+idtac "---------- add_comm ---------".
+Print Assumptions add_comm.
+idtac "---------- add_assoc ---------".
+Print Assumptions add_assoc.
 idtac "---------- double_plus ---------".
 Print Assumptions double_plus.
-idtac "---------- mult_comm ---------".
-Print Assumptions mult_comm.
+idtac "---------- mul_comm ---------".
+Print Assumptions mul_comm.
 idtac "---------- binary_commute ---------".
 idtac "MANUAL".
 idtac "".
 idtac "********** Advanced **********".
-idtac "---------- plus_comm_informal ---------".
+idtac "---------- add_comm_informal ---------".
 idtac "MANUAL".
 idtac "---------- binary_inverse_a ---------".
 idtac "MANUAL".
@@ -180,6 +180,6 @@ idtac "---------- binary_inverse_c ---------".
 idtac "MANUAL".
 Abort.
 
-(* 2020-08-24 15:40 *)
+(* 2021-08-11 15:08 *)
 
-(* 2020-08-24 15:40 *)
+(* 2021-08-11 15:08 *)

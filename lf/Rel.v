@@ -10,7 +10,7 @@
     reasoning facilities, so it may be useful to look at this material
     just after the [IndProp] chapter. *)
 
-Set Warnings "-notation-overridden,-parsing".
+Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From LF Require Export IndProp.
 
 (* ################################################################# *)
@@ -22,15 +22,16 @@ From LF Require Export IndProp.
 
 Definition relation (X: Type) := X -> X -> Prop.
 
-(** Confusingly, the Coq standard library hijacks the generic term
-    "relation" for this specific instance of the idea. To maintain
-    consistency with the library, we will do the same.  So, henceforth
-    the Coq identifier [relation] will always refer to a binary
-    relation between some set and itself, whereas the English word
-    "relation" can refer either to the specific Coq concept or the
-    more general concept of a relation between any number of possibly
-    different sets.  The context of the discussion should always make
-    clear which is meant. *)
+(** Rather confusingly, the Coq standard library hijacks the generic
+    term "relation" for this specific instance of the idea. To
+    maintain consistency with the library, we will do the same.  So,
+    henceforth, the Coq identifier [relation] will always refer to a
+    binary relation _on_ some set (between the set and itself),
+    whereas in ordinary mathematical English the word "relation" can
+    refer either to this specific concept or the more general concept
+    of a relation between any number of possibly different sets.  The
+    context of the discussion should always make clear which is
+    meant. *)
 
 (** An example relation on [nat] is [le], the less-than-or-equal-to
     relation, which we usually write [n1 <= n2]. *)
@@ -75,7 +76,7 @@ Print next_nat.
 Check next_nat : relation nat.
 
 Theorem next_nat_partial_function :
-   partial_function next_nat.
+  partial_function next_nat.
 Proof.
   unfold partial_function.
   intros x y1 y2 H1 H2.
@@ -98,7 +99,7 @@ Proof.
     - apply le_S. apply le_n. }
   discriminate Nonsense.   Qed.
 
-(** **** Exercise: 2 stars, standard, optional (total_relation_not_partial) 
+(** **** Exercise: 2 stars, standard, optional (total_relation_not_partial)
 
     Show that the [total_relation] defined in (an exercise in)
     [IndProp] is not a partial function. *)
@@ -107,7 +108,7 @@ Proof.
 
     [] *)
 
-(** **** Exercise: 2 stars, standard, optional (empty_relation_partial) 
+(** **** Exercise: 2 stars, standard, optional (empty_relation_partial)
 
     Show that the [empty_relation] defined in (an exercise in)
     [IndProp] is a partial function. *)
@@ -157,7 +158,7 @@ Proof.
   apply Hnm.
   apply Hmo. Qed.
 
-(** **** Exercise: 2 stars, standard, optional (le_trans_hard_way) 
+(** **** Exercise: 2 stars, standard, optional (le_trans_hard_way)
 
     We can also prove [lt_trans] more laboriously by induction,
     without using [le_trans].  Do this. *)
@@ -172,7 +173,7 @@ Proof.
     (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, standard, optional (lt_trans'') 
+(** **** Exercise: 2 stars, standard, optional (lt_trans'')
 
     Prove the same thing again by induction on [o]. *)
 
@@ -196,14 +197,14 @@ Proof.
   - apply H.
 Qed.
 
-(** **** Exercise: 1 star, standard, optional (le_S_n)  *)
+(** **** Exercise: 1 star, standard, optional (le_S_n) *)
 Theorem le_S_n : forall n m,
   (S n <= S m) -> (n <= m).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, standard, optional (le_Sn_n_inf) 
+(** **** Exercise: 2 stars, standard, optional (le_Sn_n_inf)
 
     Provide an informal proof of the following theorem:
 
@@ -217,7 +218,7 @@ Proof.
 
     [] *)
 
-(** **** Exercise: 1 star, standard, optional (le_Sn_n)  *)
+(** **** Exercise: 1 star, standard, optional (le_Sn_n) *)
 Theorem le_Sn_n : forall n,
   ~ (S n <= n).
 Proof.
@@ -236,7 +237,7 @@ Proof.
 Definition symmetric {X: Type} (R: relation X) :=
   forall a b : X, (R a b) -> (R b a).
 
-(** **** Exercise: 2 stars, standard, optional (le_not_symmetric)  *)
+(** **** Exercise: 2 stars, standard, optional (le_not_symmetric) *)
 Theorem le_not_symmetric :
   ~ (symmetric le).
 Proof.
@@ -250,14 +251,14 @@ Proof.
 Definition antisymmetric {X: Type} (R: relation X) :=
   forall a b : X, (R a b) -> (R b a) -> a = b.
 
-(** **** Exercise: 2 stars, standard, optional (le_antisymmetric)  *)
+(** **** Exercise: 2 stars, standard, optional (le_antisymmetric) *)
 Theorem le_antisymmetric :
   antisymmetric le.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, standard, optional (le_step)  *)
+(** **** Exercise: 2 stars, standard, optional (le_step) *)
 Theorem le_step : forall n m p,
   n < m ->
   m <= S p ->
@@ -309,12 +310,12 @@ Proof.
     module of the Coq standard library: *)
 
 Inductive clos_refl_trans {A: Type} (R: relation A) : relation A :=
-    | rt_step x y (H : R x y) : clos_refl_trans R x y
-    | rt_refl x : clos_refl_trans R x x
-    | rt_trans x y z
-          (Hxy : clos_refl_trans R x y)
-          (Hyz : clos_refl_trans R y z) :
-          clos_refl_trans R x z.
+  | rt_step x y (H : R x y) : clos_refl_trans R x y
+  | rt_refl x : clos_refl_trans R x x
+  | rt_trans x y z
+        (Hxy : clos_refl_trans R x y)
+        (Hyz : clos_refl_trans R y z) :
+        clos_refl_trans R x z.
 
 (** For example, the reflexive and transitive closure of the
     [next_nat] relation coincides with the [le] relation. *)
@@ -367,12 +368,12 @@ Inductive clos_refl_trans_1n {A : Type}
     constructors.  *)
 
 Lemma rsc_R : forall (X:Type) (R:relation X) (x y : X),
-       R x y -> clos_refl_trans_1n R x y.
+  R x y -> clos_refl_trans_1n R x y.
 Proof.
   intros X R x y H.
   apply rt1n_trans with y. apply H. apply rt1n_refl.   Qed.
 
-(** **** Exercise: 2 stars, standard, optional (rsc_trans)  *)
+(** **** Exercise: 2 stars, standard, optional (rsc_trans) *)
 Lemma rsc_trans :
   forall (X:Type) (R: relation X) (x y z : X),
       clos_refl_trans_1n R x y  ->
@@ -386,12 +387,12 @@ Proof.
     reflexive, transitive closure do indeed define the same
     relation. *)
 
-(** **** Exercise: 3 stars, standard, optional (rtc_rsc_coincide)  *)
+(** **** Exercise: 3 stars, standard, optional (rtc_rsc_coincide) *)
 Theorem rtc_rsc_coincide :
-         forall (X:Type) (R: relation X) (x y : X),
-  clos_refl_trans R x y <-> clos_refl_trans_1n R x y.
+  forall (X:Type) (R: relation X) (x y : X),
+    clos_refl_trans R x y <-> clos_refl_trans_1n R x y.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(* 2020-08-24 15:39 *)
+(* 2021-08-11 15:08 *)
