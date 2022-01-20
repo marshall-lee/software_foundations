@@ -3,4 +3,9 @@
 *.vos
 *.glob
 *.aux
-/lf/Makefile.conf
+Makefile.conf
+.Makefile.coq.d
+.Makefile.d
+CoqMakefile.conf
+Makefile.coq
+Makefile.coq.conf
