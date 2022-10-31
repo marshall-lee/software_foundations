@@ -96,7 +96,7 @@ From LF Require Export Basics.
 (* ################################################################# *)
 (** * Proof by Induction *)
 
-(** We can prove that [0] is a neutral element for [+] on the left
+(** We can prove that [0] is a neutral element for [+] on the _left_
     using just [reflexivity].  But the proof that it is also a neutral
     element on the _right_ ... *)
 
@@ -263,6 +263,20 @@ Proof.
 Qed.
 (** [] *)
 
+(** **** Exercise: 2 stars, standard (eqb_refl)
+
+    The following theorem relates the computational equality [=?] on
+    [nat] with the definitional equality [=] on [bool]. *)
+Theorem eqb_refl : forall n : nat,
+  (n =? n) = true.
+Proof.
+  intros n.
+  induction n.
+  reflexivity.
+  simpl. rewrite <- IHn. reflexivity.
+Qed.
+(** [] *)
+
 (** **** Exercise: 2 stars, standard, optional (even_S)
 
     One inconvenient aspect of our definition of [even n] is the
@@ -293,8 +307,6 @@ Qed.
 (* [induction] adds an Induction Hypothesis to the context which is helpful *)
 *)
 
-(* Do not modify the following line: *)
-Definition manual_grade_for_destruct_induction : option (nat*string) := None.
 (** [] *)
 
 (* ################################################################# *)
@@ -302,7 +314,7 @@ Definition manual_grade_for_destruct_induction : option (nat*string) := None.
 
 (** In Coq, as in informal mathematics, large proofs are often
     broken into a sequence of theorems, with later proofs referring to
-    earlier theorems.  But sometimes a proof will require some
+    earlier theorems.  But sometimes a proof will involve some
     miscellaneous fact that is too trivial and of too little general
     interest to bother giving it its own top-level name.  In such
     cases, it is convenient to be able to simply state and prove the
@@ -310,37 +322,38 @@ Definition manual_grade_for_destruct_induction : option (nat*string) := None.
     [assert] tactic allows us to do this. *)
 
 Theorem mult_0_plus' : forall n m : nat,
-  (0 + n) * m = n * m.
+  (n + 0 + 0) * m = n * m.
 Proof.
   intros n m.
-  assert (H: 0 + n = n). { reflexivity. }
+  assert (H: n + 0 + 0 = n).
+    { rewrite add_comm. simpl. rewrite add_comm. reflexivity. }
   rewrite -> H.
   reflexivity.  Qed.
 
 (** The [assert] tactic introduces two sub-goals.  The first is
     the assertion itself; by prefixing it with [H:] we name the
     assertion [H].  (We can also name the assertion with [as] just as
-    we did above with [destruct] and [induction], i.e., [assert (0 + n
-    = n) as H].)  Note that we surround the proof of this assertion
-    with curly braces [{ ... }], both for readability and so that,
-    when using Coq interactively, we can see more easily when we have
-    finished this sub-proof.  The second goal is the same as the one
-    at the point where we invoke [assert] except that, in the context,
-    we now have the assumption [H] that [0 + n = n].  That is,
-    [assert] generates one subgoal where we must prove the asserted
-    fact and a second subgoal where we can use the asserted fact to
-    make progress on whatever we were trying to prove in the first
-    place. *)
+    we did above with [destruct] and [induction], i.e., [assert (n + 0
+    + 0 = n) as H].)  Note that we surround the proof of this
+    assertion with curly braces [{ ... }], both for readability and so
+    that, when using Coq interactively, we can see more easily when we
+    have finished this sub-proof.  The second goal is the same as the
+    one at the point where we invoke [assert] except that, in the
+    context, we now have the assumption [H] that [n + 0 + 0 = n].
+    That is, [assert] generates one subgoal where we must prove the
+    asserted fact and a second subgoal where we can use the asserted
+    fact to make progress on whatever we were trying to prove in the
+    first place. *)
 
-(** For example, suppose we want to prove that [(n + m) + (p + q)
-    = (m + n) + (p + q)]. The only difference between the two sides of
-    the [=] is that the arguments [m] and [n] to the first inner [+]
-    are swapped, so it seems we should be able to use the
-    commutativity of addition ([add_comm]) to rewrite one into the
+(** As another example, suppose we want to prove that [(n + m)
+    + (p + q) = (m + n) + (p + q)]. The only difference between the
+    two sides of the [=] is that the arguments [m] and [n] to the
+    first inner [+] are swapped, so it seems we should be able to use
+    the commutativity of addition ([add_comm]) to rewrite one into the
     other.  However, the [rewrite] tactic is not very smart about
     _where_ it applies the rewrite.  There are three uses of [+] here,
-    and it turns out that doing [rewrite -> add_comm] will affect
-    only the _outer_ one... *)
+    and it turns out that doing [rewrite -> add_comm] will affect only
+    the _outer_ one... *)
 
 Theorem plus_rearrange_firsttry : forall n m p q : nat,
   (n + m) + (p + q) = (m + n) + (p + q).
@@ -436,7 +449,7 @@ Proof.
   - (* n = S n' *)
     simpl. rewrite IHn'. reflexivity.   Qed.
 
-(** ... and if you're used to Coq you may be able to step
+(** ... and if you're used to Coq you might be able to step
     through the tactics one after the other in your mind and imagine
     the state of the context and goal stack at each point, but if the
     proof were even a little bit more complicated this would be next
@@ -505,6 +518,9 @@ Definition manual_grade_for_add_comm_informal : option (nat*string) := None.
 
     Proof: (* FILL IN HERE *)
 *)
+
+(* Do not modify the following line: *)
+Definition manual_grade_for_eqb_refl_informal : option (nat*string) := None.
 (** [] *)
 
 (* ################################################################# *)
@@ -526,9 +542,9 @@ Proof.
   rewrite -> H. reflexivity.
 Qed.
 
-(** Now prove commutativity of multiplication.  You will probably
-    want to define and prove a "helper" theorem to be used
-    in the proof of this one. Hint: what is [n * (1 + k)]? *)
+(** Now prove commutativity of multiplication.  You will probably want
+    to look for (or define and prove) a "helper" theorem to be used in
+    the proof of this one. Hint: what is [n * (1 + k)]? *)
 
 Theorem mul_comm : forall m n : nat,
   m * n = n * m.
@@ -551,6 +567,26 @@ Proof.
 Qed.
 (** [] *)
 
+(** **** Exercise: 2 stars, standard, optional (plus_leb_compat_l)
+
+    If a hypothesis has the form [H: P -> a = b], then [rewrite H] will
+    rewrite [a] to [b] in the goal, and add [P] as a new subgoal. Use
+    that in the inductive step of this exercise. *)
+
+Check leb.
+
+Theorem plus_leb_compat_l : forall n m p : nat,
+  n <=? m = true -> (p + n) <=? (p + m) = true.
+Proof.
+  intros n m p.
+  intros H.
+  induction p as [| p' IHp'].
+  - simpl. rewrite -> H. reflexivity.
+  - simpl. rewrite -> IHp'. reflexivity.
+Qed.
+
+(** [] *)
+
 (** **** Exercise: 3 stars, standard, optional (more_exercises)
 
     Take a piece of paper.  For each of the following theorems, first
@@ -560,8 +596,6 @@ Qed.
     down your prediction.  Then fill in the proof.  (There is no need
     to turn in your piece of paper; this is just to encourage you to
     reflect before you hack!) *)
-
-Check leb.
 
 Theorem leb_refl : forall n:nat,
   (n <=? n) = true.
@@ -581,16 +615,6 @@ Theorem andb_false_r : forall b : bool,
 Proof.
   destruct b.
   reflexivity. reflexivity. Qed.
-
-Theorem plus_leb_compat_l : forall n m p : nat,
-  n <=? m = true -> (p + n) <=? (p + m) = true.
-Proof.
-  intros n m p.
-  intros H.
-  induction p as [| p' IHp'].
-  - simpl. rewrite -> H. reflexivity.
-  - simpl. rewrite -> IHp'. reflexivity.
-Qed.
 
 Theorem S_neqb_0 : forall n:nat,
   (S n) =? 0 = false.
@@ -660,18 +684,6 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 2 stars, standard, optional (eqb_refl) *)
-
-Theorem eqb_refl : forall n : nat,
-  (n =? n) = true.
-Proof.
-  intros n.
-  induction n.
-  reflexivity.
-  simpl. rewrite <- IHn. reflexivity.
-Qed.
-(** [] *)
-
 (** **** Exercise: 2 stars, standard, optional (add_shuffle3')
 
     The [replace] tactic allows you to specify a particular subterm to
@@ -686,7 +698,7 @@ Qed.
 Theorem add_shuffle3' : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
-  intros n   m p.
+  intros n m p.
   rewrite -> add_assoc.
   rewrite -> add_assoc.
   replace (n + m) with (m + n). reflexivity.
@@ -694,11 +706,41 @@ Proof.
 Qed.
 (** [] *)
 
+(* ################################################################# *)
+(** * Nat to Bin and Back to Nat *)
+
+(** Recall the [bin] type we defined in [Basics]: *)
+
+Inductive bin : Type :=
+  | Z
+  | B0 (n : bin)
+  | B1 (n : bin)
+.
+(** Before you start working on the next exercise, replace the stub
+    definitions of [incr] and [bin_to_nat], below, with your solution
+    from [Basics].  That will make it possible for this file to
+    be graded on its own. *)
+
+Fixpoint incr (m:bin) : bin
+  := match m with
+     | Z    => B1 Z
+     | B0 n => B1 n
+     | B1 n => B0 (incr n)
+     end.
+
+Fixpoint bin_to_nat (m:bin) : nat
+  := match m with
+     | Z    => O
+     | B0 n => (bin_to_nat n) + (bin_to_nat n)
+     | B1 n => S ((bin_to_nat n) + (bin_to_nat n))
+     end.
+
+(** In [Basics], we did some unit testing of [bin_to_nat], but we
+    didn't prove its correctness. Now we'll do so. *)
+
 (** **** Exercise: 3 stars, standard, especially useful (binary_commute)
 
-    Recall the [incr] and [bin_to_nat] functions that you
-    wrote for the [binary] exercise in the [Basics] chapter.  Prove
-    that the following diagram commutes:
+    Prove that the following diagram commutes:
 
                             incr
               bin ----------------------> bin
@@ -712,38 +754,12 @@ Qed.
     That is, incrementing a binary number and then converting it to
     a (unary) natural number yields the same result as first converting
     it to a natural number and then incrementing.
-    Name your theorem [bin_to_nat_pres_incr] ("pres" for "preserves").
 
-    Before you start working on this exercise, copy the definitions of
-    [incr] and [bin_to_nat] from your solution to the [binary]
-    exercise here so that this file can be graded on its own.  If you
-    want to change your original definitions to make the property
-    easier to prove, feel free to do so! *)
-
-Fixpoint incr (m:bin) : bin
-  := match m with
-     | Z    => B1 Z
-     | B0 n => B1 n
-     | B1 n => B0 (incr n)
-     end.
-
-Fixpoint bin_to_nat (m:bin) : nat
-  := match m with
-     | Z    => O
-     | B0 n => (bin_to_nat n) + (bin_to_nat n)
-     | B1 n => (S (bin_to_nat n)) + (bin_to_nat n)
-     end.
-
-Lemma S_S_plus : forall a b : nat,
-  S a + S b = S (S (a + b)).
-Proof.
-  intros a b.
-  induction a.
-  reflexivity.
-  simpl. rewrite <- IHa. reflexivity. Qed.
+    If you want to change your previous definitions of [incr] or [bin_to_nat]
+    to make the property easier to prove, feel free to do so! *)
 
 Theorem bin_to_nat_pres_incr : forall b : bin,
-  bin_to_nat (incr b) = S (bin_to_nat b).
+  bin_to_nat (incr b) = 1 + bin_to_nat b.
 Proof.
   intros b.
   induction b as [|b'|b'].
@@ -751,22 +767,15 @@ Proof.
   - reflexivity.
   - simpl.
     rewrite -> IHb'.
-    rewrite -> S_S_plus.
+    simpl. rewrite <- plus_n_Sm.
     reflexivity.
 Qed.
 
-(* Do not modify the following line: *)
-Definition manual_grade_for_binary_commute : option (nat*string) := None.
 (** [] *)
 
-(** **** Exercise: 5 stars, advanced (binary_inverse)
+(** **** Exercise: 3 stars, standard (nat_bin_nat) *)
 
-    This is a further continuation of the previous exercises about
-    binary numbers.  You may find you need to go back and change your
-    earlier definitions to get things to work here.
-
-    (a) First, write a function to convert natural numbers to binary
-        numbers. *)
+(** Write a function to convert natural numbers to binary numbers. *)
 
 Fixpoint nat_to_bin (n:nat) : bin
   := match n with
@@ -774,11 +783,15 @@ Fixpoint nat_to_bin (n:nat) : bin
      | S n' => incr (nat_to_bin n')
      end.
 
-(** Prove that, if we start with any [nat], convert it to binary, and
-    convert it back, we get the same [nat] we started with.  (Hint: If
-    your definition of [nat_to_bin] involved any extra functions, you
-    may need to prove a subsidiary lemma showing how such functions
-    relate to [nat_to_bin].) *)
+(** Prove that, if we start with any [nat], convert it to [bin], and
+    convert it back, we get the same [nat] which we started with.
+
+    Hint: This proof should go through smoothly using the previous
+    exercise about [incr] as a lemma. If not, revisit your definitions
+    of the functions involved and consider whether they are more
+    complicated than necessary: the shape of a proof by induction will
+    match the recursive structure of the program being verified, so
+    make the recursions as simple as possible. *)
 
 Theorem nat_bin_nat : forall n, bin_to_nat (nat_to_bin n) = n.
 Proof.
@@ -790,36 +803,163 @@ Proof.
     reflexivity.
 Qed.
 
-(* Do not modify the following line: *)
-Definition manual_grade_for_binary_inverse_a : option (nat*string) := None.
-
-(** (b) One might naturally expect that we could also prove the
-        opposite direction -- that starting with a binary number,
-        converting to a natural, and then back to binary should yield
-        the same number we started with.  However, this is not the
-        case!  Explain (in a comment) what the problem is. *)
-
-(* FILL IN HERE *)
-
-(* Do not modify the following line: *)
-Definition manual_grade_for_binary_inverse_b : option (nat*string) := None.
-
-(** (c) Define a normalization function -- i.e., a function
-        [normalize] going directly from [bin] to [bin] (i.e., _not_ by
-        converting to [nat] and back) such that, for any binary number
-        [b], converting [b] to a natural and then back to binary yields
-        [(normalize b)].  Prove it.  (Warning: This part is a bit
-        tricky -- you may end up defining several auxiliary lemmas.
-        One good way to find out what you need is to start by trying
-        to prove the main statement, see where you get stuck, and see
-        if you can find a lemma -- perhaps requiring its own inductive
-        proof -- that will allow the main proof to make progress.) Don't
-        define this using [nat_to_bin] and [bin_to_nat]! *)
-
-(* FILL IN HERE *)
-
-(* Do not modify the following line: *)
-Definition manual_grade_for_binary_inverse_c : option (nat*string) := None.
 (** [] *)
 
-(* 2021-08-11 15:08 *)
+(* ################################################################# *)
+(** * Bin to Nat and Back to Bin (Advanced) *)
+
+(** The opposite direction -- starting with a [bin], converting to [nat],
+    then converting back to [bin] -- turns out to be problematic. That
+    is, the following theorem does not hold. *)
+
+Theorem bin_nat_bin_fails : forall b, nat_to_bin (bin_to_nat b) = b.
+Abort.
+
+(** Let's explore why that theorem fails, and how to prove a modified
+    version of it. We'll start with some lemmas that might seem
+    unrelated, but will turn out to be relevant. *)
+
+(** **** Exercise: 2 stars, advanced (double_bin) *)
+
+(** Prove this lemma about [double], which we defined earlier in the
+    chapter. *)
+
+Lemma double_incr : forall n : nat, double (S n) = S (S (double n)).
+Proof.
+  destruct n.
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+(** Now define a similar doubling function for [bin]. *)
+
+Definition double_bin (b:bin) : bin
+  := match b with
+     | Z => Z
+     | n => B0 n
+     end.
+
+(** Check that your function correctly doubles zero. *)
+
+Example double_bin_zero : double_bin Z = Z.
+Proof. reflexivity.  Qed.
+
+(** Prove this lemma, which corresponds to [double_incr]. *)
+
+Lemma double_incr_bin : forall b,
+    double_bin (incr b) = incr (incr (double_bin b)).
+Proof.
+  induction b as [|b'|b'].
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+Qed.
+(** [] *)
+
+(** Let's return to our desired theorem: *)
+
+Theorem bin_nat_bin_fails : forall b, nat_to_bin (bin_to_nat b) = b.
+Abort.
+
+(** The theorem fails because there are some [bin] such that we won't
+    necessarily get back to the _original_ [bin], but instead to an
+    "equivalent" [bin].  (We deliberately leave that notion undefined
+    here for you to think about.)
+
+    Explain in a comment, below, why this failure occurs. Your
+    explanation will not be graded, but it's important that you get it
+    clear in your mind before going on to the next part. If you're
+    stuck on this, think about alternative implementations of
+    [double_bin] that might have failed to satisfy [double_bin_zero]
+    yet otherwise seem correct. *)
+
+(* FILL IN HERE *)
+
+(** To solve that problem, we can introduce a _normalization_ function
+    that selects the simplest [bin] out of all the equivalent
+    [bin]. Then we can prove that the conversion from [bin] to [nat] and
+    back again produces that normalized, simplest [bin]. *)
+
+(** **** Exercise: 4 stars, advanced (bin_nat_bin) *)
+
+(** Define [normalize]. You will need to keep its definition as simple
+    as possible for later proofs to go smoothly. Do not use
+    [bin_to_nat] or [nat_to_bin], but do use [double_bin].
+
+    Hint: Structure the recursion such that it _always_ reaches the
+    end of the [bin] and process each bit only once. Do not try to
+    "look ahead" at future bits. *)
+
+Fixpoint normalize (b:bin) : bin
+  := match b with
+     | Z     => Z
+     | B0 b' => double_bin (normalize b')
+     | B1 b' => incr (double_bin (normalize b'))
+     end.
+
+(** It would be wise to do some [Example] proofs to check that your definition of
+    [normalize] works the way you intend before you proceed. They won't be graded,
+    but fill them in below. *)
+
+Example test_normalize0_1 : normalize Z = Z.
+Proof. reflexivity. Qed.
+
+Example test_normalize0_2 : normalize (B0 Z) = Z.
+Proof. reflexivity. Qed.
+
+Example test_normalize0_3 : normalize (B0 (B0 Z)) = Z.
+Proof. reflexivity. Qed.
+
+Example test_normalize0_4 : normalize (B0 (B0 (B0 Z))) = Z.
+Proof. reflexivity. Qed.
+
+Example test_normalize1 : bin_to_nat (normalize (B1 Z)) = 1.
+Proof. reflexivity. Qed.
+
+Example test_normalize2 : bin_to_nat (normalize (B0 (B1 Z))) = 2.
+Proof. reflexivity. Qed.
+
+Example test_normalize3 : bin_to_nat (normalize (B1 (B1 Z))) = 3.
+Proof. reflexivity. Qed.
+
+Example test_normalize4 : bin_to_nat (normalize (B0 (B0 (B1 Z)))) = 4.
+Proof. reflexivity. Qed.
+
+(** Finally, prove the main theorem. The inductive cases could be a
+    bit tricky.
+
+    Hint 1: Start by trying to prove the main statement, see where you
+    get stuck, and see if you can find a lemma -- perhaps requiring
+    its own inductive proof -- that will allow the main proof to make
+    progress. You might end up with a couple of these.
+
+    Hint 2: Lemma [double_incr_bin] that you proved above will be
+    helpful, too.*)
+
+Lemma nat_to_bin_double : forall n : nat,
+  nat_to_bin(double n) = double_bin(nat_to_bin n).
+Proof.
+  intros n.
+  induction n.
+  - reflexivity.
+  - simpl. rewrite -> double_incr_bin. rewrite <- IHn.
+    reflexivity.
+Qed.
+
+Theorem bin_nat_bin : forall b, nat_to_bin (bin_to_nat b) = normalize b.
+Proof.
+  intros b.
+  induction b as [|b'|b'].
+  - reflexivity.
+  - simpl. rewrite <- IHb'.
+    destruct (bin_to_nat b').
+    + reflexivity.
+    + rewrite <- double_plus. rewrite -> nat_to_bin_double.
+      reflexivity.
+  - simpl. rewrite <- IHb'.
+    rewrite <- double_plus. rewrite -> nat_to_bin_double.
+    reflexivity.
+Qed.
+(** [] *)
+
+(* 2022-08-08 17:13 *)

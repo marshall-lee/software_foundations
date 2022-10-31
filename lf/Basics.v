@@ -57,7 +57,7 @@
     library providing definitions of booleans, numbers, and many
     common data structures like lists and hash tables.  But there is
     nothing magic or primitive about these library definitions.  To
-    illustrate this, this course we will explicitly recapitulate
+    illustrate this, in this course we will explicitly recapitulate
     (almost) all the definitions we need, rather than getting them
     from the standard library. *)
 
@@ -159,12 +159,8 @@ Proof. simpl. reflexivity.  Qed.
     assignments.  In order for these scripts to work correctly (and
     give you that you get full credit for your work!), please be
     careful to follow these rules:
-      - The grading scripts work by extracting marked regions of the
-        [.v] files that you submit.  It is therefore important that
-        you do not alter the "markup" that delimits exercises: the
-        Exercise header, the name of the exercise, the "empty square
-        bracket" marker at the end, etc.  Please leave this markup
-        exactly as you find it.
+      - Do not change the names of exercises. Otherwise the grading
+        scripts will be unable to find your solution.
       - Do not delete exercises.  If you skip an exercise (e.g.,
         because it is marked "optional," or because you can't solve it),
         it is OK to leave a partial proof in your [.v] file; in
@@ -172,8 +168,7 @@ Proof. simpl. reflexivity.  Qed.
         example [Abort]).
       - It is fine to use additional definitions (of helper functions,
         useful lemmas, etc.) in your solutions.  You can put these
-        between the exercise header and the theorem you are asked to
-        prove.
+        before the theorem you are asked to prove.
       - If you introduce a helper lemma that you end up being unable
         to prove, hence end it with [Admitted], then make sure to also
         end the main theorem in which you use it with [Admitted], not
@@ -215,8 +210,9 @@ From Coq Require Export String.
 (* ================================================================= *)
 (** ** Booleans *)
 
-(** In a similar way, we can define the standard type [bool] of
-    booleans, with members [true] and [false]. *)
+(** Following the pattern of the days of the week above, we can
+    define the standard type [bool] of booleans, with members [true]
+    and [false]. *)
 
 Inductive bool : Type :=
   | true
@@ -317,7 +313,13 @@ Definition orb' (b1:bool) (b2:bool) : bool :=
     each be verified by Coq.  (I.e., fill in each proof, following the
     model of the [orb] tests above, and make sure Coq accepts it.) The
     function should return [true] if either or both of its inputs are
-    [false]. *)
+    [false].
+
+    Hint: if [simpl] will not simplify the goal in your proof, it's
+    probably because you defined [nandb] without using a [match]
+    expression. Try a different definition of [nandb], or just
+    skip over [simpl] and go directly to [reflexivity]. We'll
+    explain this phenomenon later in the chapter. *)
 
 Definition nandb (b1:bool) (b2:bool) : bool
   := negb (b1 && b2).
@@ -564,13 +566,14 @@ Module NatPlayground.
 
     In fact, there is a representation of numbers that is even simpler
     than binary, namely unary (base 1), in which only a single digit
-    is used (as one might do to count days in prison by scratching on
-    the walls). To represent unary numbers with a Coq datatype, we use
-    two constructors. The capital-letter [O] constructor represents
-    zero.  When the [S] constructor is applied to the representation
-    of the natural number n, the result is the representation of
-    n+1, where [S] stands for "successor" (or "scratch" if one is in
-    prison).  Here is the complete datatype definition. *)
+    is used (as our ancient forebears might have done to count days by
+    making scratches on the walls of their caves). To represent unary
+    numbers with a Coq datatype, we use two constructors. The
+    capital-letter [O] constructor represents zero.  When the [S]
+    constructor is applied to the representation of the natural number
+    n, the result is the representation of n+1, where [S] stands for
+    "successor" (or "scratch").  Here is the complete datatype
+    definition. *)
 
 Inductive nat : Type :=
   | O
@@ -779,7 +782,12 @@ Fixpoint exp (base power : nat) : nat :=
        factorial(0)  =  1
        factorial(n)  =  n * factorial(n-1)     (if n>0)
 
-    Translate this into Coq. *)
+    Translate this into Coq.
+
+    Make sure you put a [:=] between the header we've given you and
+    your definition.  If you see an error like "The reference
+    factorial was not found in the current environment," it means
+    you've forgotten the [:=]. *)
 
 Fixpoint factorial (n:nat) : nat
   := match n with
@@ -1051,10 +1059,6 @@ Proof.
 
     Remove "[Admitted.]" and fill in the proof. *)
 
-(* SOOMER: KK: [plus_id_exercise] contains multiple hypotheses, and at
-   least one student was confused about this. Maybe we can talk about
-   [->] being right-associative before it. *)
-
 Theorem plus_id_exercise : forall n m o : nat,
   n = m -> m = o -> n + m = m + o.
 Proof.
@@ -1299,8 +1303,14 @@ Qed.
 (** **** Exercise: 2 stars, standard (andb_true_elim2)
 
     Prove the following claim, marking cases (and subcases) with
-    bullets when you use [destruct]. Hint: delay introducing the
-    hypothesis until after you have an opportunity to simplify it. *)
+    bullets when you use [destruct].
+
+    Hint: You will eventually need to destruct both Booleans, as in
+    the theorems above. But, delay introducing the hypothesis until
+    after you have an opportunity to simplify it.
+
+    Hint 2: When you reach contradiction in the hypotheses, focus
+    on how to [rewrite] with that contradiction. *)
 
 Theorem andb_true_elim2 : forall b c : bool,
   andb b c = true -> c = true.
@@ -1617,6 +1627,9 @@ Proof. reflexivity.  Qed.
        coqc -Q . LF Basics.v
        coqc -Q . LF BasicsTest.v
 
+    (Make sure you do this in a directory that also contains a file named
+    [_CoqProject] containing the single line [-Q . LF].)
+
     If you accidentally deleted an exercise or changed its name, then
     [make BasicsTest.vo] will fail with an error that tells you the
     name of the missing exercise.  Otherwise, you will get a lot of
@@ -1663,4 +1676,4 @@ Proof. reflexivity.  Qed.
     output.  But since they have to be graded by a human, the test
     script won't be able to tell you much about them.  *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)
