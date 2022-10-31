@@ -871,9 +871,7 @@ Proof.
   induction l.
   - reflexivity.
   - simpl.
-    destruct (rev l).
-    + rewrite -> rev_app_distr. rewrite -> IHl. reflexivity.
-    + rewrite -> rev_app_distr. rewrite -> IHl. reflexivity.
+    rewrite -> rev_app_distr. rewrite -> IHl. reflexivity.
 Qed.
 
 (** There is a short solution to the next one.  If you find yourself
