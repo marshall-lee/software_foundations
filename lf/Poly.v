@@ -131,7 +131,7 @@ Example test_repeat2 :
   repeat bool false 1 = cons bool false (nil bool).
 Proof. reflexivity. Qed.
 
-(** **** Exercise: 2 stars, standard (mumble_grumble)
+(** **** Exercise: 2 stars, standard, optional (mumble_grumble)
 
     Consider the following two inductively defined types. *)
 
@@ -160,9 +160,6 @@ Eval compute in d bool (b a 5).
 Eval compute in e bool true.
 Eval compute in e mumble (b c 0).
 End MumbleGrumble.
-
-(* Do not modify the following line: *)
-Definition manual_grade_for_mumble_grumble : option (nat*string) := None.
 (** [] *)
 
 (* ----------------------------------------------------------------- *)
@@ -178,7 +175,7 @@ Fixpoint repeat' X x count : list X :=
   | S count' => cons X x (repeat' X x count')
   end.
 
-(** Indeed it will.  Let's see what type Coq has assigned to [repeat']: *)
+(** Indeed it will.  Let's see what type Coq has assigned to [repeat']... *)
 
 Check repeat'
   : forall X : Type, X -> nat -> list X.
@@ -266,7 +263,7 @@ Arguments nil {X}.
 Arguments cons {X}.
 Arguments repeat {X}.
 
-(** Now we don't have to supply type arguments at all: *)
+(** Now we don't have to supply any type arguments at all in the example: *)
 
 Definition list123'' := cons 1 (cons 2 (cons 3 nil)).
 
@@ -337,7 +334,7 @@ Proof. reflexivity. Qed.
 (* ----------------------------------------------------------------- *)
 (** *** Supplying Type Arguments Explicitly *)
 
-(** One small problem with declaring arguments [Implicit] is
+(** One small problem with declaring arguments to be implicit is
     that, once in a while, Coq does not have enough local information
     to determine a type argument; in such cases, we need to tell Coq
     that we want to give the argument explicitly just this time.  For
@@ -384,7 +381,7 @@ Definition list123''' := [1; 2; 3].
 (* ----------------------------------------------------------------- *)
 (** *** Exercises *)
 
-(** **** Exercise: 2 stars, standard, optional (poly_exercises)
+(** **** Exercise: 2 stars, standard (poly_exercises)
 
     Here are a few simple exercises, just like ones in the [Lists]
     chapter, for practice with polymorphism.  Complete the proofs
@@ -419,7 +416,7 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 2 stars, standard, optional (more_poly_exercises)
+(** **** Exercise: 2 stars, standard (more_poly_exercises)
 
     Here are some slightly more interesting ones... *)
 
@@ -432,28 +429,14 @@ Proof.
   - simpl. rewrite -> IHl1. rewrite -> app_assoc. reflexivity.
 Qed.
 
-Lemma cons_rev : forall X : Type, forall l : list X, forall n : X,
-  n :: rev l = rev (app l [n]).
-Proof.
-  intros X l n.
-  induction l as [| n' l'].
-  - reflexivity.
-  - simpl.
-    rewrite <- IHl'.
-    simpl.
-    reflexivity.
-Qed.
-
 Theorem rev_involutive : forall X : Type, forall l : list X,
   rev (rev l) = l.
 Proof.
   intros X l.
-  induction l as [| n l'].
+  induction l.
   - reflexivity.
   - simpl.
-    rewrite <- cons_rev.
-    rewrite -> IHl'.
-    reflexivity.
+    rewrite -> rev_app_distr. rewrite -> IHl. reflexivity.
 Qed.
 (** [] *)
 
@@ -475,7 +458,7 @@ Arguments pair {X} {Y}.
 Notation "( x , y )" := (pair x y).
 
 (** We can also use the [Notation] mechanism to define the standard
-    notation for product _types_: *)
+    notation for _product types_ (i.e., the types of pairs): *)
 
 Notation "X * Y" := (prod X Y) : type_scope.
 
@@ -922,7 +905,7 @@ Example fold_example3 :
   fold app  [[1];[];[2;3];[4]] [] = [1;2;3;4].
 Proof. reflexivity. Qed.
 
-(** **** Exercise: 1 star, advanced (fold_types_different)
+(** **** Exercise: 1 star, standard, optional (fold_types_different)
 
     Observe that the type of [fold] is parameterized by _two_ type
     variables, [X] and [Y], and the parameter [f] is a binary operator
@@ -932,10 +915,6 @@ Proof. reflexivity. Qed.
 
 Definition flat_map' {X : Type} (l : list (list X)) : list X
   := fold app l [].
-
-(* Do not modify the following line: *)
-Definition manual_grade_for_fold_types_different : option (nat*string) := None.
-(** [] *)
 
 (* ================================================================= *)
 (** ** Functions That Construct Functions *)
@@ -1025,9 +1004,9 @@ Definition fold_map {X Y: Type} (f: X -> Y) (l: list X) : list Y
   := fold (fun x l => cons (f x) l) l [].
 
 (** Write down a theorem [fold_map_correct] in Coq stating that
-   [fold_map] is correct, and prove it.  (Hint: again, remember that
-   [reflexivity] simplifies expressions a bit more aggressively than
-   [simpl].) *)
+    [fold_map] is correct, and prove it.  (Hint: again, remember that
+    [reflexivity] simplifies expressions a bit more aggressively than
+    [simpl].) *)
 
 Theorem fold_map_correct : forall (X Y : Type) (f : X -> Y) (l : list X),
   map f l = fold_map f l.
@@ -1045,18 +1024,26 @@ Definition manual_grade_for_fold_map : option (nat*string) := None.
 
 (** **** Exercise: 2 stars, advanced (currying)
 
-    In Coq, a function [f : A -> B -> C] really has the type [A
-    -> (B -> C)].  That is, if you give [f] a value of type [A], it
-    will give you function [f' : B -> C].  If you then give [f'] a
-    value of type [B], it will return a value of type [C].  This
-    allows for partial application, as in [plus3].  Processing a list
-    of arguments with functions that return functions is called
-    _currying_, in honor of the logician Haskell Curry.
+    The type [X -> Y -> Z] can be read as describing functions that
+    take two arguments, one of type [X] and another of type [Y], and
+    return an output of type [Z]. Strictly speaking, this type is
+    written [X -> (Y -> Z)] when fully parenthesized.  That is, if we
+    have [f : X -> Y -> Z], and we give [f] an input of type [X], it
+    will give us as output a function of type [Y -> Z].  If we then
+    give that function an input of type [Y], it will return an output
+    of type [Z]. That is, every function in Coq takes only one input,
+    but some functions return a function as output. This is precisely
+    what enables partial application, as we saw above with [plus3].
 
-    Conversely, we can reinterpret the type [A -> B -> C] as [(A *
-    B) -> C].  This is called _uncurrying_.  With an uncurried binary
-    function, both arguments must be given at once as a pair; there is
-    no partial application. *)
+    By contrast, functions of type [X * Y -> Z] -- which when fully
+    parenthesized is written [(X * Y) -> Z] -- require their single
+    input to be a pair.  Both arguments must be given at once; there
+    is no possibility of partial application.
+
+    It is possible to convert a function between these two types.
+    Converting from [X * Y -> Z] to [X -> Y -> Z] is called
+    _currying_, in honor of the logician Haskell Curry.  Converting
+    from [X -> Y -> Z] to [X * Y -> Z] is called _uncurrying_.  *)
 
 (** We can define currying as follows: *)
 
@@ -1106,9 +1093,11 @@ Proof.
      | a :: l' => if n =? O then Some a else nth_error l' (pred n)
      end.
 
-   Write an informal proof of the following theorem:
+   Write a careful informal proof of the following theorem:
 
    forall X l n, length l = n -> @nth_error X l n = None
+
+   Make sure to state the induction hypothesis _explicitly_.
 *)
 (* FILL IN HERE *)
 
@@ -1116,11 +1105,14 @@ Proof.
 Definition manual_grade_for_informal_proof : option (nat*string) := None.
 (** [] *)
 
+(* ================================================================= *)
+(** ** Church Numerals (Advanced) *)
+
 (** The following exercises explore an alternative way of defining
-    natural numbers, using the so-called _Church numerals_, named
-    after mathematician Alonzo Church.  We can represent a natural
-    number [n] as a function that takes a function [f] as a parameter
-    and returns [f] iterated [n] times. *)
+    natural numbers using the _Church numerals_, which are named after
+    their inventor, the mathematician Alonzo Church.  We can represent
+    a natural number [n] as a function that takes a function [f] as a
+    parameter and returns [f] iterated [n] times. *)
 
 Module Church.
 Definition cnat := forall X : Type, (X -> X) -> X -> X.
@@ -1144,38 +1136,84 @@ Definition zero : cnat :=
   fun (X : Type) (f : X -> X) (x : X) => x.
 
 (** More generally, a number [n] can be written as [fun X f x => f (f
-    ... (f x) ...)], with [n] occurrences of [f].  Notice in
-    particular how the [doit3times] function we've defined previously
-    is actually just the Church representation of [3]. *)
+    ... (f x) ...)], with [n] occurrences of [f].  Let's informally
+    notate that as [fun X f x => f^n x], with the convention that [f^0 x]
+    is just [x]. Note how the [doit3times] function we've defined
+    previously is actually just the Church representation of [3]. *)
 
 Definition three : cnat := @doit3times.
 
-(** Complete the definitions of the following functions. Make sure
-    that the corresponding unit tests pass by proving them with
+(** So [n X f x] represents "do it [n] times", where [n] is a Church
+    numerals and "it" means applying [f] starting with [x].
+
+    Another way to think about the Church representation is that
+    function [f] represents the successor operation on [X], and value
+    [x] represents the zero element of [X].  We could even rewrite
+    with those names to make it clearer: *)
+
+Definition zero' : cnat :=
+  fun (X : Type) (succ : X -> X) (zero : X) => zero.
+Definition one' : cnat :=
+  fun (X : Type) (succ : X -> X) (zero : X) => succ zero.
+Definition two' : cnat :=
+  fun (X : Type) (succ : X -> X) (zero : X) => succ (succ zero).
+
+(** If we passed in [S] as [succ] and [O] as [zero], we'd even get the Peano
+    naturals as a result: *)
+
+Example zero_church_peano : zero nat S O = 0.
+Proof. reflexivity. Qed.
+
+Example one_church_peano : one nat S O = 1.
+Proof. reflexivity. Qed.
+
+Example two_church_peano : two nat S O = 2.
+Proof. reflexivity. Qed.
+
+(** But the intellectually exciting implication of the Church numerals
+    is that we don't strictly need the natural numbers to be built-in
+    to a functional programming language, or even to be definable with
+    an inductive data type. It's possible to represent them purely (if
+    not efficiently) with functions.
+
+    Of course, it's not enough to represent numerals; we need to be
+    able to do arithmetic with them. Show that we can by completing
+    the definitions of the following functions. Make sure that the
+    corresponding unit tests pass by proving them with
     [reflexivity]. *)
 
-(** **** Exercise: 1 star, advanced (church_succ) *)
+(** **** Exercise: 2 stars, advanced (church_scc) *)
 
-(** Successor of a natural number: given a Church numeral [n],
-    the successor [succ n] is a function that iterates its
-    argument once more than [n]. *)
-Definition succ (n : cnat) : cnat
+(** Define a function that computes the successor of a Church numeral.
+    Given a Church numeral [n], its successor [scc n] should iterate
+    its function argument once more than [n]. That is, given [fun X f x
+    => f^n x] as input, [scc] should produce [fun X f x => f^(n+1) x] as
+    output. In other words, do it [n] times, then do it once more. *)
+
+Definition scc (n : cnat) : cnat
   := fun (X : Type) (f : X -> X) (x : X) => n X f (f x).
 
-Example succ_1 : succ zero = one.
+Example scc_1 : scc zero = one.
 Proof. reflexivity. Qed.
 
-Example succ_2 : succ one = two.
+Example scc_2 : scc one = two.
 Proof. reflexivity. Qed.
 
-Example succ_3 : succ two = three.
+Example scc_3 : scc two = three.
 Proof. reflexivity. Qed.
 
 (** [] *)
 
-(** **** Exercise: 1 star, advanced (church_plus) *)
+(** **** Exercise: 3 stars, advanced (church_plus) *)
 
-(** Addition of two natural numbers: *)
+(** Define a function that computes the addition of two Church
+    numerals.  Given [fun X f x => f^n x] and [fun X f x => f^m x] as
+    input, [plus] should produce [fun X f x => f^(n + m) x] as output.
+    In other words, do it [n] times, then do it [m] more times.
+
+    Hint: the "zero" argument to a Church numeral need not be just
+    [x]. *)
+
 Definition plus (n m : cnat) : cnat
   := fun (X : Type) (f : X -> X) (x : X) => n X f (m X f x).
 
@@ -1191,9 +1229,20 @@ Proof. reflexivity. Qed.
 
 (** [] *)
 
-(** **** Exercise: 2 stars, advanced (church_mult) *)
+(** **** Exercise: 3 stars, advanced (church_mult) *)
 
-(** Multiplication: *)
+(** Define a function that computes the multiplication of two Church
+    numerals.
+
+    Hint: the "successor" argument to a Church numeral need not be
+    just [f].
+
+    Warning: Coq will not let you pass [cnat] itself as the type [X]
+    argument to a Church numeral; you will get a "Universe
+    inconsistency" error. That is Coq's way of preventing a paradox in
+    which a type contains itself. So leave the type argument
+    unchanged. *)
+
 Definition mult (n m : cnat) : cnat
   := fun (X : Type) (f : X -> X) => m X (n X f).
 
@@ -1208,14 +1257,16 @@ Proof. reflexivity. Qed.
 
 (** [] *)
 
-(** **** Exercise: 2 stars, advanced (church_exp) *)
+(** **** Exercise: 3 stars, advanced (church_exp) *)
 
 (** Exponentiation: *)
 
-(** (_Hint_: Polymorphism plays a crucial role here.  However,
-    choosing the right type to iterate over can be tricky.  If you hit
-    a "Universe inconsistency" error, try iterating over a different
-    type.  Iterating over [cnat] itself is usually problematic.) *)
+(** Define a function that computes the exponentiation of two Church
+    numerals.
+
+    Hint: the type argument to a Church numeral need not just be [X].
+    But again, you cannot pass [cnat] itself as the type argument.
+    Finding the right type can be tricky. *)
 
 Definition exp (n m : cnat) : cnat
   := fun (X : Type) => m (X -> X) (n X).
@@ -1234,4 +1285,4 @@ Proof. reflexivity. Qed.
 End Church.
 End Exercises.
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)
