@@ -19,8 +19,8 @@ Inductive natprod : Type :=
 
 Check (pair 3 5) : natprod.
 
-(** Here are simple functions for extracting the first and
-    second components of a pair. *)
+(** Functions for extracting the first and second components of a pair
+    can then be defined by pattern matching. *)
 
 Definition fst (p : natprod) : nat :=
   match p with
@@ -106,8 +106,8 @@ Theorem surjective_pairing' : forall (n m : nat),
 Proof.
   reflexivity. Qed.
 
-(** But [reflexivity] is not enough if we state the lemma in a more
-    natural way: *)
+(** But just [reflexivity] is not enough if we state the lemma in the
+    most natural way: *)
 
 Theorem surjective_pairing_stuck : forall (p : natprod),
   p = (fst p, snd p).
@@ -313,6 +313,12 @@ Example test_oddmembers:
   oddmembers [0;1;0;2;3;0;0] = [1;3].
 Proof. reflexivity. Qed.
 
+(** For [countoddmembers], we're giving you a header that uses keyword
+    [Definition] instead of [Fixpoint].  The point of stating the
+    question this way is to encourage you to implement the function by
+    using already-defined functions, rather than writing your own
+    recursive definition. *)
+
 Definition countoddmembers (l:natlist) : nat
   := length (oddmembers l).
 
@@ -336,12 +342,12 @@ Proof. reflexivity. Qed.
     from the first list and elements from the second.  See the tests
     below for more specific examples.
 
-    (Note: one natural and elegant way of writing [alternate] will
-    fail to satisfy Coq's requirement that all [Fixpoint] definitions
-    be "obviously terminating."  If you find yourself in this rut,
-    look for a slightly more verbose solution that considers elements
-    of both lists at the same time.  One possible solution involves
-    defining a new kind of pairs, but this is not the only way.)  *)
+    Hint: there is an elegant way of writing [alternate] that fails to
+    satisfy Coq's requirement that all [Fixpoint] definitions be
+    _structurally recursing_, as mentioned in [Basics]. If you
+    encounter that difficulty, consider pattern matching against both
+    lists at the same time with the "multiple pattern" syntax we've
+    seen before. *)
 
 Fixpoint alternate (l1 l2 : natlist) : natlist
   := match l1, l2 with
@@ -378,8 +384,8 @@ Definition bag := natlist.
 
 (** **** Exercise: 3 stars, standard, especially useful (bag_functions)
 
-    Complete the following definitions for the functions
-    [count], [sum], [add], and [member] for bags. *)
+    Complete the following definitions for the functions [count],
+    [sum], [add], and [member] for bags. *)
 
 Fixpoint count (v : nat) (s : bag) : nat
   := match s with
@@ -397,14 +403,11 @@ Proof. reflexivity. Qed.
 (** Multiset [sum] is similar to set [union]: [sum a b] contains all
     the elements of [a] and of [b].  (Mathematicians usually define
     [union] on multisets a little bit differently -- using max instead
-    of sum -- which is why we don't call this operation [union].)  For
-    [sum], we're giving you a header that does not give explicit names
-    to the arguments.  Moreover, it uses the keyword [Definition]
-    instead of [Fixpoint], so even if you had names for the arguments,
-    you wouldn't be able to process them recursively.  The point of
-    stating the question this way is to encourage you to think about
-    whether [sum] can be implemented in another way -- perhaps by
-    using one or more functions that have already been defined.  *)
+    of sum -- which is why we don't call this operation [union].)
+
+    We've deliberately given you a header that does not give explicit
+    names to the arguments.  Implement [sum] with an already-defined
+    function without changing the header. *)
 
 Definition sum : bag -> bag -> bag
   := app.
@@ -420,8 +423,11 @@ Proof. reflexivity. Qed.
 Example test_add2:                count 5 (add 1 [1;4;1]) = 0.
 Proof. reflexivity. Qed.
 
-Definition member (v : nat) (s : bag) : bool
-  := negb (eqb O (count v s)).
+Fixpoint member (v : nat) (s : bag) : bool
+  := match s with
+     | n :: s' => if n =? v then true else member v s'
+     | nil    => false
+     end.
 
 Example test_member1:             member 1 [1;4;1] = true.
 Proof. reflexivity. Qed.
@@ -477,24 +483,24 @@ Proof. reflexivity. Qed.
 Example test_remove_all4:  count 5 (remove_all 5 [2;1;5;4;5;1;4;5;1;4]) = 0.
 Proof. reflexivity. Qed.
 
-Fixpoint subset (s1 : bag) (s2 : bag) : bool
+Fixpoint included (s1 : bag) (s2 : bag) : bool
   := match s1 with
-     | n :: s1' => if member n s2 then subset s1' (remove_one n s2) else false
+     | n :: s1' => if member n s2 then included s1' (remove_one n s2) else false
      | nil      => true
      end.
 
-Example test_subset1:              subset [1;2] [2;1;4;1] = true.
+Example test_included1:              included [1;2] [2;1;4;1] = true.
 Proof. reflexivity. Qed.
-Example test_subset2:              subset [1;2;2] [2;1;4;1] = false.
+Example test_included2:              included [1;2;2] [2;1;4;1] = false.
 Proof. reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, especially useful (add_inc_count)
 
     Adding a value to a bag should increase the value's count by one.
-    State that as a theorem and prove it. *)
+    State this as a theorem and prove it. *)
 (*
-Theorem bag_theorem : ...
+Theorem add_inc_count : ...
 Proof.
   ...
 Qed.
@@ -609,7 +615,7 @@ Proof.
 (** For comparison, here is an informal proof of the same theorem. *)
 
 (** _Theorem_: For all lists [l1], [l2], and [l3],
-   [(l1 ++ l2) ++ l3 = l1 ++ (l2 ++ l3)].
+               [(l1 ++ l2) ++ l3 = l1 ++ (l2 ++ l3)].
 
    _Proof_: By induction on [l1].
 
@@ -856,28 +862,18 @@ Proof.
   - simpl. rewrite -> IHl1. rewrite -> app_assoc. reflexivity.
 Qed.
 
-Lemma cons_rev : forall l : natlist, forall n : nat,
-  n :: rev l = rev (app l [n]).
-Proof.
-  intros l n.
-  induction l as [| n' l'].
-  - reflexivity.
-  - simpl.
-    rewrite <- IHl'.
-    simpl.
-    reflexivity.
-Qed.
-
+(** An _involution_ is a function that is its own inverse. That is,
+    applying the function twice yield the original input. *)
 Theorem rev_involutive : forall l : natlist,
   rev (rev l) = l.
 Proof.
   intros l.
-  induction l as [| n l'].
+  induction l.
   - reflexivity.
   - simpl.
-    rewrite <- cons_rev.
-    rewrite -> IHl'.
-    reflexivity.
+    destruct (rev l).
+    + rewrite -> rev_app_distr. rewrite -> IHl. reflexivity.
+    + rewrite -> rev_app_distr. rewrite -> IHl. reflexivity.
 Qed.
 
 (** There is a short solution to the next one.  If you find yourself
@@ -994,9 +990,9 @@ Qed.
     [=?] you may find it useful to know that [destruct] works on
     arbitrary expressions, not just simple identifiers.)
 *)
+
 Theorem bag_count_sum : forall (s1 s2 : bag), forall n : nat,
   count n (sum s1 s2) = (count n s1) + (count n s2).
-Proof.
   intros s1 s2 n.
   induction s1 as [| n' s1'].
   - reflexivity.
@@ -1007,10 +1003,31 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 4 stars, advanced (rev_injective)
+(** **** Exercise: 3 stars, advanced (involution_injective) *)
 
-    Prove that the [rev] function is injective. There is a hard way
-    and an easy way to do this. *)
+(** Prove that every involution is injective. Involutions were defined
+    above in [rev_involutive]. An _injective_ function is one-to-one:
+    it maps distinct inputs to distinct outputs, without any
+    collisions. *)
+
+Theorem involution_injective : forall (f : nat -> nat),
+    (forall n : nat, n = f (f n)) -> (forall n1 n2 : nat, f n1 = f n2 -> n1 = n2).
+Proof.
+  intros f I n1 n2 H.
+  rewrite -> I.
+  rewrite <- H.
+  rewrite <- I.
+  reflexivity.
+Qed.
+
+(** [] *)
+
+(** **** Exercise: 2 stars, advanced (rev_injective)
+
+    Prove that [rev] is injective. Do not prove this by induction --
+    that would be hard. Instead, re-use the same proof technique that
+    you used for [involution_injective]. Do not try to use that
+    exercise directly as a lemma: the types are not the same. *)
 
 Theorem rev_injective : forall (l1 l2 : natlist),
   rev l1 = rev l2 -> l1 = l2.
@@ -1138,7 +1155,8 @@ Inductive id : Type :=
 
 (** Internally, an [id] is just a number.  Introducing a separate type
     by wrapping each nat with the tag [Id] makes definitions more
-    readable and gives us more flexibility. *)
+    readable and gives us flexibility to change representations later
+    if we want to. *)
 
 (** We'll also need an equality test for [id]s: *)
 
@@ -1158,7 +1176,7 @@ Proof.
 (** Now we define the type of partial maps: *)
 
 Module PartialMap.
-Export NatList.
+Export NatList.  (* make the definitions from NatList available here *)
 
 Inductive partial_map : Type :=
   | empty
@@ -1227,8 +1245,6 @@ Inductive baz : Type :=
 
 (** no elements *)
 
-(* Do not modify the following line: *)
-Definition manual_grade_for_baz_num_elts : option (nat*string) := None.
 (** [] *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)
