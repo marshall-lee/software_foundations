@@ -81,9 +81,9 @@ Proof.
 (** [] *)
 
 (** To use the [apply] tactic, the (conclusion of the) fact
-    being applied must match the goal exactly -- for example, [apply]
-    will not work if the left and right sides of the equality are
-    swapped. *)
+    being applied must match the goal exactly (perhaps after
+    simplification) -- for example, [apply] will not work if the left
+    and right sides of the equality are swapped. *)
 
 Theorem silly3 : forall (n m : nat),
   n = m ->
@@ -100,14 +100,13 @@ Proof.
 
   symmetry. apply H.  Qed.
 
-(** **** Exercise: 3 stars, standard (apply_exercise1)
+(** **** Exercise: 2 stars, standard (apply_exercise1)
 
-    _Hint_: You can also use [apply] with previously defined lemmas,
-    not just hypotheses in the context.  You may find earlier lemmas
-    like [app_nil_r], [app_assoc], [rev_app_distr], [rev_involutive],
-    etc. helpful.  Also, remember that [Search] is your friend (though
-    it may not find earlier lemmas if they were posed as optional
-    problems and you chose not to finish the proofs). *)
+    You can use [apply] with previously defined theorems, not
+    just hypotheses in the context.  Use [Search] to find a
+    previously-defined theorem about [rev] from [Lists].  Use
+    that theorem as part of your (relatively short) solution to this
+    exercise. You do not need [induction]. *)
 
 Theorem rev_exercise1 : forall (l l' : list nat),
   l = rev l' ->
@@ -336,8 +335,10 @@ Proof.
     nonsensical situation described by the premise did somehow arise,
     _then_ the nonsensical conclusion would also follow, because we'd
     be living in an inconsistent universe where every statement is
-    true.  We'll explore the principle of explosion in more detail in
-    the next chapter. *)
+    true.
+
+    We'll explore the principle of explosion in more detail in the
+    next chapter. *)
 
 (** **** Exercise: 1 star, standard (discriminate_ex3) *)
 Example discriminate_ex3 :
@@ -394,10 +395,10 @@ Theorem eq_implies_succ_equal : forall (n m : nat),
 Proof. intros n m H. apply f_equal. apply H. Qed.
 
 (** There is also a tactic named `f_equal` that can prove such
-    theorems.  Given a goal of the form [f a1 ... an = g b1 ... bn],
-    the tactic [f_equal] will produce subgoals of the form [f = g],
-    [a1 = b1], ..., [an = bn]. At the same time, any of these subgoals
-    that are simple enough (e.g., immediately provable by
+    theorems directly.  Given a goal of the form [f a1 ... an = g b1
+    ... bn], the tactic [f_equal] will produce subgoals of the form [f
+    = g], [a1 = b1], ..., [an = bn]. At the same time, any of these
+    subgoals that are simple enough (e.g., immediately provable by
     [reflexivity]) will be automatically discharged by [f_equal]. *)
 
 Theorem eq_implies_succ_equal' : forall (n m : nat),
@@ -452,10 +453,10 @@ Proof.
     the _goal_ and iteratively reasons about what would imply the
     goal, until premises or previously proven theorems are reached.
 
-    The informal proofs that you've seen in math or computer science
-    classes probably tended to use forward reasoning.  In general,
-    idiomatic use of Coq favors backward reasoning, but in some
-    situations the forward style can be easier to think about. *)
+    The informal proofs seen in math or computer science classes tend
+    to use forward reasoning.  By contrast, idiomatic use of Coq
+    generally favors backward reasoning, though in some situations the
+    forward style can be easier to think about. *)
 
 (* ################################################################# *)
 (** * Varying the Induction Hypothesis *)
@@ -475,7 +476,7 @@ Proof.
 
        intros n. induction n.
 
-    all is well.  But if we begin it with introducing both variables
+    then all is well.  But if we begin it with introducing both variables
 
        intros n m. induction n.
 
@@ -533,9 +534,8 @@ Abort.
 
        - "if [double (S n) = double m] then [S n = m]".
 
-    To see why this is strange, let's think of a particular (arbitrary,
-    but fixed) [m] -- say, [5].  The statement is then saying that,
-    if we know
+    To see why this is strange, let's think of a particular [m] --
+    say, [5].  The statement is then saying that, if we know
 
       - [Q] = "if [double n = 10] then [n = 5]"
 
@@ -600,14 +600,14 @@ Proof.
 
       apply IHn'. simpl in eq. injection eq as goal. apply goal. Qed.
 
-(** What you should take away from all this is that you need to be
+(** The thing to take away from all this is that you need to be
     careful, when using induction, that you are not trying to prove
     something too specific: When proving a property involving two
     variables [n] and [m] by induction on [n], it is sometimes crucial
     to leave [m] generic. *)
 
-(** The following exercise (which further strengthens the link between
-    [=?] and [=]) follows the same pattern. *)
+(** The following exercise, which further strengthens the link between
+    [=?] and [=], follows the same pattern. *)
 
 (** **** Exercise: 2 stars, standard (eqb_true) *)
 Theorem eqb_true : forall n m,
@@ -628,8 +628,9 @@ Qed.
 
 (** **** Exercise: 2 stars, advanced (eqb_true_informal)
 
-    Give a careful informal proof of [eqb_true], being as explicit
-    as possible about quantifiers. *)
+    Give a careful informal proof of [eqb_true], stating the induction
+    hypothesis explicitly and being as explicit as possible about
+    quantifiers, everywhere. *)
 
 (* FILL IN HERE *)
 
@@ -860,11 +861,12 @@ Abort.
     a match whose scrutinee, [m], is a variable, so the [match] cannot
     be simplified further.  It is not smart enough to notice that the
     two branches of the [match] are identical, so it gives up on
-    unfolding [bar m] and leaves it alone.  Similarly, tentatively
-    unfolding [bar (m+1)] leaves a [match] whose scrutinee is a
-    function application (that cannot itself be simplified, even
-    after unfolding the definition of [+]), so [simpl] leaves it
-    alone. *)
+    unfolding [bar m] and leaves it alone.
+
+    Similarly, tentatively unfolding [bar (m+1)] leaves a [match]
+    whose scrutinee is a function application (that cannot itself be
+    simplified, even after unfolding the definition of [+]), so
+    [simpl] leaves it alone. *)
 
 (** At this point, there are two ways to make progress.  One is to use
     [destruct m] to break the proof into two cases, each focusing on a
@@ -1188,17 +1190,14 @@ Qed.
 
 (** **** Exercise: 3 stars, advanced (split_combine)
 
-    We proved, in an exercise above, that for all lists of pairs,
-    [combine] is the inverse of [split].  How would you formalize the
-    statement that [split] is the inverse of [combine]?  When is this
-    property true?
+    We proved, in an exercise above, that [combine] is the inverse of
+    [split].  Complete the definition of [split_combine_statement]
+    below with a property that states that [split] is the inverse of
+    [combine]. Then, prove that the property holds.
 
-    Complete the definition of [split_combine_statement] below with a
-    property that states that [split] is the inverse of
-    [combine]. Then, prove that the property holds. (Be sure to leave
-    your induction hypothesis general by not doing [intros] on more
-    things than necessary.  Hint: what property do you need of [l1]
-    and [l2] for [split (combine l1 l2) = (l1,l2)] to be true?) *)
+    Hint: Take a look at the definition of [combine] in [Poly].
+    Your property will need to account for the behavior of [combine]
+    in its base cases, which possibly drop some list elements. *)
 
 Definition split_combine_statement : Prop
   (* ("[: Prop]" means that we are giving a name to a
@@ -1224,11 +1223,7 @@ Qed.
 Definition manual_grade_for_split_combine : option (nat*string) := None.
 (** [] *)
 
-(** **** Exercise: 3 stars, advanced (filter_exercise)
-
-    This one is a bit challenging.  Pay attention to the form of your
-    induction hypothesis. *)
-
+(** **** Exercise: 3 stars, advanced (filter_exercise) *)
 Theorem filter_exercise : forall (X : Type) (test : X -> bool)
                                  (x : X) (l lf : list X),
   filter test l = x :: lf ->
@@ -1324,4 +1319,4 @@ Qed.
 
 (** [] *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)
