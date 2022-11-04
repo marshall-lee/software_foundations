@@ -257,7 +257,7 @@
 (** Coq runs on Windows, Linux, and macOS.  You will need:
 
     - A current installation of Coq, available from the Coq home page.
-      These files have been tested with Coq 8.12.
+      These files have been tested with Coq 8.15.
 
     - An IDE for interacting with Coq.  Currently, there are two
       choices:
@@ -363,9 +363,9 @@
     title        =   "Logical Foundations",
     series       =   "Software Foundations",
     volume       =   "1",
-    year         =   "2021",
+    year         =   "2022",
     publisher    =   "Electronic textbook",
-    note         =   {Version 6.1, \URL{http://softwarefoundations.cis.upenn.edu}}
+    note         =   {Version 6.2, \URL{http://softwarefoundations.cis.upenn.edu}}
     }
 *)
 
@@ -398,7 +398,7 @@
 (** If you plan to use these materials in your own teaching, or if you
     are using software foundations for self study and are finding
     things you'd like to help add or improve, your contributions are
-    welcome!
+    welcome!  You are warmly invited to join the private SF git repo.
 
     In order to keep the legalities simple and to have a single point
     of responsibility in case the need should ever arise to adjust the
@@ -418,9 +418,11 @@
         Testing in Coq," the Author of Record is Benjamin C. Pierce.
         For Volume 3, "Verified Functional Algorithms," and volume 5,
         "Verifiable C," the Author of Record is Andrew W. Appel. For
-        components outside of designated volumes (e.g., typesetting
-        and grading tools and other software infrastructure), the
-        Author of Record is Benjamin Pierce.
+        Volume 6, "Separation Logic Foundations," the author of record
+        is Arthur Chargueraud. For components outside of designated
+        volumes (e.g., typesetting and grading tools and other
+        software infrastructure), the Author of Record is Benjamin
+        Pierce.
 
     To get started, please send an email to Benjamin Pierce,
     describing yourself and how you plan to use the materials and
@@ -447,4 +449,4 @@
     NSF Expeditions grant 1521523, _The Science of Deep
     Specification_. *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)

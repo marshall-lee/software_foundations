@@ -83,6 +83,18 @@ Print Assumptions double_plus.
 Goal True.
 idtac " ".
 
+idtac "-------------------  eqb_refl  --------------------".
+idtac " ".
+
+idtac "#> eqb_refl".
+idtac "Possible points: 2".
+check_type @eqb_refl ((forall n : nat, (n =? n) = true)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions eqb_refl.
+Goal True.
+idtac " ".
+
 idtac "-------------------  add_comm_informal  --------------------".
 idtac " ".
 
@@ -95,8 +107,17 @@ idtac " ".
 idtac "-------------------  mul_comm  --------------------".
 idtac " ".
 
+idtac "#> add_shuffle3".
+idtac "Possible points: 1".
+check_type @add_shuffle3 ((forall n m p : nat, n + (m + p) = m + (n + p))).
+idtac "Assumptions:".
+Abort.
+Print Assumptions add_shuffle3.
+Goal True.
+idtac " ".
+
 idtac "#> mul_comm".
-idtac "Possible points: 3".
+idtac "Possible points: 2".
 check_type @mul_comm ((forall m n : nat, m * n = n * m)).
 idtac "Assumptions:".
 Abort.
@@ -107,40 +128,89 @@ idtac " ".
 idtac "-------------------  binary_commute  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: binary_commute".
+idtac "#> bin_to_nat_pres_incr".
 idtac "Possible points: 3".
-print_manual_grade manual_grade_for_binary_commute.
+check_type @bin_to_nat_pres_incr (
+(forall b : bin, bin_to_nat (incr b) = 1 + bin_to_nat b)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions bin_to_nat_pres_incr.
+Goal True.
 idtac " ".
 
-idtac "-------------------  binary_inverse  --------------------".
+idtac "-------------------  nat_bin_nat  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: binary_inverse_a".
+idtac "#> nat_bin_nat".
+idtac "Possible points: 3".
+check_type @nat_bin_nat ((forall n : nat, bin_to_nat (nat_to_bin n) = n)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions nat_bin_nat.
+Goal True.
+idtac " ".
+
+idtac "-------------------  double_bin  --------------------".
+idtac " ".
+
+idtac "#> double_incr".
 idtac "Advanced".
-idtac "Possible points: 4".
-print_manual_grade manual_grade_for_binary_inverse_a.
+idtac "Possible points: 0.5".
+check_type @double_incr ((forall n : nat, double (S n) = S (S (double n)))).
+idtac "Assumptions:".
+Abort.
+Print Assumptions double_incr.
+Goal True.
 idtac " ".
 
-idtac "#> Manually graded: binary_inverse_b".
+idtac "#> double_bin_zero".
 idtac "Advanced".
-idtac "Possible points: 2".
-print_manual_grade manual_grade_for_binary_inverse_b.
+idtac "Possible points: 0.5".
+check_type @double_bin_zero ((double_bin Z = Z)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions double_bin_zero.
+Goal True.
 idtac " ".
 
-idtac "#> Manually graded: binary_inverse_c".
+idtac "#> double_incr_bin".
 idtac "Advanced".
-idtac "Possible points: 4".
-print_manual_grade manual_grade_for_binary_inverse_c.
+idtac "Possible points: 1".
+check_type @double_incr_bin (
+(forall b : bin, double_bin (incr b) = incr (incr (double_bin b)))).
+idtac "Assumptions:".
+Abort.
+Print Assumptions double_incr_bin.
+Goal True.
+idtac " ".
+
+idtac "-------------------  bin_nat_bin  --------------------".
+idtac " ".
+
+idtac "#> bin_nat_bin".
+idtac "Advanced".
+idtac "Possible points: 6".
+check_type @bin_nat_bin ((forall b : bin, nat_to_bin (bin_to_nat b) = normalize b)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions bin_nat_bin.
+Goal True.
 idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 10".
-idtac "Max points - advanced: 22".
+idtac "Max points - standard: 15".
+idtac "Max points - advanced: 25".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
 idtac "FunctionalExtensionality.functional_extensionality_dep".
+idtac "plus_le".
+idtac "le_trans".
+idtac "le_plus_l".
+idtac "add_le_cases".
+idtac "Sn_le_Sm__n_le_m".
+idtac "O_le_n".
 idtac "".
 idtac "".
 idtac "********** Summary **********".
@@ -164,22 +234,30 @@ idtac "---------- add_assoc ---------".
 Print Assumptions add_assoc.
 idtac "---------- double_plus ---------".
 Print Assumptions double_plus.
+idtac "---------- eqb_refl ---------".
+Print Assumptions eqb_refl.
+idtac "---------- add_shuffle3 ---------".
+Print Assumptions add_shuffle3.
 idtac "---------- mul_comm ---------".
 Print Assumptions mul_comm.
-idtac "---------- binary_commute ---------".
-idtac "MANUAL".
+idtac "---------- bin_to_nat_pres_incr ---------".
+Print Assumptions bin_to_nat_pres_incr.
+idtac "---------- nat_bin_nat ---------".
+Print Assumptions nat_bin_nat.
 idtac "".
 idtac "********** Advanced **********".
 idtac "---------- add_comm_informal ---------".
 idtac "MANUAL".
-idtac "---------- binary_inverse_a ---------".
-idtac "MANUAL".
-idtac "---------- binary_inverse_b ---------".
-idtac "MANUAL".
-idtac "---------- binary_inverse_c ---------".
-idtac "MANUAL".
+idtac "---------- double_incr ---------".
+Print Assumptions double_incr.
+idtac "---------- double_bin_zero ---------".
+Print Assumptions double_bin_zero.
+idtac "---------- double_incr_bin ---------".
+Print Assumptions double_incr_bin.
+idtac "---------- bin_nat_bin ---------".
+Print Assumptions bin_nat_bin.
 Abort.
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)

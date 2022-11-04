@@ -125,6 +125,17 @@ Print Assumptions subseq_app.
 Goal True.
 idtac " ".
 
+idtac "#> subseq_trans".
+idtac "Advanced".
+idtac "Possible points: 1".
+check_type @subseq_trans (
+(forall l1 l2 l3 : list nat, subseq l1 l2 -> subseq l2 l3 -> subseq l1 l3)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions subseq_trans.
+Goal True.
+idtac " ".
+
 idtac "-------------------  exp_match_ex1  --------------------".
 idtac " ".
 
@@ -238,20 +249,34 @@ idtac " ".
 idtac "-------------------  filter_challenge  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: filter_challenge".
+idtac "#> merge_filter".
 idtac "Advanced".
 idtac "Possible points: 6".
-print_manual_grade manual_grade_for_filter_challenge.
+check_type @merge_filter (
+(forall (X : Set) (test : X -> bool) (l l1 l2 : list X),
+ @merge X l1 l2 l ->
+ @All X (fun n : X => test n = true) l1 ->
+ @All X (fun n : X => test n = false) l2 -> @filter X test l = l1)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions merge_filter.
+Goal True.
 idtac " ".
 
 idtac " ".
 
 idtac "Max points - standard: 25".
-idtac "Max points - advanced: 46".
+idtac "Max points - advanced: 47".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
 idtac "FunctionalExtensionality.functional_extensionality_dep".
+idtac "plus_le".
+idtac "le_trans".
+idtac "le_plus_l".
+idtac "add_le_cases".
+idtac "Sn_le_Sm__n_le_m".
+idtac "O_le_n".
 idtac "".
 idtac "".
 idtac "********** Summary **********".
@@ -299,12 +324,14 @@ idtac "---------- subseq_refl ---------".
 Print Assumptions subseq_refl.
 idtac "---------- subseq_app ---------".
 Print Assumptions subseq_app.
+idtac "---------- subseq_trans ---------".
+Print Assumptions subseq_trans.
 idtac "---------- Pumping.weak_pumping ---------".
 Print Assumptions Pumping.weak_pumping.
-idtac "---------- filter_challenge ---------".
-idtac "MANUAL".
+idtac "---------- merge_filter ---------".
+Print Assumptions merge_filter.
 Abort.
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:14 *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:14 *)

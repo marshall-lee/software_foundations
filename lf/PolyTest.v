@@ -32,12 +32,59 @@ Import Check.
 
 Goal True.
 
-idtac "-------------------  mumble_grumble  --------------------".
+idtac "-------------------  poly_exercises  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: mumble_grumble".
-idtac "Possible points: 2".
-print_manual_grade manual_grade_for_mumble_grumble.
+idtac "#> app_nil_r".
+idtac "Possible points: 0.5".
+check_type @app_nil_r ((forall (X : Type) (l : list X), l ++ [ ] = l)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions app_nil_r.
+Goal True.
+idtac " ".
+
+idtac "#> app_assoc".
+idtac "Possible points: 1".
+check_type @app_assoc ((forall (A : Type) (l m n : list A), l ++ m ++ n = (l ++ m) ++ n)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions app_assoc.
+Goal True.
+idtac " ".
+
+idtac "#> app_length".
+idtac "Possible points: 0.5".
+check_type @app_length (
+(forall (X : Type) (l1 l2 : list X),
+ @length X (l1 ++ l2) = @length X l1 + @length X l2)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions app_length.
+Goal True.
+idtac " ".
+
+idtac "-------------------  more_poly_exercises  --------------------".
+idtac " ".
+
+idtac "#> rev_app_distr".
+idtac "Possible points: 1".
+check_type @rev_app_distr (
+(forall (X : Type) (l1 l2 : list X),
+ @rev X (l1 ++ l2) = @rev X l2 ++ @rev X l1)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions rev_app_distr.
+Goal True.
+idtac " ".
+
+idtac "#> rev_involutive".
+idtac "Possible points: 1".
+check_type @rev_involutive ((forall (X : Type) (l : list X), @rev X (@rev X l) = l)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions rev_involutive.
+Goal True.
 idtac " ".
 
 idtac "-------------------  split  --------------------".
@@ -152,15 +199,6 @@ Print Assumptions test_flat_map1.
 Goal True.
 idtac " ".
 
-idtac "-------------------  fold_types_different  --------------------".
-idtac " ".
-
-idtac "#> Manually graded: fold_types_different".
-idtac "Advanced".
-idtac "Possible points: 1".
-print_manual_grade manual_grade_for_fold_types_different.
-idtac " ".
-
 idtac "-------------------  fold_length  --------------------".
 idtac " ".
 
@@ -218,37 +256,49 @@ idtac "Possible points: 2".
 print_manual_grade Exercises.manual_grade_for_informal_proof.
 idtac " ".
 
-idtac "-------------------  church_succ  --------------------".
+idtac "-------------------  church_scc  --------------------".
 idtac " ".
 
-idtac "#> Exercises.Church.succ_2".
+idtac "#> Exercises.Church.scc_2".
 idtac "Advanced".
-idtac "Possible points: 0.5".
-check_type @Exercises.Church.succ_2 (
-(Exercises.Church.succ Exercises.Church.one = Exercises.Church.two)).
+idtac "Possible points: 1".
+check_type @Exercises.Church.scc_2 (
+(Exercises.Church.scc Exercises.Church.one = Exercises.Church.two)).
 idtac "Assumptions:".
 Abort.
-Print Assumptions Exercises.Church.succ_2.
+Print Assumptions Exercises.Church.scc_2.
 Goal True.
 idtac " ".
 
-idtac "#> Exercises.Church.succ_3".
+idtac "#> Exercises.Church.scc_3".
 idtac "Advanced".
-idtac "Possible points: 0.5".
-check_type @Exercises.Church.succ_3 (
-(Exercises.Church.succ Exercises.Church.two = Exercises.Church.three)).
+idtac "Possible points: 1".
+check_type @Exercises.Church.scc_3 (
+(Exercises.Church.scc Exercises.Church.two = Exercises.Church.three)).
 idtac "Assumptions:".
 Abort.
-Print Assumptions Exercises.Church.succ_3.
+Print Assumptions Exercises.Church.scc_3.
 Goal True.
 idtac " ".
 
 idtac "-------------------  church_plus  --------------------".
 idtac " ".
 
+idtac "#> Exercises.Church.plus_1".
+idtac "Advanced".
+idtac "Possible points: 1".
+check_type @Exercises.Church.plus_1 (
+(Exercises.Church.plus Exercises.Church.zero Exercises.Church.one =
+ Exercises.Church.one)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions Exercises.Church.plus_1.
+Goal True.
+idtac " ".
+
 idtac "#> Exercises.Church.plus_2".
 idtac "Advanced".
-idtac "Possible points: 0.5".
+idtac "Possible points: 1".
 check_type @Exercises.Church.plus_2 (
 (Exercises.Church.plus Exercises.Church.two Exercises.Church.three =
  Exercises.Church.plus Exercises.Church.three Exercises.Church.two)).
@@ -260,7 +310,7 @@ idtac " ".
 
 idtac "#> Exercises.Church.plus_3".
 idtac "Advanced".
-idtac "Possible points: 0.5".
+idtac "Possible points: 1".
 check_type @Exercises.Church.plus_3 (
 (Exercises.Church.plus
    (Exercises.Church.plus Exercises.Church.two Exercises.Church.two)
@@ -278,7 +328,7 @@ idtac " ".
 
 idtac "#> Exercises.Church.mult_1".
 idtac "Advanced".
-idtac "Possible points: 0.5".
+idtac "Possible points: 1".
 check_type @Exercises.Church.mult_1 (
 (Exercises.Church.mult Exercises.Church.one Exercises.Church.one =
  Exercises.Church.one)).
@@ -290,7 +340,7 @@ idtac " ".
 
 idtac "#> Exercises.Church.mult_2".
 idtac "Advanced".
-idtac "Possible points: 0.5".
+idtac "Possible points: 1".
 check_type @Exercises.Church.mult_2 (
 (Exercises.Church.mult Exercises.Church.zero
    (Exercises.Church.plus Exercises.Church.three Exercises.Church.three) =
@@ -318,7 +368,7 @@ idtac " ".
 
 idtac "#> Exercises.Church.exp_1".
 idtac "Advanced".
-idtac "Possible points: 0.5".
+idtac "Possible points: 1".
 check_type @Exercises.Church.exp_1 (
 (Exercises.Church.exp Exercises.Church.two Exercises.Church.two =
  Exercises.Church.plus Exercises.Church.two Exercises.Church.two)).
@@ -330,7 +380,7 @@ idtac " ".
 
 idtac "#> Exercises.Church.exp_2".
 idtac "Advanced".
-idtac "Possible points: 0.5".
+idtac "Possible points: 1".
 check_type @Exercises.Church.exp_2 (
 (Exercises.Church.exp Exercises.Church.three Exercises.Church.zero =
  Exercises.Church.one)).
@@ -357,12 +407,18 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 19".
-idtac "Max points - advanced: 30".
+idtac "Max points - standard: 21".
+idtac "Max points - advanced: 36".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
 idtac "FunctionalExtensionality.functional_extensionality_dep".
+idtac "plus_le".
+idtac "le_trans".
+idtac "le_plus_l".
+idtac "add_le_cases".
+idtac "Sn_le_Sm__n_le_m".
+idtac "O_le_n".
 idtac "".
 idtac "".
 idtac "********** Summary **********".
@@ -376,8 +432,16 @@ idtac "  - A list of pending axioms, containing unproven assumptions. In this ca
 idtac "    the exercise is considered complete, if the axioms are all allowed.".
 idtac "".
 idtac "********** Standard **********".
-idtac "---------- mumble_grumble ---------".
-idtac "MANUAL".
+idtac "---------- app_nil_r ---------".
+Print Assumptions app_nil_r.
+idtac "---------- app_assoc ---------".
+Print Assumptions app_assoc.
+idtac "---------- app_length ---------".
+Print Assumptions app_length.
+idtac "---------- rev_app_distr ---------".
+Print Assumptions rev_app_distr.
+idtac "---------- rev_involutive ---------".
+Print Assumptions rev_involutive.
 idtac "---------- split ---------".
 Print Assumptions split.
 idtac "---------- test_split ---------".
@@ -404,18 +468,18 @@ idtac "---------- fold_map ---------".
 idtac "MANUAL".
 idtac "".
 idtac "********** Advanced **********".
-idtac "---------- fold_types_different ---------".
-idtac "MANUAL".
 idtac "---------- Exercises.uncurry_curry ---------".
 Print Assumptions Exercises.uncurry_curry.
 idtac "---------- Exercises.curry_uncurry ---------".
 Print Assumptions Exercises.curry_uncurry.
 idtac "---------- informal_proof ---------".
 idtac "MANUAL".
-idtac "---------- Exercises.Church.succ_2 ---------".
-Print Assumptions Exercises.Church.succ_2.
-idtac "---------- Exercises.Church.succ_3 ---------".
-Print Assumptions Exercises.Church.succ_3.
+idtac "---------- Exercises.Church.scc_2 ---------".
+Print Assumptions Exercises.Church.scc_2.
+idtac "---------- Exercises.Church.scc_3 ---------".
+Print Assumptions Exercises.Church.scc_3.
+idtac "---------- Exercises.Church.plus_1 ---------".
+Print Assumptions Exercises.Church.plus_1.
 idtac "---------- Exercises.Church.plus_2 ---------".
 Print Assumptions Exercises.Church.plus_2.
 idtac "---------- Exercises.Church.plus_3 ---------".
@@ -434,6 +498,6 @@ idtac "---------- Exercises.Church.exp_3 ---------".
 Print Assumptions Exercises.Church.exp_3.
 Abort.
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:14 *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:14 *)

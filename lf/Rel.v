@@ -22,7 +22,7 @@ From LF Require Export IndProp.
 
 Definition relation (X: Type) := X -> X -> Prop.
 
-(** Rather confusingly, the Coq standard library hijacks the generic
+(** Somewhat confusingly, the Coq standard library hijacks the generic
     term "relation" for this specific instance of the idea. To
     maintain consistency with the library, we will do the same.  So,
     henceforth, the Coq identifier [relation] will always refer to a
@@ -67,12 +67,10 @@ Check le : relation nat.
 Definition partial_function {X: Type} (R: relation X) :=
   forall x y1 y2 : X, R x y1 -> R x y2 -> y1 = y2.
 
-(** For example, the [next_nat] relation defined earlier is a partial
-    function. *)
+(** For example, the [next_nat] relation is a partial function. *)
+Inductive next_nat : nat -> nat -> Prop :=
+  | nn n : next_nat n (S n).
 
-Print next_nat.
-(* ====> Inductive next_nat (n : nat) : nat -> Prop :=
-           nn : next_nat n (S n) *)
 Check next_nat : relation nat.
 
 Theorem next_nat_partial_function :
@@ -99,23 +97,39 @@ Proof.
     - apply le_S. apply le_n. }
   discriminate Nonsense.   Qed.
 
-(** **** Exercise: 2 stars, standard, optional (total_relation_not_partial)
+(** **** Exercise: 2 stars, standard, optional (total_relation_not_partial_function)
 
     Show that the [total_relation] defined in (an exercise in)
     [IndProp] is not a partial function. *)
 
-(* FILL IN HERE
+(** Copy the definition of [total_relation] from your [IndProp]
+    here so that this file can be graded on its own.  *)
+Inductive total_relation : nat -> nat -> Prop :=
+  (* FILL IN HERE *)
+.
 
-    [] *)
+Theorem total_relation_not_partial_function :
+  ~ (partial_function total_relation).
+Proof.
+  (* FILL IN HERE *) Admitted.
+(** [] *)
 
-(** **** Exercise: 2 stars, standard, optional (empty_relation_partial)
+(** **** Exercise: 2 stars, standard, optional (empty_relation_partial_function)
 
     Show that the [empty_relation] defined in (an exercise in)
     [IndProp] is a partial function. *)
 
-(* FILL IN HERE
+(** Copy the definition of [empty_relation] from your [IndProp]
+    here so that this file can be graded on its own.  *)
+Inductive empty_relation : nat -> nat -> Prop :=
+  (* FILL IN HERE *)
+.
 
-    [] *)
+Theorem empty_relation_partial_function :
+  partial_function empty_relation.
+Proof.
+  (* FILL IN HERE *) Admitted.
+(** [] *)
 
 (* ----------------------------------------------------------------- *)
 (** *** Reflexive Relations *)
@@ -395,4 +409,4 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)

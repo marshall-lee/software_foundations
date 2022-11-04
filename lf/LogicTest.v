@@ -122,6 +122,18 @@ idtac "Possible points: 1".
 print_manual_grade manual_grade_for_informal_not_PNP.
 idtac " ".
 
+idtac "-------------------  de_morgan_not_or  --------------------".
+idtac " ".
+
+idtac "#> de_morgan_not_or".
+idtac "Possible points: 2".
+check_type @de_morgan_not_or ((forall P Q : Prop, ~ (P \/ Q) -> ~ P /\ ~ Q)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions de_morgan_not_or.
+Goal True.
+idtac " ".
+
 idtac "-------------------  or_distributes_over_and  --------------------".
 idtac " ".
 
@@ -325,12 +337,18 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 43".
-idtac "Max points - advanced: 49".
+idtac "Max points - standard: 45".
+idtac "Max points - advanced: 51".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
 idtac "FunctionalExtensionality.functional_extensionality_dep".
+idtac "plus_le".
+idtac "le_trans".
+idtac "le_plus_l".
+idtac "add_le_cases".
+idtac "Sn_le_Sm__n_le_m".
+idtac "O_le_n".
 idtac "".
 idtac "".
 idtac "********** Summary **********".
@@ -356,6 +374,8 @@ idtac "---------- contrapositive ---------".
 Print Assumptions contrapositive.
 idtac "---------- not_both_true_and_false ---------".
 Print Assumptions not_both_true_and_false.
+idtac "---------- de_morgan_not_or ---------".
+Print Assumptions de_morgan_not_or.
 idtac "---------- or_distributes_over_and ---------".
 Print Assumptions or_distributes_over_and.
 idtac "---------- dist_not_exists ---------".
@@ -394,6 +414,6 @@ idtac "---------- not_exists_dist ---------".
 Print Assumptions not_exists_dist.
 Abort.
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:14 *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:14 *)

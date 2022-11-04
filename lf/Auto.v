@@ -107,6 +107,8 @@ Proof. auto. Qed.
 (** Proof search could, in principle, take an arbitrarily long time,
     so there are limits to how far [auto] will search by default. *)
 
+(** If [auto] is not solving our goal as expected
+    we can use [debug auto] to see a trace *)
 Example auto_example_3 : forall (P Q R S T U: Prop),
   (P -> Q) ->
   (Q -> R) ->
@@ -118,6 +120,10 @@ Example auto_example_3 : forall (P Q R S T U: Prop),
 Proof.
   (* When it cannot solve the goal, [auto] does nothing *)
   auto.
+
+  (* Let's see where [auto] gets stuck using [debug auto] *)
+  debug auto.
+
   (* Optional argument says how deep to search (default is 5) *)
   auto 6.
 Qed.
@@ -223,6 +229,11 @@ Example auto_example_7' : forall x,
 Proof.
   auto. (* try also: info_auto. *)
 Qed.
+
+(** (Note that the [Hint Unfold is_fortytwo] command above the
+    example is needed because, unlike the [apply] tactic, the "apply"
+    steps that are performed by [auto] do not do any automatic
+    unfolding. *)
 
 (** Let's take a first pass over [ceval_deterministic] to simplify the
     proof script. *)
@@ -738,4 +749,4 @@ Proof.
   intros P Q HP HQ. destruct HP as [y HP']. eauto.
 Qed.
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:13 *)

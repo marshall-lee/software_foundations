@@ -36,7 +36,7 @@ idtac "-------------------  apply_exercise1  --------------------".
 idtac " ".
 
 idtac "#> rev_exercise1".
-idtac "Possible points: 3".
+idtac "Possible points: 2".
 check_type @rev_exercise1 ((forall l l' : list nat, l = @rev nat l' -> l' = @rev nat l)).
 idtac "Assumptions:".
 Abort.
@@ -199,12 +199,18 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 23".
-idtac "Max points - advanced: 37".
+idtac "Max points - standard: 22".
+idtac "Max points - advanced: 36".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
 idtac "FunctionalExtensionality.functional_extensionality_dep".
+idtac "plus_le".
+idtac "le_trans".
+idtac "le_plus_l".
+idtac "add_le_cases".
+idtac "Sn_le_Sm__n_le_m".
+idtac "O_le_n".
 idtac "".
 idtac "".
 idtac "********** Summary **********".
@@ -248,6 +254,6 @@ idtac "---------- existsb_existsb' ---------".
 Print Assumptions existsb_existsb'.
 Abort.
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:14 *)
 
-(* 2021-08-11 15:08 *)
+(* 2022-08-08 17:14 *)
