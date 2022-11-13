@@ -31,6 +31,7 @@
 
 From Coq Require Import Arith.Arith.
 From Coq Require Import Bool.Bool.
+From Coq Require Import Datatypes.
 Require Export Coq.Strings.String.
 From Coq Require Import Logic.FunctionalExtensionality.
 From Coq Require Import Lists.List.
@@ -187,7 +188,7 @@ Proof. reflexivity. Qed.
 Lemma t_apply_empty : forall (A : Type) (x : string) (v : A),
   (_ !-> v) x = v.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (t_update_eq)
@@ -199,7 +200,8 @@ Proof.
 Lemma t_update_eq : forall (A : Type) (m : total_map A) x v,
   (x !-> v ; m) x = v.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. unfold t_update. rewrite eqb_refl. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (t_update_neq)
@@ -212,7 +214,9 @@ Theorem t_update_neq : forall (A : Type) (m : total_map A) x1 x2 v,
   x1 <> x2 ->
   (x1 !-> v ; m) x2 = m x2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros A m x1 x2 v H.
+  unfold t_update. destruct (eqb_spec x1 x2). exfalso. apply H. apply e. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (t_update_shadow)
@@ -226,9 +230,12 @@ Proof.
 Lemma t_update_shadow : forall (A : Type) (m : total_map A) x v1 v2,
   (x !-> v2 ; x !-> v1 ; m) = (x !-> v2 ; m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros A m x v1 v2.
+  apply functional_extensionality. intros x'.
+  unfold t_update.
+  destruct (eqb_spec x x') as [_ | _]. reflexivity. reflexivity.
+Qed.
 (** [] *)
-
 (** **** Exercise: 2 stars, standard (t_update_same)
 
     Given [string]s [x1] and [x2], we can use the tactic
@@ -243,7 +250,12 @@ Proof.
 Theorem t_update_same : forall (A : Type) (m : total_map A) x,
   (x !-> m x ; m) = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros A m x.
+  apply functional_extensionality.
+  intros x'.
+  unfold t_update.
+  destruct (eqb_spec x x') as [H | _]. rewrite H. reflexivity. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard, especially useful (t_update_permute)
@@ -259,7 +271,18 @@ Theorem t_update_permute : forall (A : Type) (m : total_map A)
   =
   (x2 !-> v2 ; x1 !-> v1 ; m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros A m v1 v2 x1 x2 H.
+  apply functional_extensionality.
+  intros x'.
+  unfold t_update.
+  destruct (eqb_spec x1 x') as [H1 | H1].
+  - destruct (eqb_spec x2 x') as [H2 | _].
+    + exfalso. apply H. rewrite H1. rewrite H2. reflexivity.
+    + reflexivity.
+  - destruct (eqb_spec x2 x') as [H2 | H2].
+    + reflexivity.
+    + reflexivity.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
