@@ -2416,6 +2416,30 @@ Inductive ceval : com -> state -> result -> state -> Prop :=
 
   where "st '=[' c ']=>' st' '/' s" := (ceval c st s st').
 
+Theorem ceval_deterministic: forall (c:com) st st1 st2 s1 s2,
+     st =[ c ]=> st1 / s1 ->
+     st =[ c ]=> st2 / s2 ->
+     st1 = st2 /\ s1 = s2.
+Proof.
+  intros c st st1 st2 s1 s2 E1 E2.
+  generalize dependent st2.
+  generalize dependent s2.
+  induction E1;
+    intros s2 st2 E2;
+    inversion E2 as [ | | | | | | | | | | ];
+    subst;
+    try (split; reflexivity);
+    try (apply IHE1; assumption);
+    try (rewrite H in H0; discriminate).
+  + destruct (IHE1 SContinue st'0). assumption. discriminate.
+  + destruct (IHE1_1 SBreak st2). assumption. discriminate.
+  + destruct (IHE1_1 SContinue st'0). assumption. subst. apply IHE1_2. assumption.
+  + split. apply IHE1 with SBreak. assumption. reflexivity.
+  + destruct (IHE1 SContinue st'0). assumption. discriminate.
+  + destruct (IHE1_1 SBreak st2). assumption. discriminate.
+  + destruct (IHE1_1 SContinue st'0). assumption. subst. apply IHE1_2. assumption.
+Qed.
+
 End ForImp.
 
 (* 2022-08-08 17:13 *)
