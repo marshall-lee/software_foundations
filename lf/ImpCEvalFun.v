@@ -208,15 +208,16 @@ Proof. reflexivity. Qed.
    your solution satisfies the test that follows. *)
 
 Definition pup_to_n : com
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  := <{ Y := 0;
+        while X > 0 do
+          Y := Y + X;
+          X := X - 1
+        end }>.
 
 Example pup_to_n_1 :
   test_ceval (X !-> 5) pup_to_n
   = Some (0, 15, 0).
-(* FILL IN HERE *) Admitted.
-(* 
 Proof. reflexivity. Qed.
-*)
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (peven)
@@ -225,9 +226,32 @@ Proof. reflexivity. Qed.
     sets [Z] to [1] otherwise.  Use [test_ceval] to test your
     program. *)
 
-(* FILL IN HERE
+Definition peven : com
+  := <{ Z := 0;
+        while X > 0 do
+          if Z = 0 then Z := 1 else Z := 0 end;
+          X := X - 1
+        end }>.
 
-    [] *)
+Example peven0 :
+  test_ceval (X !-> 0) peven = Some (0, 0, 0).
+Proof. reflexivity. Qed.
+
+Example peven1 :
+  test_ceval (X !-> 1) peven = Some (0, 0, 1).
+Proof. reflexivity. Qed.
+
+Example peven2 :
+  test_ceval (X !-> 2) peven = Some (0, 0, 0).
+Proof. reflexivity. Qed.
+
+Example peven3 :
+  test_ceval (X !-> 3) peven = Some (0, 0, 1).
+Proof. reflexivity. Qed.
+
+Example peven4 :
+  test_ceval (X !-> 4) peven = Some (0, 0, 0).
+Proof. reflexivity. Qed.
 
 (* ################################################################# *)
 (** * Relational vs. Step-Indexed Evaluation *)
@@ -360,7 +384,22 @@ Theorem ceval__ceval_step: forall c st st',
 Proof.
   intros c st st' Hce.
   induction Hce.
-  (* FILL IN HERE *) Admitted.
+  - exists 1. reflexivity.
+  - exists 1. simpl. rewrite H. reflexivity.
+  - destruct IHHce1 as [i IH1]. destruct IHHce2 as [j IH2].
+    exists (S i + j).
+    assert (H: ceval_step st c1 (i + j) = Some st').
+    apply ceval_step_more with (i1:=i). apply le_plus_l. apply IH1.
+    simpl. rewrite H. apply ceval_step_more with (i1:=j).
+    rewrite plus_comm. apply le_plus_l. apply IH2.
+  - destruct IHHce as [i IH]. exists (S i). simpl. rewrite H. apply IH.
+  - destruct IHHce as [i IH]. exists (S i). simpl. rewrite H. apply IH.
+  - exists 1. simpl. rewrite H. reflexivity.
+  - destruct IHHce1 as [i IH1]. destruct IHHce2 as [j IH2]. exists (S i + j). simpl. rewrite H.
+    assert (G: ceval_step st c (i + j) = Some st').
+    apply ceval_step_more with (i1:=i). apply le_plus_l. apply IH1.
+    rewrite G. apply ceval_step_more with (i1:=j). apply le_plus_r. apply IH2.
+Qed.
 (** [] *)
 
 Theorem ceval_and_ceval_step_coincide: forall c st st',
