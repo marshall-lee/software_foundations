@@ -183,11 +183,11 @@ Theorem andb_eq_orb :
   forall (b c : bool),
   (andb b c = orb b c) ->
   b = c.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. destruct b; destruct c; try reflexivity; try discriminate. Qed.
 
 Theorem add_assoc : forall n m p : nat,
     n + (m + p) = (n + m) + p.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. intros n m p; induction n as [| n' IHn']; try (simpl; rewrite IHn'); reflexivity. Qed.
 
 Fixpoint nonzeros (lst : list nat) :=
   match lst with
@@ -198,7 +198,7 @@ Fixpoint nonzeros (lst : list nat) :=
 
 Lemma nonzeros_app : forall lst1 lst2 : list nat,
   nonzeros (lst1 ++ lst2) = (nonzeros lst1) ++ (nonzeros lst2).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. intros lst1 lst2; induction lst1 as [|h t IH]; try (destruct h; simpl; rewrite <- IH); reflexivity. Qed.
 
 (** [] *)
 
@@ -283,7 +283,7 @@ Qed.
 
 Theorem add_assoc' : forall n m p : nat,
     n + (m + p) = (n + m) + p.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. intros n m p; induction n as [| n' IHn']; [| simpl; rewrite IHn']; reflexivity. Qed.
 
 (** [] *)
 
@@ -352,7 +352,7 @@ Qed.
     Prove that 100 is even. Your proof script should be quite short. *)
 
 Theorem ev100: ev 100.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. repeat (apply ev_SS). apply ev_0. Qed.
 
 (** [] *)
 
@@ -587,7 +587,40 @@ Qed.
 Lemma re_opt_match' : forall T (re: reg_exp T) s,
   s =~ re -> s =~ re_opt re.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros T re s M.
+  induction M
+    as [| x'
+        | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
+        | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+        | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2].
+  - (* MEmpty *) simpl; apply MEmpty.
+  - (* MChar *) simpl; apply MChar.
+  - (* MApp *)
+    simpl;
+      destruct re1;
+      [inversion IH1 | inversion IH1; simpl; destruct re2; apply IH2 | | | |];
+      (destruct re2;
+       [inversion IH2 | inversion IH2; rewrite app_nil_r; apply IH1 | | | | ];
+       (apply MApp; [apply IH1 | apply IH2])).
+  - (* MUnionL *)
+    simpl;
+      destruct re1;
+      [inversion IH | | | | |];
+      destruct re2; try apply MUnionL; apply IH.
+  - (* MUnionR *)
+    simpl;
+      destruct re1;
+      [apply IH | | | | |];
+      (destruct re2; [inversion IH | | | | |]; apply MUnionR; apply IH).
+ - (* MStar0 *)
+   simpl;
+     destruct re; try apply MEmpty; try apply MStar0.
+ - (* MStarApp *)
+   simpl;
+    destruct re;
+    [inversion IH1 | inversion IH1; inversion IH2; apply MEmpty | | | |];
+    (apply star_app; [apply MStar1; apply IH1 | apply IH2]).
+Qed.
 (* Do not modify the following line: *)
 Definition manual_grade_for_re_opt : option (nat*string) := None.
 (** [] *)
@@ -922,20 +955,20 @@ Qed.
 
 Theorem plus_id_exercise_from_basics : forall n m o : nat,
   n = m -> m = o -> n + m = m + o.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. lia. Qed.
 
 Theorem add_assoc_from_induction : forall n m p : nat,
     n + (m + p) = (n + m) + p.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. lia. Qed.
 
 Theorem S_injective_from_tactics : forall (n m : nat),
   S n = S m ->
   n = m.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. congruence. Qed.
 
 Theorem or_distributes_over_and_from_logic : forall P Q R : Prop,
     P \/ (Q /\ R) <-> (P \/ Q) /\ (P \/ R).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. intuition. Qed.
 
 (** [] *)
 
@@ -1134,10 +1167,109 @@ Qed.
     very long proof, and shorten it, rather than starting with
     [re_opt_match']; but, either way can work. *)
 
+Create HintDb re_db.
+Hint Constructors exp_match : re_db.
+
 Lemma re_opt_match'' : forall T (re: reg_exp T) s,
   s =~ re -> s =~ re_opt re.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros T re s M.
+  induction M
+    as [| x'
+        | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
+        | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+        | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2].
+  - (* MEmpty *) auto with re_db.
+  - (* MChar *) auto with re_db.
+  - (* MApp *) simpl.
+    destruct re1.
+    + inversion IH1.
+    + inversion IH1. simpl. destruct re2; auto.
+    + destruct re2.
+      * inversion IH2.
+      * inversion IH2. rewrite app_nil_r. auto.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+    + destruct re2.
+      * inversion IH2.
+      * inversion IH2. rewrite app_nil_r. auto.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+    + destruct re2.
+      * inversion IH2.
+      * inversion IH2. rewrite app_nil_r. auto.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+    + destruct re2.
+      * inversion IH2.
+      * inversion IH2. rewrite app_nil_r. auto.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+  - (* MUnionL *) simpl.
+    destruct re1.
+    + inversion IH.
+    + destruct re2; auto with re_db.
+    + destruct re2; auto with re_db.
+    + destruct re2; auto with re_db.
+    + destruct re2; auto with re_db.
+    + destruct re2; auto with re_db.
+  - (* MUnionR *) simpl.
+    destruct re1.
+    + apply IH.
+    + destruct re2.
+      * inversion IH.
+      * constructor. auto.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+    + destruct re2.
+      * inversion IH.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+    + destruct re2.
+      * inversion IH.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+    + destruct re2.
+      * inversion IH.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+    + destruct re2.
+      * inversion IH.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+      * auto with re_db.
+ - (* MStar0 *) simpl.
+    destruct re; auto with re_db.
+ - (* MStarApp *) simpl.
+   destruct re.
+   + inversion IH1.
+   + inversion IH1. inversion IH2. auto with re_db.
+   + auto with re_db.
+   + auto with re_db.
+   + auto with re_db.
+   + auto with re_db.
+Qed.
 (* Do not modify the following line: *)
 Definition manual_grade_for_re_opt_match'' : option (nat*string) := None.
 (** [] *)
@@ -1159,7 +1291,78 @@ Lemma weak_pumping : forall T (re : reg_exp T) s,
         forall m, s1 ++ napp m s2 ++ s3 =~ re.
 
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros T re s Hmatch.
+  induction Hmatch
+    as [ | x | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
+       | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+       | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ].
+  - (* MEmpty *)
+    simpl. lia.
+  - (* MChar *)
+    simpl. lia.
+  - (* MApp *)
+    intros H. simpl in H.
+    rewrite app_length in H.
+    apply add_le_cases in H. destruct H.
+    + apply IH1 in H.
+      destruct H as [s1' [s2' [s3' [Happ [Hne Hnapp]]]]].
+      exists s1'. exists s2'. exists (s3' ++ s2).
+      split. rewrite Happ.
+      rewrite <- app_assoc with T s1' (s2' ++ s3') s2.
+      rewrite <- app_assoc with T s2' s3' s2.
+      reflexivity.
+      split. auto.
+      intros m.
+      rewrite app_assoc with T s1' (napp m s2') (s3' ++ s2).
+      rewrite app_assoc with T (s1' ++ napp m s2') s3' s2.
+      rewrite <- app_assoc with T s1' (napp m s2') s3'.
+      auto with re_db.
+    + apply IH2 in H.
+      destruct H as [s1' [s2' [s3' [Happ [Hne Hnapp]]]]].
+      exists (s1 ++ s1'). exists s2'. exists s3'.
+      split. rewrite Happ.
+      rewrite <- app_assoc with T s1 s1' (s2' ++ s3').
+      reflexivity.
+      split. apply Hne.
+      intros m.
+      rewrite <- app_assoc with T s1 s1' (napp m s2' ++ s3').
+      auto with re_db.
+  - (* MUnionL *)
+    intros H. simpl in H.
+    apply plus_le in H. destruct H as [H H'].
+    apply IH in H.
+    destruct H as [s1' [s2' [s3' [Happ [Hne Hnapp]]]]].
+    exists s1'. exists s2'. exists s3'. auto with re_db.
+  - (* MUnionR *)
+    intros H. simpl in H.
+    apply plus_le in H. destruct H as [H' H].
+    apply IH in H.
+    destruct H as [s1' [s2' [s3' [Happ [Hne Hnapp]]]]].
+    exists s1'. exists s2'. exists s3'. auto with re_db.
+  - (* MStar0 *)
+    intros H.
+    assert (Hp : (pumping_constant re) >= 1).
+    { apply pumping_constant_ge_1. }
+    inversion H as [H0|]. rewrite H0 in Hp. inversion Hp.
+  - (* MStarApp *)
+    intros H.
+    rewrite app_length in H.
+    assert (Hp : (pumping_constant re) >= 1).
+    { apply pumping_constant_ge_1. }
+    assert (Hl: (1 <= length s1 \/ 1 <= length s2)).
+    { destruct s1. right. apply le_trans with (pumping_constant re). apply Hp. apply H. left. simpl. apply n_le_m__Sn_le_Sm. apply O_le_n. }
+    exists []. exists (s1 ++ s2). exists [].
+    split. rewrite app_nil_r. reflexivity.
+    split. destruct Hl as [Hl | Hl].
+    + destruct s1. inversion Hl. discriminate.
+    + destruct s2. inversion Hl. destruct s1. discriminate. discriminate.
+    + induction m.
+      * apply MStar0.
+      * simpl in IHm. simpl. rewrite <- app_assoc.
+        apply star_app.
+        apply (MStarApp s1 s2 re Hmatch1 Hmatch2).
+        apply IHm.
+Qed.
 (* Do not modify the following line: *)
 Definition manual_grade_for_pumping_redux : option (nat*string) := None.
 (** [] *)
@@ -1180,7 +1383,116 @@ Lemma pumping : forall T (re : reg_exp T) s,
         forall m, s1 ++ napp m s2 ++ s3 =~ re.
 
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros T re s Hmatch.
+  induction Hmatch
+    as [ | x | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
+       | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+       | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ].
+  - (* MEmpty *)
+    simpl. intros contra. lia.
+  - (* MChar *)
+    intros contra. apply Sn_le_Sm__n_le_m in contra. lia.
+  - (* MApp *)
+    intros H.
+    rewrite app_length in H. simpl in H.
+    destruct (lt_ge_cases (length s1) (pumping_constant re1)) as [H1 | H1].
+    + destruct (lt_ge_cases (length s2) (pumping_constant re2)) as [H2 | H2].
+      * apply add_le_cases in H. destruct H as [H1' | H2'].
+        ** lia.
+        ** lia.
+      * apply IH2 in H2.
+        destruct H2 as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+        exists (s1 ++ s1'). exists s2'. exists s3'.
+        split. rewrite Happ.
+        rewrite <- app_assoc with T s1 s1' (s2' ++ s3').
+        reflexivity.
+        split. apply Hne.
+        split. simpl. rewrite app_length. rewrite <- add_assoc.
+        apply le_trans with (n := length s1 + pumping_constant re2).
+        apply plus_le_compat_l. apply Hlen.
+        apply plus_le_compat_r. apply n_lt_m__n_le_m in H1. apply H1.
+        intros m.
+        rewrite <- app_assoc with T s1 s1' (napp m s2' ++ s3').
+        auto with re_db.
+    + apply IH1 in H1.
+      destruct H1 as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+      exists s1'. exists s2'. exists (s3' ++ s2).
+      split. rewrite Happ.
+      rewrite <- app_assoc with T s1' (s2' ++ s3') s2.
+      rewrite <- app_assoc with T s2' s3' s2.
+      reflexivity.
+      split. apply Hne.
+      split. simpl.
+      apply le_trans with (n := pumping_constant re1).
+      apply Hlen. apply le_plus_l.
+      intros m.
+      rewrite app_assoc with T s1' (napp m s2') (s3' ++ s2).
+      rewrite app_assoc with T (s1' ++ napp m s2') s3' s2.
+      rewrite <- app_assoc with T s1' (napp m s2') s3'.
+      auto with re_db.
+  - (* MUnionL *)
+    intros H. simpl in H.
+    apply plus_le in H. destruct H as [H H'].
+    apply IH in H.
+    destruct H as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+    exists s1'. exists s2'. exists s3'.
+    split. apply Happ.
+    split. apply Hne.
+    split. simpl. apply le_trans with (n := pumping_constant re1). apply Hlen. apply le_plus_l.
+    auto with re_db.
+  - (* MUnionR *)
+    intros H. simpl in H.
+    apply plus_le in H. destruct H as [H' H].
+    apply IH in H.
+    destruct H as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+    exists s1'. exists s2'. exists s3'.
+    split. apply Happ.
+    split. apply Hne.
+    split. simpl. apply le_trans with (n := pumping_constant re2). apply Hlen. rewrite add_comm. apply le_plus_l.
+    intros m. apply MUnionR. apply Hnapp.
+  - (* MStar0 *)
+    intros H.
+    assert (Hp : (pumping_constant re) >= 1).
+    { apply pumping_constant_ge_1. }
+    inversion H as [H0|]. rewrite H0 in Hp. inversion Hp.
+  - (* MStarApp *)
+    intros H.
+    rewrite app_length in H.
+    assert (Hp : (pumping_constant re) >= 1).
+    { apply pumping_constant_ge_1. }
+    assert (Hl: (1 <= length s1 \/ 1 <= length s2)).
+    { destruct s1. right. apply le_trans with (pumping_constant re). apply Hp. apply H. left. simpl. apply n_le_m__Sn_le_Sm. apply O_le_n. }
+    destruct s1 as [| x s11].
+    + destruct (lt_ge_cases (length s2) (pumping_constant (Star re))) as [H2 | H2].
+      * exists []. exists s2. exists [].
+        split. rewrite app_nil_r. reflexivity.
+        split. destruct Hl as [Hl | Hl].
+        ** inversion Hl.
+        ** destruct s2. inversion Hl. discriminate.
+        ** split. apply n_lt_m__n_le_m in H2. apply H2.
+        induction m. apply MStar0. simpl. rewrite <- app_assoc. apply star_app. apply Hmatch2. apply IHm.
+      * apply IH2 in H2.
+        destruct H2 as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+        exists s1'. exists s2'. exists s3'. auto.
+    + remember (x :: s11) as s1.
+      destruct (lt_ge_cases (length s1) (pumping_constant re)) as [H1 | H1].
+      * exists []. exists s1. exists s2.
+        split. reflexivity.
+        split. rewrite Heqs1. discriminate.
+        split. apply n_lt_m__n_le_m in H1. apply H1.
+        intros m. simpl. apply napp_star. apply Hmatch1. apply Hmatch2.
+      * apply IH1 in H1.
+        destruct H1 as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+        exists s1'. exists s2'. exists (s3' ++ s2).
+        split. rewrite Happ. simpl.
+        rewrite <- app_assoc with (m := s2' ++ s3').
+        rewrite <- app_assoc with (m := s3').
+        reflexivity.
+        split. apply Hne.
+        split. apply Hlen.
+        intros m. rewrite app_assoc. rewrite app_assoc. apply MStarApp.
+        rewrite <- app_assoc. apply Hnapp. apply Hmatch2.
+Qed.
 (* Do not modify the following line: *)
 Definition manual_grade_for_pumping_redux_strong : option (nat*string) := None.
 (** [] *)
@@ -1372,7 +1684,7 @@ Qed.
 
 Theorem andb3_exchange :
   forall b c d, andb (andb b c) d = andb (andb b d) c.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. intros; destructpf b; destructpf c; destructpf d. Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (andb_true_elim2)
@@ -1394,16 +1706,14 @@ Qed.
     own, improved version of [destructpf]. Use it to prove the
     theorem. *)
 
-(*
-Ltac destructpf' x := ...
-*)
+Ltac destructpf' x := destruct x ; auto.
 
 (** Your one-shot proof should need only [intros] and
     [destructpf']. *)
 
 Theorem andb_true_elim2' : forall b c : bool,
     andb b c = true -> c = true.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. intros b c; destructpf' b; destructpf' c. Qed.
 
 (** Double-check that [intros] and your new [destructpf'] still
     suffice to prove this earlier theorem -- i.e., that your improved
@@ -1411,7 +1721,7 @@ Proof. (* FILL IN HERE *) Admitted.
 
 Theorem andb3_exchange' :
   forall b c d, andb (andb b c) d = andb (andb b d) c.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. intros; destructpf' b; destructpf' c; destructpf' d. Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -1789,7 +2099,18 @@ Qed.
     to expand it to handle conjunctions, negations, bi-implications,
     and [nand]. *)
 
-(* Ltac nand_intuition := ... *)
+Ltac nand_intuition :=
+  repeat match goal with
+         | [ |- nand _ _  ] => constructor
+         | [ H : nand _ _ |- _] => destruct H
+         | [ H : ?P |- ?P ] => apply H
+         | [ |- forall _, _ ] => intro
+         | [ |- ?P <-> ?Q ] => split
+         | [ H : ?P /\ ?Q |- _ ] => destruct H
+         | [ H1 : ?P -> ?Q, H2 : ?P |- _ ] => apply H1 in H2
+         | [ |- ~?P ] => intro
+         | [ |- ?P ] => auto
+         end.
 
 (** Each of the three theorems below, and many others involving these
     logical connectives, should be provable with just
@@ -1797,15 +2118,15 @@ Qed.
 
 Theorem nand_comm' : forall (P Q : Prop),
     nand P Q <-> nand Q P.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. nand_intuition. Qed.
 
 Theorem nand_not' : forall (P : Prop),
     nand P P <-> ~P.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. nand_intuition. Qed.
 
 Theorem nand_not_and' : forall (P Q : Prop),
     nand P Q -> ~ (P /\ Q).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. nand_intuition. Qed.
 (* Do not modify the following line: *)
 Definition manual_grade_for_nand_intuition : option (nat*string) := None.
 (** [] *)
