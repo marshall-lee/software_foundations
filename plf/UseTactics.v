@@ -71,7 +71,7 @@ Import Stlc.
     variables of a theorem and explicitly name the hypotheses
     involved. In the example shown next, the variables [c],
     [st], [st1] and [st2] involved in the statement of determinism
-    need not be named explicitly, because their name where already
+    need not be named explicitly, because their names were already
     given in the statement of the lemma. On the contrary, it is
     useful to provide names for the two hypotheses, which we
     name [E1] and [E2], respectively. *)
@@ -502,12 +502,12 @@ Module UnfoldsExample.
 
 Lemma bexp_eval_true : forall b st,
   beval st b = true ->
-  (bassn b) st.
+  (bassertion b) st.
 Proof.
   intros b st Hbe. dup.
 
   (* The old proof: *)
-  unfold bassn. assumption.
+  unfold bassertion. assumption.
 
   (* The new proof: *)
   unfolds. assumption.
@@ -920,4 +920,4 @@ End ExamplesLets.
 
 *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

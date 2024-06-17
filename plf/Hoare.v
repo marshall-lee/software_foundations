@@ -106,13 +106,13 @@ Definition Assertion := state -> Prop.
     natural language). *)
 
 Module ExAssertions.
-Definition assn1 : Assertion := fun st => st X <= st Y.
-Definition assn2 : Assertion :=
+Definition assertion1 : Assertion := fun st => st X <= st Y.
+Definition assertion2 : Assertion :=
   fun st => st X = 3 \/ st X <= st Y.
-Definition assn3 : Assertion :=
+Definition assertion3 : Assertion :=
   fun st => st Z * st Z <= st X /\
             ~ (((S (st Z)) * (S (st Z))) <= st X).
-Definition assn4 : Assertion :=
+Definition assertion4 : Assertion :=
   fun st => st Z = max (st X) (st Y).
 (* FILL IN HERE *)
 End ExAssertions.
@@ -162,8 +162,8 @@ Open Scope hoare_spec_scope.
 (** We'll also want the "iff" variant of implication between
     assertions: *)
 
-Notation "P <<->> Q" :=
-  (P ->> Q /\ Q ->> P) (at level 80) : hoare_spec_scope.
+Notation "P <<->> Q" := (P ->> Q /\ Q ->> P)
+                          (at level 80) : hoare_spec_scope.
 
 (* ================================================================= *)
 (** ** Notations for Assertions *)
@@ -234,10 +234,10 @@ Definition ex1 : Assertion := X = 3.
 Definition ex2 : Assertion := True.
 Definition ex3 : Assertion := False.
 
-Definition assn1 : Assertion := X <= Y.
-Definition assn2 : Assertion := X = 3 \/ X <= Y.
-Definition assn3 : Assertion := Z = ap2 max X Y.
-Definition assn4 : Assertion := Z * Z <= X
+Definition assertion1 : Assertion := X <= Y.
+Definition assertion2 : Assertion := X = 3 \/ X <= Y.
+Definition assertion3 : Assertion := Z = ap2 max X Y.
+Definition assertion4 : Assertion := Z * Z <= X
                             /\  ~ (((ap S Z) * (ap S Z)) <= X).
 End ExamplePrettyAssertions.
 
@@ -266,12 +266,12 @@ End ExamplePrettyAssertions.
 (** For example,
 
     - [{{X = 0}} X := X + 1 {{X = 1}}] is a valid Hoare triple,
-      stating that command [X := X + 1] would transform a state in
+      stating that command [X := X + 1] will transform a state in
       which [X = 0] to a state in which [X = 1].
 
-    - [forall m, {{X = m}} X := X + 1 {{X = m + 1}}], is a
+    - [forall m, {{X = m}} X := X + 1 {{X = m + 1}}] is a
       _proposition_ stating that the Hoare triple [{{X = m}} X := X +
-      m {{X = m + 1}}] is valid for any choice of [m].  Note that [m]
+      1 {{X = m + 1}}] is valid for any choice of [m].  Note that [m]
       in the two assertions and the command in the middle is a
       reference to the _Coq_ variable [m], which is bound outside the
       Hoare triple. *)
@@ -338,16 +338,17 @@ End ExamplePrettyAssertions.
 
 (** We can formalize valid Hoare triples in Coq as follows: *)
 
-Definition hoare_triple
+Definition valid_hoare_triple
            (P : Assertion) (c : com) (Q : Assertion) : Prop :=
   forall st st',
      st =[ c ]=> st' ->
      P st  ->
      Q st'.
 
-Notation "{{ P }}  c  {{ Q }}" :=
-  (hoare_triple P c Q) (at level 90, c custom com at level 99)
-  : hoare_spec_scope.
+Notation "{{ P }} c {{ Q }}" :=
+  (valid_hoare_triple P c Q)
+    (at level 90, c custom com at level 99)
+    : hoare_spec_scope.
 Check ({{True}} X := 0 {{True}}).
 
 (** **** Exercise: 1 star, standard (hoare_post_true) *)
@@ -386,7 +387,7 @@ Proof.
     assignment, one for sequencing, one for conditionals, etc. -- plus
     a couple of "structural" rules for gluing things together.  We
     will then be able to prove programs correct using these proof
-    rules, without ever unfolding the definition of [hoare_triple]. *)
+    rules, without ever unfolding the definition of [valid_hoare_triple]. *)
 
 (* ================================================================= *)
 (** ** Skip *)
@@ -423,7 +424,7 @@ Theorem hoare_seq : forall P Q R c1 c2,
      {{P}} c1 {{Q}} ->
      {{P}} c1; c2 {{R}}.
 Proof.
-  unfold hoare_triple.
+  unfold valid_hoare_triple.
   intros P Q R c1 c2 H1 H2 st st' H12 Pre.
   inversion H12; subst.
   eauto.
@@ -531,7 +532,7 @@ Qed.
 
 (** To formalize the rule, we must first formalize the idea of
     "substituting an expression for an Imp variable in an assertion",
-    which we refer to as assertion substitution, or [assn_sub].  That
+    which we refer to as assertion substitution, or [assertion_sub].  That
     is, intuitively, given a proposition [P], a variable [X], and an
     arithmetic expression [a], we want to derive another proposition
     [P'] that is just the same as [P] except that [P'] should mention
@@ -546,11 +547,11 @@ Qed.
 (** However, we can achieve the same effect by evaluating [P] in an
     updated state: *)
 
-Definition assn_sub X a (P:Assertion) : Assertion :=
+Definition assertion_sub X a (P:Assertion) : Assertion :=
   fun (st : state) =>
     P (X !-> aeval st a ; st).
 
-Notation "P [ X |-> a ]" := (assn_sub X a P)
+Notation "P [ X |-> a ]" := (assertion_sub X a P)
   (at level 10, X at next level, a custom com) : hoare_spec_scope.
 
 (** That is, [P [X |-> a]] stands for an assertion -- let's call it
@@ -617,14 +618,14 @@ Notation "P [ X |-> a ]" := (assn_sub X a P)
 Theorem hoare_asgn : forall Q X a,
   {{Q [X |-> a]}} X := a {{Q}}.
 Proof.
-  unfold hoare_triple.
+  unfold valid_hoare_triple.
   intros Q X a st st' HE HQ.
   inversion HE. subst.
-  unfold assn_sub in HQ. assumption.  Qed.
+  unfold assertion_sub in HQ. assumption.  Qed.
 
 (** Here's a first formal proof using this rule. *)
 
-Example assn_sub_example :
+Example assertion_sub_example :
   {{(X < 5) [X |-> X + 1]}}
     X := X + 1
   {{X < 5}}.
@@ -671,23 +672,23 @@ Proof. (* FILL IN HERE *) Admitted.
       ------------------------------ (hoare_asgn_wrong)
       {{ True }} X := a {{ X = a }}
 
-    Give a counterexample showing that this rule is incorrect and
-    argue informally that it is really a counterexample.  (Hint:
-    The rule universally quantifies over the arithmetic expression
-    [a], and your counterexample needs to exhibit an [a] for which
-    the rule doesn't work.)
+    Give a counterexample showing that this rule is incorrect and use
+    it to complete the proof belkow, showing that it is really a
+    counterexample.  (Hint: The rule universally quantifies over the
+    arithmetic expression [a], and your counterexample needs to
+    exhibit an [a] for which the rule doesn't work.) *)
 
-*)
+Theorem hoare_asgn_wrong : exists a:aexp,
+  ~ {{ True }} X := a {{ X = a }}.
+Proof.
+  (* FILL IN HERE *) Admitted.
+(* FILL IN HERE
 
-(* FILL IN HERE *)
-
-(* Do not modify the following line: *)
-Definition manual_grade_for_hoare_asgn_wrong : option (nat*string) := None.
-(** [] *)
+    [] *)
 
 (** **** Exercise: 3 stars, advanced (hoare_asgn_fwd)
 
-    However, by using a _parameter_ [m] (a Coq number) to remember the
+    By using a _parameter_ [m] (a Coq number) to remember the
     original value of [X] we can define a Hoare rule for assignment
     that does, intuitively, "work forwards" rather than backwards.
 
@@ -792,7 +793,7 @@ Theorem hoare_consequence_pre : forall (P P' Q : Assertion) c,
   P ->> P' ->
   {{P}} c {{Q}}.
 Proof.
-  unfold hoare_triple, "->>".
+  unfold valid_hoare_triple, "->>".
   intros P P' Q c Hhoare Himp st st' Heval Hpre.
   apply Hhoare with (st := st).
   - assumption.
@@ -804,7 +805,7 @@ Theorem hoare_consequence_post : forall (P Q Q' : Assertion) c,
   Q' ->> Q ->
   {{P}} c {{Q}}.
 Proof.
-  unfold hoare_triple, "->>".
+  unfold valid_hoare_triple, "->>".
   intros P Q Q' c Hhoare Himp st st' Heval Hpre.
   apply Himp.
   apply Hhoare with (st := st).
@@ -823,11 +824,11 @@ Qed.
 
 Example hoare_asgn_example1 :
   {{True}} X := 1 {{X = 1}}.
-Proof. 
+Proof.
   (* WORKED IN CLASS *)
-  eapply hoare_consequence_pre. 
+  eapply hoare_consequence_pre.
   - apply hoare_asgn.
-  - unfold "->>", assn_sub, t_update.
+  - unfold "->>", assertion_sub, t_update.
     intros st _. simpl. reflexivity.
 Qed.
 
@@ -840,7 +841,7 @@ Qed.
 
    Or, formally ... *)
 
-Example assn_sub_example2 :
+Example assertion_sub_example2 :
   {{X < 4}}
     X := X + 1
   {{X < 5}}.
@@ -848,7 +849,7 @@ Proof.
   (* WORKED IN CLASS *)
   apply hoare_consequence_pre with (P' := (X < 5) [X |-> X + 1]).
   - apply hoare_asgn.
-  - unfold "->>", assn_sub, t_update.
+  - unfold "->>", assertion_sub, t_update.
     intros st H. simpl in *. lia.
 Qed.
 
@@ -884,10 +885,11 @@ Qed.
     the [Auto] chapter of _Logical Foundations_.
 
     Recall that the [auto] tactic can be told to [unfold] definitions
-    as part of its proof search.  Let's give that hint for the
+    as part of its proof search.  Let's give it that hint for the
     definitions and coercions we're using: *)
 
-Hint Unfold assert_implies hoare_triple assn_sub t_update : core.
+Hint Unfold assert_implies assertion_sub t_update : core.
+Hint Unfold valid_hoare_triple : core.
 Hint Unfold assert_of_Prop Aexp_of_nat Aexp_of_aexp : core.
 
 (** Also recall that [auto] will search for a proof involving [intros]
@@ -905,7 +907,7 @@ Theorem hoare_consequence_pre' : forall (P P' Q : Assertion) c,
   P ->> P' ->
   {{P}} c {{Q}}.
 Proof.
-  unfold hoare_triple, "->>".
+  unfold valid_hoare_triple, "->>".
   intros P P' Q c Hhoare Himp st st' Heval Hpre.
   apply Hhoare with (st := st).
   - assumption.
@@ -940,7 +942,7 @@ Theorem hoare_consequence_pre''' : forall (P P' Q : Assertion) c,
   P ->> P' ->
   {{P}} c {{Q}}.
 Proof.
-  unfold hoare_triple, "->>".
+  unfold valid_hoare_triple, "->>".
   intros P P' Q c Hhoare Himp st st' Heval Hpre.
   eapply Hhoare.
   - eassumption.
@@ -981,7 +983,7 @@ Example hoare_asgn_example1' :
 Proof.
   eapply hoare_consequence_pre. (* no need to state an assertion *)
   - apply hoare_asgn.
-  - unfold "->>", assn_sub, t_update.
+  - unfold "->>", assertion_sub, t_update.
     intros st _. simpl. reflexivity.
 Qed.
 
@@ -1012,7 +1014,7 @@ Qed.
     We can streamline the first line with [eapply], but we can't just use
     [auto] for the final bullet, since it needs [lia]. *)
 
-Example assn_sub_example2' :
+Example assertion_sub_example2' :
   {{X < 4}}
     X := X + 1
   {{X < 5}}.
@@ -1020,26 +1022,26 @@ Proof.
   eapply hoare_consequence_pre.
   - apply hoare_asgn.
   - auto. (* no progress *)
-    unfold "->>", assn_sub, t_update.
+    unfold "->>", assertion_sub, t_update.
     intros st H. simpl in *. lia.
 Qed.
 
 (** Let's introduce our own tactic to handle both that bullet and the
     bullet from example 1: *)
 
-Ltac assn_auto :=
+Ltac assertion_auto :=
   try auto;  (* as in example 1, above *)
-  try (unfold "->>", assn_sub, t_update;
+  try (unfold "->>", assertion_sub, t_update;
        intros; simpl in *; lia). (* as in example 2 *)
 
-Example assn_sub_example2'' :
+Example assertion_sub_example2'' :
   {{X < 4}}
     X := X + 1
   {{X < 5}}.
 Proof.
   eapply hoare_consequence_pre.
   - apply hoare_asgn.
-  - assn_auto.
+  - assertion_auto.
 Qed.
 
 Example hoare_asgn_example1''':
@@ -1047,28 +1049,28 @@ Example hoare_asgn_example1''':
 Proof.
   eapply hoare_consequence_pre.
   - apply hoare_asgn.
-  - assn_auto.
+  - assertion_auto.
 Qed.
 
 (** Again, we have quite a nice proof script.  All the low-level
     details of proofs about assertions have been taken care of
-    automatically. Of course, [assn_auto] isn't able to prove
+    automatically. Of course, [assertion_auto] isn't able to prove
     everything we could possibly want to know about assertions --
     there's no magic here! But it's good enough so far. *)
 
 (** **** Exercise: 2 stars, standard (hoare_asgn_examples_2)
 
-    Prove these triples.  Try to make your proof scripts as nicely
-    automated as those above. *)
+    Prove these triples.  Try to make your proof scripts nicely
+    automated by following the examples above. *)
 
-Example assn_sub_ex1' :
+Example assertion_sub_ex1' :
   {{ X <= 5 }}
     X := 2 * X
   {{ X <= 10 }}.
 Proof.
   (* FILL IN HERE *) Admitted.
 
-Example assn_sub_ex2' :
+Example assertion_sub_ex2' :
   {{ 0 <= 3 /\ 3 <= 5 }}
     X := 3
   {{ 0 <= X /\ X <= 5 }}.
@@ -1096,7 +1098,7 @@ Proof.
   - (* left part of seq *)
     eapply hoare_consequence_pre.
     + apply hoare_asgn.
-    + assn_auto.
+    + assertion_auto.
 Qed.
 
 (** Informally, a nice way of displaying a proof using the sequencing
@@ -1136,8 +1138,8 @@ Example hoare_asgn_example4 :
     Y := 2
   {{ X = 1 /\ Y = 2 }}.
 Proof.
-  apply hoare_seq with (Q := (X = 1)%assertion).
-  (* The annotation [%assertion] is needed here to help Coq parse correctly. *)
+  eapply hoare_seq with (Q := (X = 1)%assertion).
+  (* The annotation [%assertion] is needed to help Coq parse correctly. *)
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -1148,11 +1150,16 @@ Proof.
 
       {{X <= Y}} c {{Y <= X}}
 
-    Your proof should not need to use [unfold hoare_triple].  (Hint:
-    Remember that the assignment rule works best when it's applied
-    "back to front," from the postcondition to the precondition.  So
-    your proof will want to start at the end and work back to the
-    beginning of your program.)  *)
+    Your proof should not need to use [unfold valid_hoare_triple].
+
+    Hints:
+       - Remember that Imp commands need to be enclosed in <{...}>
+         brackets.
+       - Remember that the assignment rule works best when it's
+         applied "back to front," from the postcondition to the
+         precondition.  So your proof will want to start at the end
+         and work back to the beginning of your program.
+       - Remember that [eapply] is your friend.)  *)
 
 Definition swap_program : com
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
@@ -1179,7 +1186,8 @@ Proof.
     Technical hint: Hypothesis [H] below begins [forall a n, ...].
     You'll want to instantiate that with the particular [a] and [n]
     you've invented.  You can do that with [assert] and [apply], but
-    Coq offers an even easier tactic: [specialize].  If you write
+    you may remember (from [Tactics.v] in Logical Foundations)
+    that Coq offers an even easier tactic: [specialize].  If you write
 
        specialize H with (a := your_a) (n := your_n)
 
@@ -1190,8 +1198,8 @@ Proof.
        a state [st'] in which [Y] has some value [y1]
      - Use the evaluation rules ([E_Seq] and [E_Asgn]) to show that
        [Y] has a _different_ value [y2] in the same final state [st']
-     - since [y1] and [y2] are both equal to [st' Y], they are equal
-       to each other; but we chose them to be different, so this is a
+     - Since [y1] and [y2] are both equal to [st' Y], they are equal
+       to each other. But we chose them to be different, so this is a
        contradiction, which finishes the proof.
  *)
 
@@ -1200,7 +1208,7 @@ Theorem invalid_triple : ~ forall (a : aexp) (n : nat),
       X := 3; Y := a
     {{ Y = n }}.
 Proof.
-  unfold hoare_triple.
+  unfold valid_hoare_triple.
   intros H.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1252,21 +1260,21 @@ Proof.
     Strictly speaking, the assertion we've written, [P /\ b], is the
     conjunction of an assertion and a boolean expression -- i.e., it
     doesn't typecheck.  To fix this, we need a way of formally
-    "lifting" any bexp [b] to an assertion.  We'll write [bassn b] for
+    "lifting" any bexp [b] to an assertion.  We'll write [bassertion b] for
     the assertion "the boolean expression [b] evaluates to [true] (in
     the given state)." *)
 
-Definition bassn b : Assertion :=
+Definition bassertion b : Assertion :=
   fun st => (beval st b = true).
 
-Coercion bassn : bexp >-> Assertion.
+Coercion bassertion : bexp >-> Assertion.
 
-Arguments bassn /.
+Arguments bassertion /.
 
-(** A useful fact about [bassn]: *)
+(** A useful fact about [bassertion]: *)
 
 Lemma bexp_eval_false : forall b st,
-  beval st b = false -> ~ ((bassn b) st).
+  beval st b = false -> ~ ((bassertion b) st).
 Proof. congruence. Qed.
 
 Hint Resolve bexp_eval_false : core.
@@ -1288,8 +1296,8 @@ Theorem hoare_if : forall P Q (b:bexp) c1 c2,
 (** That is (unwrapping the notations):
 
       Theorem hoare_if : forall P Q b c1 c2,
-        {{fun st => P st /\ bassn b st}} c1 {{Q}} ->
-        {{fun st => P st /\ ~ (bassn b st)}} c2 {{Q}} ->
+        {{fun st => P st /\ bassertion b st}} c1 {{Q}} ->
+        {{fun st => P st /\ ~ (bassertion b st)}} c2 {{Q}} ->
         {{P}} if b then c1 else c2 end {{Q}}.
 *)
 Proof.
@@ -1315,26 +1323,26 @@ Proof.
   - (* Then *)
     eapply hoare_consequence_pre.
     + apply hoare_asgn.
-    + assn_auto. (* no progress *)
-      unfold "->>", assn_sub, t_update, bassn.
+    + assertion_auto. (* no progress *)
+      unfold "->>", assertion_sub, t_update, bassertion.
       simpl. intros st [_ H]. apply eqb_eq in H.
       rewrite H. lia.
   - (* Else *)
     eapply hoare_consequence_pre.
     + apply hoare_asgn.
-    + assn_auto.
+    + assertion_auto.
 Qed.
 
 (** As we did earlier, it would be nice to eliminate all the low-level
     proof script that isn't about the Hoare rules.  Unfortunately, the
-    [assn_auto] tactic we wrote wasn't quite up to the job.  Looking
+    [assertion_auto] tactic we wrote wasn't quite up to the job.  Looking
     at the proof of [if_example], we can see why.  We had to unfold a
-    definition ([bassn]) and use a theorem ([eqb_eq]) that we didn't
+    definition ([bassertion]) and use a theorem ([eqb_eq]) that we didn't
     need in earlier proofs.  So, let's add those into our tactic, and
     clean it up a little in the process. *)
 
-Ltac assn_auto' :=
-  unfold "->>", assn_sub, t_update, bassn;
+Ltac assertion_auto' :=
+  unfold "->>", assertion_sub, t_update, bassertion;
   intros; simpl in *;
   try rewrite -> eqb_eq in *; (* for equalities *)
   auto; try lia.
@@ -1352,10 +1360,10 @@ Proof.
   apply hoare_if.
   - eapply hoare_consequence_pre.
     + apply hoare_asgn.
-    + assn_auto'.
+    + assertion_auto'.
   - eapply hoare_consequence_pre.
     + apply hoare_asgn.
-    + assn_auto'.
+    + assertion_auto'.
 Qed.
 
 (** We can even shorten it a little bit more. *)
@@ -1369,14 +1377,14 @@ Example if_example''' :
   {{X <= Y}}.
 Proof.
   apply hoare_if; eapply hoare_consequence_pre;
-    try apply hoare_asgn; try assn_auto'.
+    try apply hoare_asgn; try assertion_auto'.
 Qed.
 
-(** For later proofs, it will help to extend [assn_auto'] to handle
+(** For later proofs, it will help to extend [assertion_auto'] to handle
     inequalities, too. *)
 
-Ltac assn_auto'' :=
-  unfold "->>", assn_sub, t_update, bassn;
+Ltac assertion_auto'' :=
+  unfold "->>", assertion_sub, t_update, bassertion;
   intros; simpl in *;
   try rewrite -> eqb_eq in *;
   try rewrite -> leb_le in *;  (* for inequalities *)
@@ -1385,7 +1393,8 @@ Ltac assn_auto'' :=
 (** **** Exercise: 2 stars, standard (if_minus_plus)
 
     Prove the theorem below using [hoare_if].  Do not use [unfold
-    hoare_triple]. *)
+    valid_hoare_triple].  The [assertion_auto''] tactic we just
+    defined may be useful. *)
 
 Theorem if_minus_plus :
   {{True}}
@@ -1502,16 +1511,16 @@ Proof. (* FILL IN HERE *) Admitted.
 (** Now we have to repeat the definition and notation of Hoare triples,
     so that they will use the updated [com] type. *)
 
-Definition hoare_triple
+Definition valid_hoare_triple
            (P : Assertion) (c : com) (Q : Assertion) : Prop :=
   forall st st',
        st =[ c ]=> st' ->
        P st  ->
        Q st'.
 
-Hint Unfold hoare_triple : core.
+Hint Unfold valid_hoare_triple : core.
 
-Notation "{{ P }}  c  {{ Q }}" := (hoare_triple P c Q)
+Notation "{{ P }}  c  {{ Q }}" := (valid_hoare_triple P c Q)
                                   (at level 90, c custom com at level 99)
                                   : hoare_spec_scope.
 
@@ -1533,8 +1542,8 @@ Notation "{{ P }}  c  {{ Q }}" := (hoare_triple P c Q)
 
 (* FILL IN HERE *)
 
-(** For full credit, prove formally [hoare_if1_good] that your rule is
-    precise enough to show the following valid Hoare triple:
+(** For full credit, prove formally ([hoare_if1_good]) that your rule is
+    precise enough to show the following Hoare triple is valid:
 
   {{ X + Y = Z }}
     if1 Y <> 0 then
@@ -1570,9 +1579,14 @@ Qed.
 
 (** Use your [if1] rule to prove the following (valid) Hoare triple.
 
-    Hint: [assn_auto''] will once again get you most but not all the
-    way to a completely automated proof.  You can finish manually, or
-    tweak the tactic further. *)
+    Hint: [assertion_auto''] will once again get you most but not all
+    the way to a completely automated proof.  You can finish manually,
+    or tweak the tactic further.
+
+    Hint: If you see a message like [Unable to unify "Imp.ceval
+    Imp.CSkip st st'" with...], it probably means you are using a
+    definition or theorem [e.g., hoare_skip] from above this exercise
+    without re-proving it for the new version of Imp with if1. *)
 
 Lemma hoare_if1_good :
   {{ X + Y = Z }}
@@ -1588,15 +1602,18 @@ End If1.
 (* ================================================================= *)
 (** ** While Loops *)
 
-(** The Hoare rule for [while] loops is based on the idea of an
-    _invariant_: an assertion whose truth is guaranteed before and
-    after executing a command.  An assertion [P] is an invariant of [c] if
+(** The Hoare rule for [while] loops is based on the idea of a
+    _command invariant_ (or just _invariant_): an assertion whose
+    truth is guaranteed after executing a command, assuming it is true
+    before.
+
+    That is, an assertion [P] is a command invariant of [c] if
 
       {{P}} c {{P}}
 
-    holds.  Note that in the middle of executing [c], the invariant
-    might temporarily become false, but by the end of [c], it must be
-    restored. *)
+    holds.  Note that the command invariant might temporarily become
+    false in the middle of executing [c], but by the end of [c] it
+    must be restored. *)
 
 (**  As a first attempt at a [while] rule, we could try:
 
@@ -1604,7 +1621,7 @@ End If1.
       ---------------------------
       {{P} while b do c end {{P}}
 
-    That rule is valid: if [P] is an invariant of [c], as the premise
+    That rule is valid: if [P] is a command invariant of [c], as the premise
     requires, then no matter how many times the loop body executes,
     [P] is going to be true when the loop finally finishes.
 
@@ -1655,14 +1672,17 @@ Qed.
 
       {{P /\ b}} c {{P}}
 
-    is a valid Hoare triple. This means that [P] will be true at the end of
-    the loop body whenever the loop body executes. If [P] contradicts [b],
-    this holds trivially since the precondition is false. For instance,
-    [X = 0] is a loop invariant of
+    is a valid Hoare triple.
+
+    This means that [P] will be true at the end of the loop body
+    whenever the loop body executes. If [P] contradicts [b], this
+    holds trivially since the precondition is false.
+
+    For instance, [X = 0] is a loop invariant of
 
       while X = 2 do X := 1 end
 
-    since we will never enter the loop. *)
+    since the program will never enter the loop. *)
 
 (** The program
 
@@ -1673,7 +1693,7 @@ Qed.
     X = Y + Z
 
     Note that this doesn't contradict the loop guard but neither
-    is it an invariant of
+    is it a command invariant of
 
     Y := Y - 1; Z := Z + 1
 
@@ -1694,8 +1714,8 @@ Proof.
   - apply hoare_while.
     eapply hoare_consequence_pre.
     + apply hoare_asgn.
-    + assn_auto''.
-  - assn_auto''.
+    + assertion_auto''.
+  - assertion_auto''.
 Qed.
 
 (** If the loop never terminates, any postcondition will work. *)
@@ -1710,7 +1730,7 @@ Proof.
 Qed.
 
 (** Of course, this result is not surprising if we remember that
-    the definition of [hoare_triple] asserts that the postcondition
+    the definition of [valid_hoare_triple] asserts that the postcondition
     must hold _only_ when the command terminates.  If the command
     doesn't terminate, we can prove anything we like about the
     post-condition.
@@ -1808,12 +1828,12 @@ where "st '=[' c ']=>' st'" := (ceval st c st').
 (** A couple of definitions from above, copied here so they use the
     new [ceval]. *)
 
-Definition hoare_triple (P : Assertion) (c : com) (Q : Assertion)
+Definition valid_hoare_triple (P : Assertion) (c : com) (Q : Assertion)
                         : Prop :=
   forall st st', st =[ c ]=> st' -> P st -> Q st'.
 
 Notation "{{ P }}  c  {{ Q }}" :=
-  (hoare_triple P c Q) (at level 90, c custom com at level 99).
+  (valid_hoare_triple P c Q) (at level 90, c custom com at level 99).
 
 (** To make sure you've got the evaluation rules for [repeat] right,
     prove that [ex1_repeat] evaluates correctly. *)
@@ -1976,12 +1996,12 @@ Hint Constructors ceval : core.
 
 (** The definition of Hoare triples is exactly as before. *)
 
-Definition hoare_triple (P:Assertion) (c:com) (Q:Assertion) : Prop :=
+Definition valid_hoare_triple (P:Assertion) (c:com) (Q:Assertion) : Prop :=
   forall st st', st =[ c ]=> st' -> P st -> Q st'.
 
-Hint Unfold hoare_triple : core.
+Hint Unfold valid_hoare_triple : core.
 
-Notation "{{ P }}  c  {{ Q }}" := (hoare_triple P c Q)
+Notation "{{ P }}  c  {{ Q }}" := (valid_hoare_triple P c Q)
                                   (at level 90, c custom com at level 99)
                                   : hoare_spec_scope.
 
@@ -1993,7 +2013,7 @@ Theorem hoare_consequence_pre : forall (P P' Q : Assertion) c,
   {{P}} c {{Q}}.
 Proof. eauto. Qed.
 
-(** **** Exercise: 3 stars, standard (hoare_havoc) *)
+(** **** Exercise: 3 stars, advanced (hoare_havoc) *)
 
 (** Complete the Hoare rule for [HAVOC] commands below by defining
     [havoc_pre], and prove that the resulting rule is correct. *)
@@ -2005,17 +2025,16 @@ Theorem hoare_havoc : forall (Q : Assertion) (X : string),
   {{ havoc_pre X Q }} havoc X {{ Q }}.
 Proof.
   (* FILL IN HERE *) Admitted.
-
 (** [] *)
 
-(** **** Exercise: 3 stars, standard (havoc_post) *)
+(** **** Exercise: 3 stars, advanced (havoc_post)
 
-(** Complete the following proof without changing any of the provided
+    Complete the following proof without changing any of the provided
     commands. If you find that it can't be completed, your definition of
     [havoc_pre] is probably too strong. Find a way to relax it so that
     [havoc_post] can be proved.
 
-    Hint: the [assn_auto] tactics we've built won't help you here.
+    Hint: the [assertion_auto] tactics we've built won't help you here.
     You need to proceed manually. *)
 
 Theorem havoc_post : forall (P : Assertion) (X : string),
@@ -2036,7 +2055,7 @@ End Himp.
 
     In this exercise, we will extend IMP with two commands, [assert]
     and [assume]. Both commands are ways to indicate that a certain
-    statement should hold any time this part of the program is
+    assertion should hold any time this part of the program is
     reached. However they differ as follows:
 
     - If an [assert] statement fails, it causes the program to go into
@@ -2145,14 +2164,14 @@ where "st '=[' c ']=>' r" := (ceval c st r).
     with result [r], then [r] is not an error and the state of [r]
     satisfies [Q]. *)
 
-Definition hoare_triple
+Definition valid_hoare_triple
            (P : Assertion) (c : com) (Q : Assertion) : Prop :=
   forall st r,
      st =[ c ]=> r  -> P st  ->
      (exists st', r = RNormal st' /\ Q st').
 
 Notation "{{ P }}  c  {{ Q }}" :=
-  (hoare_triple P c Q) (at level 90, c custom com at level 99)
+  (valid_hoare_triple P c Q) (at level 90, c custom com at level 99)
   : hoare_spec_scope.
 
 (** To test your understanding of this modification, give an example
@@ -2179,7 +2198,7 @@ Proof.
 Theorem hoare_asgn : forall Q X a,
   {{Q [X |-> a]}} X := a {{Q}}.
 Proof.
-  unfold hoare_triple.
+  unfold valid_hoare_triple.
   intros Q X a st st' HE HQ.
   inversion HE. subst.
   exists (X !-> aeval st a ; st). split; try reflexivity.
@@ -2202,7 +2221,7 @@ Theorem hoare_consequence_post : forall (P Q Q' : Assertion) c,
 Proof.
   intros P Q Q' c Hhoare Himp.
   intros st r Hc HP.
-  unfold hoare_triple in Hhoare.
+  unfold valid_hoare_triple in Hhoare.
   assert (exists st', r = RNormal st' /\ Q' st').
   { apply (Hhoare st); assumption. }
   destruct H as [st' [Hr HQ'] ].
@@ -2248,7 +2267,7 @@ Proof.
   - (* b is true *)
     apply (HTrue st st').
     + assumption.
-    + split; assumption. 
+    + split; assumption.
   - (* b is false *)
     apply (HFalse st st').
     + assumption.
@@ -2275,7 +2294,7 @@ Proof.
     apply IHHe2.
     + reflexivity.
     + clear IHHe2 He2 r.
-      unfold hoare_triple in Hhoare.
+      unfold valid_hoare_triple in Hhoare.
       apply Hhoare in He1.
       * destruct He1 as [st1 [Heq Hst1] ].
         inversion Heq; subst.
@@ -2283,7 +2302,7 @@ Proof.
       * split; assumption.
   - (* E_WhileTrueError *)
      exfalso. clear IHHe.
-     unfold hoare_triple in Hhoare.
+     unfold valid_hoare_triple in Hhoare.
      apply Hhoare in He.
      + destruct He as [st' [C _] ]. inversion C.
      + split; assumption.
@@ -2311,4 +2330,4 @@ End HoareAssertAssume.
 
 
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

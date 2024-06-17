@@ -243,17 +243,16 @@ Proof.
 (** If [T] is a tactic, then [try T] is a tactic that is just like [T]
     except that, if [T] fails, [try T] _successfully_ does nothing at
     all (rather than failing). *)
-
-Theorem silly1 : forall ae, aeval ae = aeval ae.
-Proof.
-    try reflexivity. (* This just does [reflexivity]. *)
-Qed.
-
-Theorem silly2 : forall (P : Prop), P -> P.
+Theorem silly1 : forall (P : Prop), P -> P.
 Proof.
   intros P HP.
   try reflexivity. (* Plain [reflexivity] would have failed. *)
   apply HP. (* We can still finish the proof in some other way. *)
+Qed.
+
+Theorem silly2 : forall ae, aeval ae = aeval ae.
+Proof.
+    try reflexivity. (* This just does [reflexivity]. *)
 Qed.
 
 (** There is not much reason to use [try] in completely manual
@@ -516,7 +515,8 @@ Proof.
 
     Here's an example [Ltac] script called [invert]. *)
 
-Ltac invert H := inversion H; subst; clear H.
+Ltac invert H :=
+  inversion H; subst; clear H.
 
 (** This defines a new tactic called [invert] that takes a hypothesis
     [H] as an argument and performs the sequence of commands
@@ -610,10 +610,10 @@ Qed.
 (** * Evaluation as a Relation *)
 
 (** We have presented [aeval] and [beval] as functions defined by
-    [Fixpoint]s.  Another way to think about evaluation -- one that we
-    will see is often more flexible -- is as a _relation_ between
-    expressions and their values.  This leads naturally to [Inductive]
-    definitions like the following... *)
+    [Fixpoint]s.  Another way to think about evaluation -- one that is
+    often more flexible -- is as a _relation_ between expressions and
+    their values.  This perspective leads to [Inductive] definitions
+    like the following... *)
 
 Module aevalR_first_try.
 
@@ -702,16 +702,16 @@ Inductive aevalR : aexp -> nat -> Prop :=
 (** In informal discussions, it is convenient to write the rules
     for [aevalR] and similar relations in the more readable graphical
     form of _inference rules_, where the premises above the line
-    justify the conclusion below the line. *)
+    justify the conclusion below the line.
 
-(** For example, the constructor [E_APlus]...
+    For example, the constructor [E_APlus]...
 
       | E_APlus : forall (e1 e2 : aexp) (n1 n2 : nat),
           aevalR e1 n1 ->
           aevalR e2 n2 ->
           aevalR (APlus e1 e2) (n1 + n2)
 
-    ...would be written like this as an inference rule:
+    ...can be written like this as an inference rule:
 
                                e1 ==> n1
                                e2 ==> n2
@@ -738,8 +738,8 @@ Inductive aevalR : aexp -> nat -> Prop :=
     indicated by saying something like "Let [aevalR] be the smallest
     relation closed under the following rules...". *)
 
-(** For example, [==>] is the smallest relation closed under these
-    rules:
+(** For example, we could define [==>] as the smallest relation
+    closed under these rules:
 
                              -----------                               (E_ANum)
                              ANum n ==> n
@@ -793,40 +793,40 @@ Definition manual_grade_for_beval_rules : option (nat*string) := None.
 Theorem aeval_iff_aevalR : forall a n,
   (a ==> n) <-> aeval a = n.
 Proof.
- split.
- - (* -> *)
-   intros H.
-   induction H; simpl.
-   + (* E_ANum *)
-     reflexivity.
-   + (* E_APlus *)
-     rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
-   + (* E_AMinus *)
-     rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
-   + (* E_AMult *)
-     rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
- - (* <- *)
-   generalize dependent n.
-   induction a;
-      simpl; intros; subst.
-   + (* ANum *)
-     apply E_ANum.
-   + (* APlus *)
-     apply E_APlus.
-     * apply IHa1. reflexivity.
-     * apply IHa2. reflexivity.
-   + (* AMinus *)
-     apply E_AMinus.
-     * apply IHa1. reflexivity.
-     * apply IHa2. reflexivity.
-   + (* AMult *)
-     apply E_AMult.
-     * apply IHa1. reflexivity.
-     * apply IHa2. reflexivity.
+  split.
+  - (* -> *)
+    intros H.
+    induction H; simpl.
+    + (* E_ANum *)
+      reflexivity.
+    + (* E_APlus *)
+      rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
+    + (* E_AMinus *)
+      rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
+    + (* E_AMult *)
+      rewrite IHaevalR1.  rewrite IHaevalR2.  reflexivity.
+  - (* <- *)
+    generalize dependent n.
+    induction a;
+       simpl; intros; subst.
+    + (* ANum *)
+      apply E_ANum.
+    + (* APlus *)
+      apply E_APlus.
+      * apply IHa1. reflexivity.
+      * apply IHa2. reflexivity.
+    + (* AMinus *)
+      apply E_AMinus.
+      * apply IHa1. reflexivity.
+      * apply IHa2. reflexivity.
+    + (* AMult *)
+      apply E_AMult.
+      * apply IHa1. reflexivity.
+      * apply IHa2. reflexivity.
 Qed.
 
 (** Again, we can make the proof quite a bit shorter using some
-    tactics. *)
+    tacticals. *)
 
 Theorem aeval_iff_aevalR' : forall a n,
   (a ==> n) <-> aeval a = n.
@@ -905,8 +905,9 @@ Inductive aevalR : aexp -> nat -> Prop :=
 
 where "a '==>' n" := (aevalR a n) : type_scope.
 
-(** Notice that the evaluation relation has become _partial_: There
-    are some inputs for which it does not specify an output. *)
+(** Notice that this evaluation relation corresponds to a _partial_
+    function: There are some inputs for which it does not specify an
+    output. *)
 
 End aevalR_division.
 
@@ -988,8 +989,10 @@ End aevalR_extended.
 
 (** Let's return to defining Imp, where the next thing we need to do
     is to enrich our arithmetic and boolean expressions with
-    variables. To keep things simple, we'll assume that all variables
-    are global and that they only hold numbers. *)
+    variables.
+
+    To keep things simple, we'll assume that all variables are global
+    and that they only hold numbers. *)
 
 (* ================================================================= *)
 (** ** States *)
@@ -1052,19 +1055,22 @@ Inductive bexp : Type :=
 (** ** Notations *)
 
 (** To make Imp programs easier to read and write, we introduce some
-    notations and implicit coercions.  You do not need to understand
-    exactly what these declarations do.  Briefly, though:
+    notations and implicit coercions.  *)
+
+(** You do not need to understand exactly what these declarations do.
+
+    Briefly, though:
        - The [Coercion] declaration stipulates that a function (or
          constructor) can be implicitly used by the type system to
          coerce a value of the input type to a value of the output
          type.  For instance, the coercion declaration for [AId]
          allows us to use plain strings when an [aexp] is expected;
          the string will implicitly be wrapped with [AId].
-       - [Declare Custom Entry com] tells Coq to create a new
-         "custom grammar" for parsing Imp expressions and
-         programs. The first notation declaration after this tells Coq
-         that anything between [<{] and [}>] should be parsed using
-         the Imp grammar. Again, it is not necessary to understand the
+       - [Declare Custom Entry com] tells Coq to create a new "custom
+         grammar" for parsing Imp expressions and programs. The first
+         notation declaration after this tells Coq that anything
+         between [<{] and [}>] should be parsed using the Imp
+         grammar. Again, it is not necessary to understand the
          details, but it is important to recognize that we are
          defining _new_ interpretations for some familiar operators
          like [+], [-], [*], [=], [<=], etc., when they occur between
@@ -1075,8 +1081,11 @@ Coercion ANum : nat >-> aexp.
 
 Declare Custom Entry com.
 Declare Scope com_scope.
+Declare Custom Entry com_aux.
 
-Notation "<{ e }>" := e (at level 0, e custom com at level 99) : com_scope.
+Notation "<{ e }>" := e (e custom com_aux) : com_scope.
+Notation "e" := e (in custom com_aux at level 0, e custom com) : com_scope.
+
 Notation "( x )" := x (in custom com, x at level 99) : com_scope.
 Notation "x" := x (in custom com at level 0, x constr at level 0) : com_scope.
 Notation "f x .. y" := (.. (f x) .. y)
@@ -1112,7 +1121,8 @@ Definition example_bexp : bexp := <{ true && ~(X <= 4) }>.
     handle variables in the obvious way, taking a state [st] as an
     extra argument: *)
 
-Fixpoint aeval (st : state) (* <--- NEW *) (a : aexp) : nat :=
+Fixpoint aeval (st : state) (* <--- NEW *)
+               (a : aexp) : nat :=
   match a with
   | ANum n => n
   | AId x => st x                                (* <--- NEW *)
@@ -1121,7 +1131,8 @@ Fixpoint aeval (st : state) (* <--- NEW *) (a : aexp) : nat :=
   | <{a1 * a2}> => (aeval st a1) * (aeval st a2)
   end.
 
-Fixpoint beval (st : state) (* <--- NEW *) (b : bexp) : bool :=
+Fixpoint beval (st : state) (* <--- NEW *)
+               (b : bexp) : bool :=
   match b with
   | <{true}>      => true
   | <{false}>     => false
@@ -1160,7 +1171,7 @@ Proof. reflexivity. Qed.
 (* ################################################################# *)
 (** * Commands *)
 
-(** Now we are ready define the syntax and behavior of Imp
+(** Now we are ready to define the syntax and behavior of Imp
     _commands_ (or _statements_). *)
 
 (* ================================================================= *)
@@ -1169,8 +1180,11 @@ Proof. reflexivity. Qed.
 (** Informally, commands [c] are described by the following BNF
     grammar.
 
-     c := skip | x := a | c ; c | if b then c else c end
-         | while b do c end
+     c := skip
+        | x := a
+        | c ; c
+        | if b then c else c end
+        | while b do c end
 *)
 
 (** Here is the formal definition of the abstract syntax of
@@ -1195,14 +1209,16 @@ Notation "x := y"  :=
              y at level 85, no associativity) : com_scope.
 Notation "x ; y" :=
          (CSeq x y)
-           (in custom com at level 90, right associativity) : com_scope.
+           (in custom com at level 90,
+            right associativity) : com_scope.
 Notation "'if' x 'then' y 'else' z 'end'" :=
          (CIf x y z)
            (in custom com at level 89, x at level 99,
             y at level 99, z at level 99) : com_scope.
 Notation "'while' x 'do' y 'end'" :=
          (CWhile x y)
-            (in custom com at level 89, x at level 99, y at level 99) : com_scope.
+           (in custom com at level 89, x at level 99,
+            y at level 99) : com_scope.
 
 (** For example, here is the factorial function again, written as a
     formal Coq definition.  When this command terminates, the variable
@@ -1310,14 +1326,15 @@ Locate ";".
 Locate "while".
 (* ===>
     Notation
-      "'while' x 'do' y 'end'" := CWhile x y : com_scope (default interpretation)
-      "'_' '!->' v" := t_empty v (default interpretation)
+      "'while' x 'do' y 'end'" :=
+          CWhile x y : com_scope (default interpretation)
 *)
 
 (* ================================================================= *)
 (** ** More Examples *)
 
-(** Assignment: *)
+(* ----------------------------------------------------------------- *)
+(** *** Assignment: *)
 
 Definition plus2 : com :=
   <{ X := X + 2 }>.
@@ -1325,12 +1342,12 @@ Definition plus2 : com :=
 Definition XtimesYinZ : com :=
   <{ Z := X * Y }>.
 
+(* ----------------------------------------------------------------- *)
+(** *** Loops *)
+
 Definition subtract_slowly_body : com :=
   <{ Z := Z - 1 ;
      X := X - 1 }>.
-
-(* ----------------------------------------------------------------- *)
-(** *** Loops *)
 
 Definition subtract_slowly : com :=
   <{ while X <> 0 do
@@ -1360,8 +1377,8 @@ Definition loop : com :=
 (* ================================================================= *)
 (** ** Evaluation as a Function (Failed Attempt) *)
 
-(** Here's an attempt at defining an evaluation function for commands,
-    omitting the [while] case. *)
+(** Here's an attempt at defining an evaluation function for commands
+    (with a bogus [while] case). *)
 
 Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
   match c with
@@ -1511,7 +1528,7 @@ Inductive ceval : com -> state -> state -> Prop :=
   where "st =[ c ]=> st'" := (ceval c st st').
 
 (** The cost of defining evaluation as a relation instead of a
-    function is that we now need to construct _proofs_ that some
+    function is that we now need to construct a _proof_ that some
     program evaluates to some result state, rather than just letting
     Coq's computation mechanism do it for us. *)
 
@@ -2060,4 +2077,4 @@ End BreakImp.
 
     [] *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

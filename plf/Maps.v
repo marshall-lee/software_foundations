@@ -307,6 +307,11 @@ Proof.
   reflexivity.
 Qed.
 
+(** The [update_eq] lemma is used very often in proofs.  Adding it to
+    Coq's global "hint database" allows proof-automation tactics such
+    as [auto] to find it. *)
+#[global] Hint Resolve update_eq : core.
+
 Theorem update_neq : forall (A : Type) (m : partial_map A) x1 x2 v,
   x2 <> x1 ->
   (x2 |-> v ; m) x1 = m x1.
@@ -374,4 +379,4 @@ Qed.
     used to keep track of which program variables are defined in a
     given scope. *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-02 21:54 *)

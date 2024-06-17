@@ -9,14 +9,15 @@ From PLF Require Import Stlc.
 (* ################################################################# *)
 (** * Adding Records *)
 
-(** We saw in chapter [MoreStlc] how records can be treated as just
-    syntactic sugar for nested uses of products.  This is OK for
+(** We saw in chapter [MoreStlc] how records can be treated as
+    just syntactic sugar for nested uses of products.  This is OK for
     simple examples, but the encoding is informal (in reality, if we
-    actually treated records this way, it would be carried out in the
-    parser, which we are eliding here), and anyway it is not very
-    efficient.  So it is also interesting to see how records can be
-    treated as first-class citizens of the language.  This chapter
-    shows how.
+    actually treated records this way, the translation would be
+    carried out in the parser, which we are eliding here), and anyway
+    it is not very efficient, nor does it lead to nice error messages
+    for programs that the typechecker rejects.  So it is also
+    interesting to see how records can be treated as first-class
+    citizens of the language.  This chapter shows how.
 
     Recall the informal definitions we gave before: *)
 
@@ -407,9 +408,10 @@ Hint Constructors has_type : core.
     features in this proof.  However, if you are not confident about
     how the type system works, you may want to carry out the proofs
     first using the basic features ([apply] instead of [eapply], in
-    particular) and then perhaps compress it using automation.  Before
-    starting to prove anything, make sure you understand what it is
-    saying. *)
+    particular) and then perhaps compress it using automation.
+
+    Before starting to prove _anything_, make sure you understand what
+    it is saying. :-) *)
 
 Lemma typing_example_2 :
   empty |-- (\a : ( i1 : (A -> A) :: i2 : (B -> B) :: nil), a --> i2)
@@ -735,4 +737,4 @@ Qed.
 
 End STLCExtendedRecords.
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

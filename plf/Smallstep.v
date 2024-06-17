@@ -15,37 +15,40 @@ Definition FILL_IN_HERE := <{True}>.
 (** The evaluators we have seen so far (for [aexp]s, [bexp]s,
     commands, ...) have been formulated in a "big-step" style: they
     specify how a given expression can be evaluated to its final
-    value (or a command plus a store to a final store) "all in one big
-    step."
+    value (or a how command plus a store can be evaluated to a final
+    store) "all in one big step."
 
     This style is simple and natural for many purposes -- indeed,
     Gilles Kahn, who popularized it, called it _natural semantics_.
     But there are some things it does not do well.  In particular, it
-    does not give us a natural way of talking about _concurrent_
+    does not give us a convenient way of talking about _concurrent_
     programming languages, where the semantics of a program -- i.e.,
     the essence of how it behaves -- is not just which input states
     get mapped to which output states, but also includes the
-    intermediate states that it passes through along the way, since
-    these states can also be observed by concurrently executing code.
+    intermediate states that it passes through along the way; this is
+    crucial, since these states can also be observed by concurrently
+    executing code.
 
-    Another shortcoming of the big-step style is more technical, but
-    critical in many situations.  Suppose we want to define a variant
-    of Imp where variables could hold _either_ numbers _or_ lists of
-    numbers.  In the syntax of this extended language, it will be
-    possible to write strange expressions like [2 + nil], and our
-    semantics for arithmetic expressions will then need to say
-    something about how such expressions behave.  One possibility is
-    to maintain the convention that every arithmetic expression
-    evaluates to some number by choosing some way of viewing a list as
-    a number -- e.g., by specifying that a list should be interpreted
-    as [0] when it occurs in a context expecting a number.  But this
-    is really a bit of a hack.
+    Another shortcoming of the big-step style is more technical but
+    equally critical in many situations.
+
+    Suppose we want to define a variant of Imp where variables could
+    hold _either_ numbers _or_ lists of numbers.  In the syntax of
+    this extended language, it will be possible to write strange
+    expressions like [2 + nil], and our semantics for arithmetic
+    expressions will then need to say something about how such
+    expressions behave.  One possibility is to maintain the convention
+    that every arithmetic expression evaluates to some number by
+    choosing some way of viewing a list as a number -- e.g., by
+    specifying that a list should be interpreted as [0] when it occurs
+    in a context expecting a number.  But this would be a bit of a
+    hack.
 
     A much more natural approach is simply to say that the behavior of
-    an expression like [2+nil] is _undefined_ -- i.e., it doesn't
-    evaluate to any result at all.  And we can easily do this: we just
-    have to formulate [aeval] and [beval] as [Inductive] propositions
-    rather than [Fixpoint]s, so that we can make them partial functions
+    the expression [2+nil] is _undefined_ -- i.e., it doesn't evaluate
+    to any result at all.  And we can easily do this: we just have to
+    formulate [aeval] and [beval] as [Inductive] propositions rather
+    than [Fixpoint]s, so that we can make them partial functions
     instead of total ones.
 
     Now, however, we encounter a serious deficiency.  In this
@@ -57,22 +60,22 @@ Definition FILL_IN_HERE := <{True}>.
     rules can be applied.
 
     These two outcomes -- nontermination vs. getting stuck in an
-    erroneous configuration -- should not be confused.  In particular, we
-    want to _allow_ the first (permitting the possibility of infinite
-    loops is the price we pay for the convenience of programming with
-    general looping constructs like [while]) but _prevent_ the
-    second (which is just wrong), for example by adding some form of
-    _typechecking_ to the language.  Indeed, this will be a major
-    topic for the rest of the course.  As a first step, we need a way
-    of presenting the semantics that allows us to distinguish
+    erroneous configuration -- should not be confused.  In particular,
+    we want to _allow_ the first (because permitting the possibility
+    of infinite loops is the price we pay for the convenience of
+    programming with general looping constructs like [while]) but
+    _prevent_ the second (which is just wrong), for example by adding
+    some form of _typechecking_ to the language.  Indeed, this will be
+    a major topic in the rest of the course.  As a first step, we need
+    a way of presenting the semantics that allows us to distinguish
     nontermination from erroneous "stuck states."
 
-    So, for lots of reasons, we'd often like to have a finer-grained
-    way of defining and reasoning about program behaviors.  This is
-    the topic of the present chapter.  Our goal is to replace the
-    "big-step" [eval] relation with a "small-step" relation that
-    specifies, for a given program, how the "atomic steps" of
-    computation are performed. *)
+    So, for lots of reasons, we'd like to have a finer-grained way of
+    defining and reasoning about program behaviors.  This is the topic
+    of the present chapter.  Our goal is to replace the "big-step"
+    [eval] relation with a "small-step" relation that specifies, for a
+    given program, how its atomic steps of computation are
+    performed. *)
 
 (* ################################################################# *)
 (** * A Toy Language *)
@@ -104,10 +107,10 @@ Fixpoint evalF (t : tm) : nat :=
                                ---------                               (E_Const)
                                C n ==> n
 
-                               t1 ==> v1
-                               t2 ==> v2
+                               t1 ==> n1
+                               t2 ==> n2
                            -------------------                         (E_Plus)
-                           P t1 t2 ==> v1 + v2
+                           P t1 t2 ==> n1 + n2
 *)
 
 Reserved Notation " t '==>' n " (at level 50, left associativity).
@@ -115,10 +118,10 @@ Reserved Notation " t '==>' n " (at level 50, left associativity).
 Inductive eval : tm -> nat -> Prop :=
   | E_Const : forall n,
       C n ==> n
-  | E_Plus : forall t1 t2 v1 v2,
-      t1 ==> v1 ->
-      t2 ==> v2 ->
-      P t1 t2 ==> (v1 + v2)
+  | E_Plus : forall t1 t2 n1 n2,
+      t1 ==> n1 ->
+      t2 ==> n2 ->
+      P t1 t2 ==> (n1 + n2)
 
 where " t '==>' n " := (eval t n).
 
@@ -128,7 +131,7 @@ Module SimpleArith1.
 
     
                      -------------------------------        (ST_PlusConstConst)
-                     P (C v1) (C v2) --> C (v1 + v2)
+                     P (C n1) (C n2) --> C (n1 + n2)
 
                               t1 --> t1'
                          --------------------                        (ST_Plus1)
@@ -136,27 +139,27 @@ Module SimpleArith1.
 
                               t2 --> t2'
                       ----------------------------                   (ST_Plus2)
-                      P (C v1) t2 --> P (C v1) t2'
+                      P (C n1) t2 --> P (C n1) t2'
 *)
 
 Reserved Notation " t '-->' t' " (at level 40).
 
 Inductive step : tm -> tm -> Prop :=
-  | ST_PlusConstConst : forall v1 v2,
-      P (C v1) (C v2) --> C (v1 + v2)
+  | ST_PlusConstConst : forall n1 n2,
+      P (C n1) (C n2) --> C (n1 + n2)
   | ST_Plus1 : forall t1 t1' t2,
       t1 --> t1' ->
       P t1 t2 --> P t1' t2
-  | ST_Plus2 : forall v1 t2 t2',
+  | ST_Plus2 : forall n1 t2 t2',
       t2 --> t2' ->
-      P (C v1) t2 --> P (C v1) t2'
+      P (C n1) t2 --> P (C n1) t2'
 
   where " t '-->' t' " := (step t t').
 
 (** Things to notice:
 
-    - We are defining just a single reduction step, in which
-      one [P] node is replaced by its value.
+    - We are defining a single reduction step, in which just one [P]
+      node is replaced by its value.
 
     - Each step finds the _leftmost_ [P] node that is ready to
       go (both of its operands are constants) and rewrites it in
@@ -212,8 +215,9 @@ End SimpleArith1.
 (** We will be working with several different single-step relations,
     so it is helpful to generalize a bit and state a few definitions
     and theorems about relations in general.  (The optional chapter
-    [Rel.v] develops some of these ideas in a bit more detail; it may
-    be useful if the treatment here feels too terse.) *)
+    [Rel.v] in _Logical Foundations_ develops some of these ideas in
+    a bit more detail; it may be useful if the treatment here feels
+    too terse.) *)
 
 (** A _binary relation_ on a set [X] is a family of propositions
     parameterized by two elements of [X] -- i.e., a proposition about
@@ -223,7 +227,7 @@ Definition relation (X : Type) := X -> X -> Prop.
 
 (** Our main examples of such relations in this chapter will be
     the single-step reduction relation, [-->], and its multi-step
-    variant, [-->*] (defined below), but there are many other
+    variant, [-->*], defined below, but there are many other
     examples -- e.g., the "equals," "less than," "less than or equal
     to," and "is the square of" relations on numbers, and the "prefix
     of" relation on lists and strings. *)
@@ -388,7 +392,7 @@ Inductive value : tm -> Prop :=
 
 (** 
                      -------------------------------        (ST_PlusConstConst)
-                     P (C v1) (C v2) --> C (v1 + v2)
+                     P (C n1) (C n2) --> C (n1 + n2)
 
                               t1 --> t1'
                          --------------------                        (ST_Plus1)
@@ -415,9 +419,9 @@ Inductive value : tm -> Prop :=
 Reserved Notation " t '-->' t' " (at level 40).
 
 Inductive step : tm -> tm -> Prop :=
-  | ST_PlusConstConst : forall v1 v2,
-          P (C v1) (C v2)
-      --> C (v1 + v2)
+  | ST_PlusConstConst : forall n1 n2,
+          P (C n1) (C n2)
+      --> C (n1 + n2)
   | ST_Plus1 : forall t1 t1' t2,
         t1 --> t1' ->
         P t1 t2 --> P t1' t2
@@ -439,6 +443,9 @@ Inductive step : tm -> tm -> Prop :=
 
     - If both are [ST_PlusConstConst], the result is immediate.
 
+    - The cases when both derivations end with [ST_Plus1] or
+      [ST_Plus2] follow by the induction hypothesis.
+
     - It cannot happen that one is [ST_PlusConstConst] and the other
       is [ST_Plus1] or [ST_Plus2], since this would imply that [x] has
       the form [P t1 t2] where both [t1] and [t2] are constants (by
@@ -448,10 +455,7 @@ Inductive step : tm -> tm -> Prop :=
     - Similarly, it cannot happen that one is [ST_Plus1] and the other
       is [ST_Plus2], since this would imply that [x] has the form [P
       t1 t2] where [t1] both has the form [P t11 t12] and is a
-      value (hence has the form [C n]).
-
-    - The cases when both derivations end with [ST_Plus1] or
-      [ST_Plus2] follow by the induction hypothesis. [] *)
+      value (hence has the form [C n]). [] *)
 
 (** Most of this proof is the same as the one above.  But to get
     maximum benefit from the exercise you should try to write your
@@ -594,14 +598,13 @@ Module Temp1.
 
 Inductive value : tm -> Prop :=
   | v_const : forall n, value (C n)
-  | v_funny : forall t1 v2,
-                value (P t1 (C v2)).              (* <--- *)
+  | v_funny : forall t1 n,
+                value (P t1 (C n)).              (* <--- *)
 
 Reserved Notation " t '-->' t' " (at level 40).
-
 Inductive step : tm -> tm -> Prop :=
-  | ST_PlusConstConst : forall v1 v2,
-      P (C v1) (C v2) --> C (v1 + v2)
+  | ST_PlusConstConst : forall n1 n2,
+      P (C n1) (C n2) --> C (n1 + n2)
   | ST_Plus1 : forall t1 t1' t2,
       t1 --> t1' ->
       P t1 t2 --> P t1' t2
@@ -635,8 +638,8 @@ Reserved Notation " t '-->' t' " (at level 40).
 Inductive step : tm -> tm -> Prop :=
   | ST_Funny : forall n,
       C n --> P (C n) (C 0)                  (* <--- NEW *)
-  | ST_PlusConstConst : forall v1 v2,
-      P (C v1) (C v2) --> C (v1 + v2)
+  | ST_PlusConstConst : forall n1 n2,
+      P (C n1) (C n2) --> C (n1 + n2)
   | ST_Plus1 : forall t1 t1' t2,
       t1 --> t1' ->
       P t1 t2 --> P t1' t2
@@ -659,7 +662,7 @@ End Temp2.
 
     Finally, we might define [value] and [step] so that there is some
     term that is not a value but that cannot take a step in the [step]
-    relation.  Such terms are said to be _stuck_. In this case this is
+    relation.  Such terms are said to be _stuck_.  In this case, this is
     caused by a mistake in the semantics, but we will also see
     situations where, even in a correct language definition, it makes
     sense to allow some terms to be stuck. *)
@@ -672,8 +675,8 @@ Inductive value : tm -> Prop :=
 Reserved Notation " t '-->' t' " (at level 40).
 
 Inductive step : tm -> tm -> Prop :=
-  | ST_PlusConstConst : forall v1 v2,
-      P (C v1) (C v2) --> C (v1 + v2)
+  | ST_PlusConstConst : forall n1 n2,
+      P (C n1) (C n2) --> C (n1 + n2)
   | ST_Plus1 : forall t1 t1' t2,
       t1 --> t1' ->
       P t1 t2 --> P t1' t2
@@ -697,7 +700,7 @@ Module Temp4.
 
 (** Here is another very simple language whose terms, instead of being
     just addition expressions and numbers, are just the booleans true
-    and false and a conditional expression... *)
+    and false plus a conditional expression... *)
 
 Inductive tm : Type :=
   | tru : tm
@@ -762,7 +765,7 @@ Definition manual_grade_for_smallstep_bools : option (nat*string) := None.
 (** **** Exercise: 3 stars, standard, optional (strong_progress_bool)
 
     Just as we proved a progress theorem for plus expressions, we can
-    do so for boolean expressions, as well. *)
+    do so for boolean expressions as well. *)
 
 Theorem strong_progress_bool : forall t,
   value t \/ (exists t', t --> t').
@@ -831,8 +834,9 @@ Proof.
 
     It can be shown that the determinism and strong progress theorems
     for the step relation in the lecture notes also hold for the
-    definition of step given above.  After we add the clause
-    [ST_ShortCircuit]...
+    definition of [step] given above.
+
+    After we add the clause [ST_ShortCircuit]...
 
     - Is the [step] relation still deterministic?  Write yes or no and
       briefly (1 sentence) explain your answer.
@@ -880,10 +884,11 @@ End Temp4.
       [t] can reach by multi-step reduction. *)
 
 (** Since we'll want to reuse the idea of multi-step reduction many
-    times, let's pause and define it generically.
+    times with many different single-step relations, let's pause and
+    define the concept generically.
 
     Given a relation [R] (e.g., the step relation [-->]), we define a
-    relation [multi R], called the _multi-step closure of [R]_ as
+    new relation [multi R], called the _multi-step closure of [R]_ as
     follows. *)
 
 Inductive multi {X : Type} (R : relation X) : relation X :=
@@ -893,7 +898,7 @@ Inductive multi {X : Type} (R : relation X) : relation X :=
                     multi R y z ->
                     multi R x z.
 
-(** (In the [Rel] chapter of _Logical Foundations_ and
+(** (In the [Rel] chapter of _Logical Foundations_ and in
     the Coq standard library, this relation is called
     [clos_refl_trans_1n].  We give it a shorter name here for the sake
     of readability.) *)
@@ -923,9 +928,9 @@ Notation " t '-->*' t' " := (multi step t t') (at level 40).
     First, it is obviously _reflexive_ (that is, [forall x, multi R x
     x]).  In the case of the [-->*] (i.e., [multi step]) relation, the
     intuition is that a term can execute to itself by taking zero
-    steps of execution. *)
+    steps of reduction. *)
 
-(** Second, it contains [R] -- that is, single-step executions are a
+(** Second, it contains [R] -- that is, single-step reductions are a
     particular case of multi-step executions.  (It is this fact that
     justifies the word "closure" in the term "multi-step closure of
     [R].") *)
@@ -1045,12 +1050,13 @@ Definition step_normal_form := normal_form step.
 Definition normal_form_of (t t' : tm) :=
   (t -->* t' /\ step_normal_form t').
 
-(** We have already seen that, for our language, single-step reduction is
-    deterministic -- i.e., a given term can take a single step in
-    at most one way.  It follows from this that, if [t] can reach
-    a normal form, then this normal form is unique.  In other words, we
-    can actually pronounce [normal_form t t'] as "[t'] is _the_
-    normal form of [t]." *)
+(** We have already seen that, for our language, single-step
+    reduction is deterministic -- i.e., a given term can take a single
+    step in at most one way.  It follows from this that, if [t] can
+    reach a normal form, then this normal form is unique.
+
+    In other words, we can actually pronounce [normal_form t t'] as
+    "[t'] is _the_ normal form of [t]." *)
 
 (** **** Exercise: 3 stars, standard, optional (normal_forms_unique) *)
 Theorem normal_forms_unique:
@@ -1065,9 +1071,10 @@ Proof.
 (** [] *)
 
 (** Indeed, something stronger is true for this language (though
-    not for all languages): the reduction of _any_ term [t] will
-    eventually reach a normal form -- i.e., [normal_form_of] is a
-    _total_ function.  We say the [step] relation is _normalizing_. *)
+    not for all the languages we will see): the reduction of _any_
+    term [t] will eventually reach a normal form -- i.e.,
+    [normal_form_of] is a _total_ function.  We say the [step]
+    relation is _normalizing_. *)
 
 Definition normalizing {X : Type} (R : relation X) :=
   forall t, exists t',
@@ -1120,14 +1127,13 @@ Proof.
     - [t = P t1 t2] for some [t1] and [t2].  By the IH, [t1] and [t2]
       reduce to normal forms [t1'] and [t2'].  Recall that normal
       forms are values (by [nf_same_as_value]); we therefore know that
-      [t1' = C v1] and [t2' = C v2], for some [v1] and [v2].  We can
+      [t1' = C n1] and [t2' = C n2], for some [n1] and [n2].  We can
       combine the [-->*] derivations for [t1] and [t2] using
       [multi_congr_1] and [multi_congr_2] to prove that [P t1 t2]
-      reduces in many steps to [t' = C (v1 + v2)].
+      reduces in many steps to [t' = C (n1 + n2)].
 
-      Finally, [C (v1 + v2)] is a value, which is in turn a normal
+      Finally, [C (n1 + n2)] is a value, which is in turn a normal
       form by [nf_same_as_value]. [] *)
-
 Theorem step_normalizing :
   normalizing step.
 Proof.
@@ -1146,14 +1152,14 @@ Proof.
     destruct IHt2 as [t2' [Hsteps2 Hnormal2] ].
     apply nf_same_as_value in Hnormal1.
     apply nf_same_as_value in Hnormal2.
-    destruct Hnormal1 as [v1].
-    destruct Hnormal2 as [v2].
-    exists (C (v1 + v2)).
+    destruct Hnormal1 as [n1].
+    destruct Hnormal2 as [n2].
+    exists (C (n1 + n2)).
     split.
     + (* l *)
-      apply multi_trans with (P (C v1) t2).
+      apply multi_trans with (P (C n1) t2).
       * apply multistep_congr_1. apply Hsteps1.
-      * apply multi_trans with (P (C v1) (C v2)).
+      * apply multi_trans with (P (C n1) (C n2)).
         { apply multistep_congr_2.
           - apply v_const.
           - apply Hsteps2. }
@@ -1171,7 +1177,9 @@ Qed.
     thing! *)
 
 (** They do, though it takes a little work to show it.  The
-    details are left as an exercise. *)
+    details are left as an exercise.
+
+    We consider the two implications separately. *)
 
 (** **** Exercise: 3 stars, standard (eval__multistep) *)
 Theorem eval__multistep : forall t n,
@@ -1355,7 +1363,6 @@ Inductive aval : aexp -> Prop :=
 
 Reserved Notation " a '/' st '-->a' a' "
                   (at level 40, st at level 39).
-
 Inductive astep (st : state) : aexp -> aexp -> Prop :=
   | AS_Id : forall (i : string),
       i / st -->a (st i)
@@ -1391,7 +1398,6 @@ Inductive astep (st : state) : aexp -> aexp -> Prop :=
 
 Reserved Notation " b '/' st '-->b' b' "
                   (at level 40, st at level 39).
-
 Inductive bstep (st : state) : bexp -> bexp -> Prop :=
 | BS_Eq1 : forall a1 a1' a2,
     a1 / st -->a a1' ->
@@ -1445,17 +1451,16 @@ where " b '/' st '-->b' b' " := (bstep st b b').
               that reduction can continue with the right-hand
               subcommand.
 
-       - We reduce a [while] command by transforming it into a
-         conditional followed by the same [while]. *)
+       - We reduce a [while] command a single step by transforming it
+         into a conditional followed by the same [while]. *)
 
 (** (There are other ways of achieving the effect of the latter
     trick, but they all share the feature that the original [while]
-    command needs to be saved somewhere while a single copy of the loop
-    body is being reduced.) *)
+    command is stashed away somewhere while a single copy of the loop body is
+    being reduced.) *)
 
 Reserved Notation " t '/' st '-->' t' '/' st' "
                   (at level 40, st at level 39, t' at level 39).
-
 Inductive cstep : (com * state) -> (com * state) -> Prop :=
   | CS_AsgnStep : forall st i a1 a1',
       a1 / st -->a a1' ->
@@ -1493,6 +1498,18 @@ Inductive cstep : (com * state) -> (com * state) -> Prop :=
     be interleaved in any order, but they share the same memory and
     can communicate by reading and writing the same variables. *)
 
+(** For example:
+     - This program sets [X] to [0] in one thread and [1] in another,
+       leaving it set to either [0] or [1] at the end:
+
+          X := 0 || X := 1
+
+     - This one leaves [X] set to one of [0], [1], [2], or [3] at the
+       end:
+
+          X := 0; (X := X+2 || X := X+1 || X := 0)
+*)
+
 Module CImp.
 
 Inductive com : Type :=
@@ -1501,7 +1518,7 @@ Inductive com : Type :=
   | CSeq : com -> com -> com
   | CIf : bexp -> com -> com -> com
   | CWhile : bexp -> com -> com
-  | CPar : com -> com -> com.         (* <--- NEW *)
+  | CPar : com -> com -> com.         (* <--- NEW: c1||c2 *)
 
 Notation "x || y" :=
          (CPar x y)
@@ -1893,4 +1910,4 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-02 21:54 *)

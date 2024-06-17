@@ -1138,7 +1138,7 @@ Proof.
        We'll come back to this proof case further on. *)
         unfold store_Tlookup. rewrite <- H. rewrite* app_nth2.
     (* Last, we replace [apply ..; assumption] with [apply* ..] *)
-        rewrite minus_diag. simpl. reflexivity.
+        rewrite Nat.sub_diag. simpl. reflexivity.
     (* To justify the inequality, there is no need to call [rewrite <- H],
        because the tactic [lia] is able to exploit [H] on its own.
        So, only the rewriting of [app_length] and the call to the
@@ -1938,4 +1938,4 @@ Proof. congruence. Qed.
     some investment, however this investment will pay off very quickly.
 *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-02 21:54 *)

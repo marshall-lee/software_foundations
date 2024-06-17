@@ -85,7 +85,12 @@ Set Default Goal Selector "!".
     full Imp language -- in particular, assignment -- we need to
     consider the role of mutable state and develop a more
     sophisticated notion of correctness, which we'll call _behavioral
-    equivalence_.. *)
+    equivalence_. *)
+
+(** For example:
+      - [X + 2] is behaviorally equivalent to [1 + X + 1]
+      - [X - X] is behaviorally equivalent to [0]
+      - [(X - 1) + 1] is _not_ behaviorally equivalent to [X]   *)
 
 (* ================================================================= *)
 (** ** Definitions *)
@@ -138,6 +143,11 @@ Definition cequiv (c1 c2 : com) : Prop :=
   forall (st st' : state),
     (st =[ c1 ]=> st') <-> (st =[ c2 ]=> st').
 
+(** We can also define an asymmetric variant of this relation: We say
+    that [c1] _refines_ [c2] if they produce the same final states
+    _when [c1] terminates_ (but [c1] may not terminate in some cases
+    where [c2] does). *)
+
 Definition refines (c1 c2 : com) : Prop :=
   forall (st st' : state),
     (st =[ c1 ]=> st') -> (st =[ c2 ]=> st').
@@ -146,7 +156,7 @@ Definition refines (c1 c2 : com) : Prop :=
 (** ** Simple Examples *)
 
 (** For examples of command equivalence, let's start by looking at
-    some trivial program equivalences involving [skip]: *)
+    a trivial program equivalence involving [skip]: *)
 
 Theorem skip_left : forall c,
   cequiv
@@ -391,7 +401,7 @@ Proof.
     of copies of the body can be "unrolled" without changing meaning.
 
     Loop unrolling is an important transformation in any real
-    compiler, so its correctness is of more than academic interest! *)
+    compiler: its correctness is of more than academic interest! *)
 
 Theorem loop_unrolling : forall b c,
   cequiv
@@ -475,7 +485,7 @@ Proof.
     [equiv_classes]. *)
 
 Definition prog_a : com :=
-  <{ while ~(X <= 0) do
+  <{ while X > 0 do
        X := X + 1
      end }>.
 
@@ -728,17 +738,17 @@ Proof.
 (** [] *)
 
 (** For example, here are two equivalent programs and a proof of their
-    equivalence... *)
+    equivalence using these congruence theorems... *)
 
 Example congruence_example:
   cequiv
     (* Program 1: *)
     <{ X := 0;
-       if (X = 0) then Y := 0
+       if X = 0 then Y := 0
        else Y := 42 end }>
     (* Program 2: *)
     <{ X := 0;
-       if (X = 0) then Y := X - X   (* <--- Changed here *)
+       if X = 0 then Y := X - X   (* <--- Changed here *)
        else Y := 42 end }>.
 Proof.
   apply CSeq_congruence.
@@ -746,7 +756,7 @@ Proof.
   - apply CIf_congruence.
     + apply refl_bequiv.
     + apply CAsgn_congruence. unfold aequiv. simpl.
-      symmetry. apply minus_diag.
+      symmetry. apply sub_diag.
     + apply refl_cequiv.
 Qed.
 
@@ -937,20 +947,20 @@ Example fold_com_ex1 :
     (* Original program: *)
     <{ X := 4 + 5;
        Y := X - 3;
-       if ((X - Y) = (2 + 4)) then skip
+       if (X - Y) = (2 + 4) then skip
        else Y := 0 end;
-       if (0 <= (4 - (2 + 1))) then Y := 0
+       if 0 <= (4 - (2 + 1)) then Y := 0
        else skip end;
-       while (Y = 0) do
+       while Y = 0 do
          X := X + 1
        end }>
   = (* After constant folding: *)
     <{ X := 9;
        Y := X - 3;
-       if ((X - Y) = 6) then skip
+       if (X - Y) = 6 then skip
        else Y := 0 end;
        Y := 0;
-       while (Y = 0) do
+       while Y = 0 do
          X := X + 1
        end }>.
 Proof. reflexivity. Qed.
@@ -1680,7 +1690,8 @@ End Himp.
 
 (** **** Exercise: 3 stars, standard, optional (swap_noninterfering_assignments)
 
-    (Hint: You'll need [functional_extensionality] for this one.) *)
+    (Hint: You may or may not -- depending how you approach it -- need
+    to use [functional_extensionality] explicitly for this one.) *)
 
 Theorem swap_noninterfering_assignments: forall l1 l2 a1 a2,
   l1 <> l2 ->
@@ -1768,4 +1779,4 @@ Theorem zprop_preserving : forall c c',
 Proof. (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-02 21:54 *)

@@ -484,8 +484,8 @@ Proof.
 (** **** Exercise: 2 stars, standard (typing_example_1) *)
 Example typing_example_1 :
   empty |-- (\x : TRcd_j, x --> j) trcd_kj \in (B -> B).
-(* empty |-- (\x:{k:A->A,j:B->B}. x.j)
-              {k=(\z:A.z), j=(\z:B.z)}
+(* empty |-- (\x:{k:A->A,j:B->B}, x.j)
+              {k=(\z:A,z), j=(\z:B,z)}
          : B->B *)
 Proof with eauto.
   (* FILL IN HERE *) Admitted.
@@ -495,8 +495,8 @@ Proof with eauto.
 Example typing_example_2 :
   empty |-- (\ z : (C -> C) -> TRcd_j, (z (\ x : C, x) ) --> j )
             ( \z : (C -> C), trcd_kj ) \in (B -> B).
-(* empty |-- (\z:(C->C)->{j:B->B}. (z (\x:C.x)).j)
-              (\z:C->C. {k=(\z:A.z), j=(\z:B.z)})
+(* empty |-- (\z:(C->C)->{j:B->B}, (z (\x:C,x)).j)
+              (\z:C->C, {k=(\z:A,z), j=(\z:B,z)})
            : B->B *)
 Proof with eauto.
   (* FILL IN HERE *) Admitted.
@@ -643,8 +643,8 @@ Proof with eauto.
             t1 t2'] by rule [ST_App2] because [t1] is a value.
 
           - Otherwise, [t2] is a value.  By Lemma
-            [canonical_forms_for_arrow_types], [t1 = \x:S1.s2] for
-            some [x], [S1], and [s2].  But then [(\x:S1.s2) t2 -->
+            [canonical_forms_for_arrow_types], [t1 = \x:S1,s2] for
+            some [x], [S1], and [s2].  But then [(\x:S1,s2) t2 -->
             [x:=t2]s2] by [ST_AppAbs], since [t2] is a value.
 
       - If the last step of the derivation is by [T_Proj], then there
@@ -820,7 +820,7 @@ Proof with eauto.
        subderivations and a use of [T_App].
 
        Suppose instead [t1 t2] steps by [ST_AppAbs].  Then
-       [t1 = \x:S.t12] for some type [S] and term [t12], and
+       [t1 = \x:S,t12] for some type [S] and term [t12], and
        [t' = [x:=t2]t12].
 
        By Lemma [abs_arrow], we have [T1 <: S] and [x:S1 |-- s2 : T2].
@@ -861,4 +861,4 @@ Proof with eauto.
 
 End RecordSub.
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

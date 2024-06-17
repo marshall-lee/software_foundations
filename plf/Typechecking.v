@@ -17,6 +17,7 @@
     correct. *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
+Set Warnings "-non-recursive".
 From Coq Require Import Bool.Bool.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
@@ -30,8 +31,6 @@ Export STLC.
 (** * Comparing Types *)
 
 (** First, we need a function to compare two types for equality... *)
-
-Locate "Bool".
 
 Fixpoint eqb_ty (T1 T2:ty) : bool :=
   match T1,T2 with
@@ -686,4 +685,4 @@ Import StepFunction.
 End StlcImpl.
 (** [] *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

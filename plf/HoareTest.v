@@ -63,9 +63,16 @@ idtac " ".
 idtac "-------------------  hoare_asgn_wrong  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: hoare_asgn_wrong".
+idtac "#> hoare_asgn_wrong".
 idtac "Possible points: 2".
-print_manual_grade manual_grade_for_hoare_asgn_wrong.
+check_type @hoare_asgn_wrong (
+(exists a : aexp,
+   ~
+   ({{assert_of_Prop True}} X := a {{Aexp_of_aexp (AId X) = Aexp_of_aexp a}}))).
+idtac "Assumptions:".
+Abort.
+Print Assumptions hoare_asgn_wrong.
+Goal True.
 idtac " ".
 
 idtac "-------------------  hoare_asgn_fwd  --------------------".
@@ -89,27 +96,27 @@ idtac " ".
 idtac "-------------------  hoare_asgn_examples_2  --------------------".
 idtac " ".
 
-idtac "#> assn_sub_ex1'".
+idtac "#> assertion_sub_ex1'".
 idtac "Possible points: 1".
-check_type @assn_sub_ex1' (
+check_type @assertion_sub_ex1' (
 ({{Aexp_of_aexp (AId X) <= Aexp_of_nat 5}} X := (ANum 2) * (AId X)
  {{Aexp_of_aexp (AId X) <= Aexp_of_nat 10}})).
 idtac "Assumptions:".
 Abort.
-Print Assumptions assn_sub_ex1'.
+Print Assumptions assertion_sub_ex1'.
 Goal True.
 idtac " ".
 
-idtac "#> assn_sub_ex2'".
+idtac "#> assertion_sub_ex2'".
 idtac "Possible points: 1".
-check_type @assn_sub_ex2' (
-({{Aexp_of_nat 0 <= Aexp_of_nat 3 /\ Aexp_of_nat 3 <= Aexp_of_nat 5}}
+check_type @assertion_sub_ex2' (
+({{Aexp_of_nat 0 <= Aexp_of_nat 3 /\ Aexp_of_nat 3 <= Aexp_of_nat 5}} 
  X := (ANum 3)
  {{Aexp_of_nat 0 <= Aexp_of_aexp (AId X) /\
    Aexp_of_aexp (AId X) <= Aexp_of_nat 5}})).
 idtac "Assumptions:".
 Abort.
-Print Assumptions assn_sub_ex2'.
+Print Assumptions assertion_sub_ex2'.
 Goal True.
 idtac " ".
 
@@ -165,9 +172,9 @@ idtac " ".
 idtac "#> if_minus_plus".
 idtac "Possible points: 2".
 check_type @if_minus_plus (
-({{assert_of_Prop True}}
- if (AId X) <= (AId Y) then Z := (AId Y) - (AId X)
- else Y := (AId X) + (AId Z) end
+({{assert_of_Prop True}} if (AId X) <= (AId Y) then 
+                         Z := (AId Y) - (AId X) else 
+                         Y := (AId X) + (AId Z) end
  {{Aexp_of_aexp (AId Y) = Aexp_of_aexp (AId X) + Aexp_of_aexp (AId Z)}})).
 idtac "Assumptions:".
 Abort.
@@ -214,7 +221,7 @@ idtac " ".
 idtac "#> If1.hoare_if1_good".
 idtac "Possible points: 2".
 check_type @If1.hoare_if1_good (
-(If1.hoare_triple
+(If1.valid_hoare_triple
    (Aexp_of_aexp (AId X) + Aexp_of_aexp (AId Y) = Aexp_of_aexp (AId Z))
    (If1.CIf1 <{ (AId Y) <> (ANum 0) }> (If1.CAsgn X <{ (AId X) + (AId Y) }>))
    (Aexp_of_aexp (AId X) = Aexp_of_aexp (AId Z)))).
@@ -228,10 +235,11 @@ idtac "-------------------  hoare_havoc  --------------------".
 idtac " ".
 
 idtac "#> Himp.hoare_havoc".
+idtac "Advanced".
 idtac "Possible points: 3".
 check_type @Himp.hoare_havoc (
 (forall (Q : Assertion) (X : String.string),
- Himp.hoare_triple (Himp.havoc_pre X Q) (Himp.CHavoc X) Q)).
+ Himp.valid_hoare_triple (Himp.havoc_pre X Q) (Himp.CHavoc X) Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions Himp.hoare_havoc.
@@ -242,10 +250,11 @@ idtac "-------------------  havoc_post  --------------------".
 idtac " ".
 
 idtac "#> Himp.havoc_post".
+idtac "Advanced".
 idtac "Possible points: 3".
 check_type @Himp.havoc_post (
 (forall (P : Assertion) (X : String.string),
- Himp.hoare_triple P (Himp.CHavoc X)
+ Himp.valid_hoare_triple P (Himp.CHavoc X)
    (fun st : state => exists n : nat, (P [X |-> (ANum n)]) st))).
 idtac "Assumptions:".
 Abort.
@@ -260,8 +269,8 @@ idtac "#> HoareAssertAssume.assert_assume_differ".
 idtac "Possible points: 1".
 check_type @HoareAssertAssume.assert_assume_differ (
 (exists (P : Assertion) (b : bexp) (Q : Assertion),
-   HoareAssertAssume.hoare_triple P (HoareAssertAssume.CAssume b) Q /\
-   ~ HoareAssertAssume.hoare_triple P (HoareAssertAssume.CAssert b) Q)).
+   HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssume b) Q /\
+   ~ HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssert b) Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions HoareAssertAssume.assert_assume_differ.
@@ -272,8 +281,8 @@ idtac "#> HoareAssertAssume.assert_implies_assume".
 idtac "Possible points: 1".
 check_type @HoareAssertAssume.assert_implies_assume (
 (forall (P : Assertion) (b : bexp) (Q : Assertion),
- HoareAssertAssume.hoare_triple P (HoareAssertAssume.CAssert b) Q ->
- HoareAssertAssume.hoare_triple P (HoareAssertAssume.CAssume b) Q)).
+ HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssert b) Q ->
+ HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssume b) Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions HoareAssertAssume.assert_implies_assume.
@@ -283,7 +292,7 @@ idtac " ".
 idtac "#> HoareAssertAssume.assert_assume_example".
 idtac "Possible points: 4".
 check_type @HoareAssertAssume.assert_assume_example (
-(HoareAssertAssume.hoare_triple (assert_of_Prop True)
+(HoareAssertAssume.valid_hoare_triple (assert_of_Prop True)
    (HoareAssertAssume.CSeq
       (HoareAssertAssume.CAssume <{ (AId X) = (ANum 1) }>)
       (HoareAssertAssume.CSeq
@@ -298,7 +307,7 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 31".
+idtac "Max points - standard: 25".
 idtac "Max points - advanced: 40".
 idtac "".
 idtac "Allowed Axioms:".
@@ -325,11 +334,11 @@ Print Assumptions hoare_post_true.
 idtac "---------- hoare_pre_false ---------".
 Print Assumptions hoare_pre_false.
 idtac "---------- hoare_asgn_wrong ---------".
-idtac "MANUAL".
-idtac "---------- assn_sub_ex1' ---------".
-Print Assumptions assn_sub_ex1'.
-idtac "---------- assn_sub_ex2' ---------".
-Print Assumptions assn_sub_ex2'.
+Print Assumptions hoare_asgn_wrong.
+idtac "---------- assertion_sub_ex1' ---------".
+Print Assumptions assertion_sub_ex1'.
+idtac "---------- assertion_sub_ex2' ---------".
+Print Assumptions assertion_sub_ex2'.
 idtac "---------- hoare_asgn_example4 ---------".
 Print Assumptions hoare_asgn_example4.
 idtac "---------- swap_exercise ---------".
@@ -344,10 +353,6 @@ idtac "---------- hoare_if1 ---------".
 idtac "MANUAL".
 idtac "---------- If1.hoare_if1_good ---------".
 Print Assumptions If1.hoare_if1_good.
-idtac "---------- Himp.hoare_havoc ---------".
-Print Assumptions Himp.hoare_havoc.
-idtac "---------- Himp.havoc_post ---------".
-Print Assumptions Himp.havoc_post.
 idtac "---------- HoareAssertAssume.assert_assume_differ ---------".
 Print Assumptions HoareAssertAssume.assert_assume_differ.
 idtac "---------- HoareAssertAssume.assert_implies_assume ---------".
@@ -360,8 +365,12 @@ idtac "---------- hoare_asgn_fwd ---------".
 Print Assumptions hoare_asgn_fwd.
 idtac "---------- invalid_triple ---------".
 Print Assumptions invalid_triple.
+idtac "---------- Himp.hoare_havoc ---------".
+Print Assumptions Himp.hoare_havoc.
+idtac "---------- Himp.havoc_post ---------".
+Print Assumptions Himp.havoc_post.
 Abort.
 
-(* 2023-03-25 11:15 *)
+(* 2024-01-03 15:04 *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

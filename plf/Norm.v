@@ -137,8 +137,8 @@ Notation "X * Y" :=
 Notation "( x ',' y )" := (tm_pair x y) (in custom stlc at level 0,
                                                 x custom stlc at level 99,
                                                 y custom stlc at level 99).
-Notation "t '.fst'" := (tm_fst t) (in custom stlc at level 0).
-Notation "t '.snd'" := (tm_snd t) (in custom stlc at level 0).
+Notation "t '.fst'" := (tm_fst t) (in custom stlc at level 1).
+Notation "t '.snd'" := (tm_snd t) (in custom stlc at level 1).
 
 (* ----------------------------------------------------------------- *)
 (** *** Substitution *)
@@ -435,7 +435,7 @@ Proof.
       auto.
 Qed.
 
-(* A handy consequence of [eqb_neq] *)
+(* A handy consequence of [eqb_neq]. *)
 Theorem false_eqb_string : forall x y : string,
    x <> y -> String.eqb x y = false.
 Proof.
@@ -1144,4 +1144,4 @@ Proof.
   eapply V_nil.
 Qed.
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-02 21:54 *)

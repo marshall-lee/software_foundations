@@ -10,13 +10,13 @@ Set Default Goal Selector "!".
 (* ################################################################# *)
 (** * Simple Extensions to STLC *)
 
-(** The simply typed lambda-calculus has enough structure to make its
-    theoretical properties interesting, but it is not much of a
+(** The simply typed lambda-calculus has a rich enough structure to make
+    its theoretical properties interesting, but it is not much of a
     programming language!
 
-    In this chapter, we begin to close the gap with real-world
-    languages by introducing a number of familiar features that have
-    straightforward treatments at the level of typing. *)
+    In this chapter, we begin to close the gap with real-world languages by
+    introducing a number of familiar features that have straightforward
+    treatments at the level of typing. *)
 
 (* ================================================================= *)
 (** ** Numbers *)
@@ -474,8 +474,8 @@ Set Default Goal Selector "!".
 
 (** Another facility found in most programming languages (including
     Coq) is the ability to define recursive functions.  For example,
-    we would like to be able to define the factorial function like
-    this:
+    we would like to be able to define and use the factorial function
+    like this:
 
       let fact = \x:Nat,
              if x=0 then 1 else x * (fact (pred x))) in
@@ -483,10 +483,12 @@ Set Default Goal Selector "!".
 
    Note that the right-hand side of this binder mentions [fact], the
    variable being bound -- something that is not allowed according
-   to the way we defined [let] above.  (The body of a [let] is
-   typechecked in the same context as the [let] itself, which means
-   that the recursive occurrence of [fact] in the body will not have
-   a type in the context when it is looked up by the [T_Var] rule.) *)
+   to the way we defined [let] above. *)
+
+(** (The body of a [let] is typechecked in the same context as the
+   [let] itself, which means that the recursive occurrence of [fact] in the
+   body will not have a type in the context when it is looked up by the
+   [T_Var] rule.) *)
 
 (* Changing the [let] rule to handle "recursive definitions"
    like this is possible, but it requires some extra effort -- e.g.,
@@ -654,6 +656,10 @@ Set Default Goal Selector "!".
     6
 *)
 
+(** The simply typed lambda-calculus with fixed points is a famous and
+    extensively studied system. It is often called _PCF_ because it is a
+    simple language of "partial computable functions". *)
+
 (** **** Exercise: 1 star, standard, optional (halve_fix)
 
     Translate this informal recursive definition into one using [fix]:
@@ -697,22 +703,21 @@ Set Default Goal Selector "!".
         (\eq:Nat->Nat->Bool,
            \m:Nat, \n:Nat,
              if m=0 then iszero n
-             else if n=0 then fls
+             else if n=0 then false
              else eq (pred m) (pred n))
 *)
 (** And finally, here is an example where [fix] is used to define a
     _pair_ of recursive functions (illustrating the fact that the type
     [T1] in the rule [T_Fix] need not be a function type):
 
-      evenodd =
-        fix
-          (\eo: (Nat->Bool * Nat->Bool),
-             let e = \n:Nat, if n=0 then tru else eo.snd (pred n) in
-             let o = \n:Nat, if n=0 then fls else eo.fst (pred n) in
-             (e,o))
-
-      even = evenodd.fst
-      odd  = evenodd.snd
+    let evenodd =
+         fix
+           (\eo: ((Nat -> Nat) * (Nat -> Nat)),
+              (\n:Nat, if0 n then 1 else (eo.snd (pred n)),
+               \n:Nat, if0 n then 0 else (eo.fst (pred n)))) in
+    let even = evenodd.fst in
+    let odd  = evenodd.snd in
+    (even 3, even 4)}
 *)
 
 (* ================================================================= *)
@@ -992,6 +997,7 @@ Inductive tm : Type :=
        if0 x then ... else ...
 *)
 
+Definition w : string := "w".
 Definition x : string := "x".
 Definition y : string := "y".
 Definition z : string := "z".
@@ -1056,8 +1062,8 @@ Notation "X * Y" :=
 Notation "( x ',' y )" := (tm_pair x y) (in custom stlc at level 0,
                                                 x custom stlc at level 99,
                                                 y custom stlc at level 99).
-Notation "t '.fst'" := (tm_fst t) (in custom stlc at level 0).
-Notation "t '.snd'" := (tm_snd t) (in custom stlc at level 0).
+Notation "t '.fst'" := (tm_fst t) (in custom stlc at level 1).
+Notation "t '.snd'" := (tm_snd t) (in custom stlc at level 1).
 
 Notation "'List' T" :=
   (Ty_List T) (in custom stlc_ty at level 4).
@@ -1144,6 +1150,31 @@ Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
   end
 
 where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
+
+(* Make sure the following tests are valid by reflexzivity: *)
+Example substeg1 :
+  <{ [z:=0] (let w = z in z) }> = <{ let w = 0 in 0 }>.
+Proof.
+(* 
+  reflexivity.
+*)
+(* FILL IN HERE *) Admitted.
+
+Example substeg2 :
+  <{ [z:=0] (let w = z in w) }> = <{ let w = 0 in w }>.
+Proof.
+(* 
+  reflexivity.
+*)
+(* FILL IN HERE *) Admitted.
+
+Example substeg3 :
+  <{ [z:=0] (let y = succ 0 in z) }> = <{ let y = succ 0 in 0 }>.
+Proof.
+(* 
+  reflexivity.
+*)
+(* FILL IN HERE *) Admitted.
 
 (** [] *)
 
@@ -1435,7 +1466,6 @@ Hint Extern 2 (_ = _) => compute; reflexivity : core.
 
 Module Numtest.
 
-(* tm_test0 (pred (succ (pred (2 * 0))) then 5 else 6 *)
 Definition tm_test :=
   <{if0
     (pred
@@ -1470,13 +1500,12 @@ End Numtest.
 
 Module ProdTest.
 
-(* ((5,6),7).fst.tm_snd *)
 Definition tm_test :=
   <{((5,6),7).fst.snd}>.
 
 Example typechecks :
   empty |-- tm_test \in Nat.
-Proof. unfold tm_test. eauto 15. (* FILL IN HERE *) Admitted.
+Proof. unfold tm_test. eauto. (* FILL IN HERE *) Admitted.
 
 Example reduces :
   tm_test -->* 6.
@@ -1493,14 +1522,13 @@ End ProdTest.
 
 Module LetTest.
 
-(* let x = pred 6 in succ x *)
 Definition tm_test :=
   <{let x = (pred 6) in
     (succ x)}>.
 
 Example typechecks :
   empty |-- tm_test \in Nat.
-Proof. unfold tm_test. eauto 15.
+Proof. unfold tm_test. eauto.
 (* FILL IN HERE *) Admitted.
 
 Example reduces :
@@ -1512,6 +1540,27 @@ Proof.
 (* FILL IN HERE *) Admitted.
 
 End LetTest.
+
+Module LetTest1.
+
+Definition tm_test :=
+  <{let z = pred 6 in
+    (succ z)}>.
+
+Example typechecks :
+  empty |-- tm_test \in Nat.
+Proof. unfold tm_test. eauto.
+(* FILL IN HERE *) Admitted.
+
+Example reduces :
+  tm_test -->* 6.
+Proof.
+(* 
+  unfold tm_test. normalize.
+*)
+(* FILL IN HERE *) Admitted.
+
+End LetTest1.
 
 (* ----------------------------------------------------------------- *)
 (** *** Sums *)
@@ -1525,7 +1574,7 @@ Definition tm_test :=
 
 Example typechecks :
   empty |-- tm_test \in Nat.
-Proof. unfold tm_test. eauto 15. (* FILL IN HERE *) Admitted.
+Proof. unfold tm_test. eauto. (* FILL IN HERE *) Admitted.
 
 Example reduces :
   tm_test -->* 5.
@@ -1556,7 +1605,7 @@ Definition tm_test :=
 
 Example typechecks :
   empty |-- tm_test \in (Nat * Nat).
-Proof. unfold tm_test. eauto 15. (* FILL IN HERE *) Admitted.
+Proof. unfold tm_test. eauto 10. (* FILL IN HERE *) Admitted.
 
 Example reduces :
   tm_test -->* <{(5, 0)}>.
@@ -1586,7 +1635,7 @@ Definition tm_test :=
 
 Example typechecks :
   empty |-- tm_test \in Nat.
-Proof. unfold tm_test. eauto 20. (* FILL IN HERE *) Admitted.
+Proof. unfold tm_test. eauto. (* FILL IN HERE *) Admitted.
 
 Example reduces :
   tm_test -->* 25.
@@ -1603,10 +1652,6 @@ End ListTest.
 
 Module FixTest1.
 
-(* fact := fix
-             (\f:nat->nat.
-                \a:nat.
-                   test a=0 then 1 else a * (f (pred a))) *)
 Definition fact :=
   <{fix
       (\f:Nat->Nat,
@@ -1632,14 +1677,6 @@ End FixTest1.
 
 Module FixTest2.
 
-(* map :=
-     \g:nat->nat.
-       fix
-         (\f:[nat]->[nat].
-            \l:[nat].
-               case l of
-               | [] -> []
-               | x::l -> (g x)::(f l)) *)
 Definition map :=
   <{ \g:Nat->Nat,
        fix
@@ -1666,14 +1703,6 @@ Proof.
 End FixTest2.
 
 Module FixTest3.
-
-(* equal =
-      fix
-        (\eq:Nat->Nat->Bool.
-           \m:Nat. \n:Nat.
-             tm_test0 m then (tm_test0 n then 1 else 0)
-             else tm_test0 n then 0
-             else eq (pred m) (pred n))   *)
 
 Definition equal :=
   <{fix
@@ -1709,17 +1738,6 @@ Proof.
 End FixTest3.
 
 Module FixTest4.
-
-(* let evenodd =
-         fix
-           (\eo: (Nat->Nat * Nat->Nat).
-              let e = \n:Nat. tm_test0 n then 1 else eo.tm_snd (pred n) in
-              let o = \n:Nat. tm_test0 n then 0 else eo.tm_fst (pred n) in
-              (e,o)) in
-    let even = evenodd.tm_fst in
-    let odd  = evenodd.tm_snd in
-    (even 3, even 4)
-*)
 
 Definition eotest :=
 <{let evenodd =
@@ -2083,4 +2101,4 @@ Proof with eauto.
 
 End STLCExtended.
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

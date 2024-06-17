@@ -160,9 +160,9 @@
     title        =   "Programming Language Foundations",
     series       =   "Software Foundations",
     volume       =   "2",
-    year         =   "2023",
+    year         =   "2024",
     publisher    =   "Electronic textbook",
-    note         =   {Version 6.3,
+    note         =   {Version 6.5,
                       \URL{http://softwarefoundations.cis.upenn.edu} },
     }
 *)
@@ -183,4 +183,4 @@
     NSF Expeditions grant 1521523, _The Science of Deep
     Specification_. *)
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-02 21:54 *)

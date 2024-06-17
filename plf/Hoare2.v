@@ -1,6 +1,7 @@
 (** * Hoare2: Hoare Logic, Part II *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
+Set Warnings "-intuition-auto-with-star".
 From Coq Require Import Strings.String.
 From PLF Require Import Maps.
 From Coq Require Import Bool.Bool.
@@ -94,7 +95,7 @@ Definition FILL_IN_HERE := <{True}>.
     invariants. In the remainder of this section we explain in detail
     how to construct decorations for several short programs, all of
     which are loop-free or have simple loop invariants. We'll return
-    finding more interesting loop invariants later in the chapter. *)
+    to finding more interesting loop invariants later in the chapter. *)
 
 (* ================================================================= *)
 (** ** Example: Swapping *)
@@ -270,7 +271,7 @@ These decorations can be constructed as follows:
     quotient [Y] such that [n * Y + X = m /\ X < n].
 
     It turns out that we get lucky with this program and don't have to
-    think very hard about the loop invariant: the invariant is just
+    think very hard about the loop invariant: the loop invariant is just
     the first conjunct, [n * Y + X = m], and we can use this to
     decorate the program.
 
@@ -292,7 +293,7 @@ These decorations can be constructed as follows:
      (10)  {{ n * Y + X = m /\ X < n }}
 
     Assertions (4), (5), (8), and (9) are derived mechanically from
-    the invariant and the loop's guard.  Assertions (8), (7), and (6)
+    the loop invariant and the loop's guard.  Assertions (8), (7), and (6)
     are derived using the assignment rule going backwards from (8)
     to (6).  Assertions (4), (3), and (2) are again backwards
     applications of the assignment rule.
@@ -314,40 +315,41 @@ These decorations can be constructed as follows:
 (** ** From Decorated Programs to Formal Proofs *)
 
 (** From an informal proof in the form of a decorated program, it is
-    easy to read off a formal proof using the Coq theorems
-    corresponding to the Hoare Logic rules. *)
+    "easy in principle" to read off a formal proof using the Coq
+    theorems corresponding to the Hoare Logic rules, but these proofs
+    can be a bit long and fiddly. *)
 
-(** Note that we do _not_ unfold the definition of
-    [hoare_triple] anywhere in this proof: the point of the game is to
-    use the Hoare rules as a self-contained logic for reasoning about
-    programs. *)
+(** Note that we do _not_ unfold the definition of [valid_hoare_triple]
+    anywhere in this proof: the point of the game we're playing now
+    is to use the Hoare rules as a self-contained logic for reasoning
+    about programs. *)
 
 (** For example... *)
-Definition reduce_to_zero' : com :=
+Definition reduce_to_zero : com :=
   <{ while X <> 0 do
        X := X - 1
      end }>.
 
 Theorem reduce_to_zero_correct' :
   {{True}}
-    reduce_to_zero'
+    reduce_to_zero
   {{X = 0}}.
 Proof.
-  unfold reduce_to_zero'.
+  unfold reduce_to_zero.
   (* First we need to transform the postcondition so
      that hoare_while will apply. *)
   eapply hoare_consequence_post.
   - apply hoare_while.
-    + (* Loop body preserves invariant *)
+    + (* Loop body preserves loop invariant *)
       (* Massage precondition so [hoare_asgn] applies *)
       eapply hoare_consequence_pre.
       * apply hoare_asgn.
       * (* Proving trivial implication (2) ->> (3) *)
-        unfold assn_sub, "->>". simpl. intros.
+        unfold assertion_sub, "->>". simpl. intros.
         exact I.
-  - (* Invariant and negated guard imply post *)
+  - (* Loop invariant and negated guard imply post *)
     intros st [Inv GuardFalse].
-    unfold bassn in GuardFalse. simpl in GuardFalse.
+    unfold bassertion in GuardFalse. simpl in GuardFalse.
     rewrite not_true_iff_false in GuardFalse.
     rewrite negb_false_iff in GuardFalse.
     apply eqb_eq in GuardFalse.
@@ -355,7 +357,7 @@ Proof.
 Qed.
 
 (** In [Hoare] we introduced a series of tactics named
-    [assn_auto] to automate proofs involving assertions.
+    [assertion_auto] to automate proofs involving assertions.
 
     The following declaration introduces a more sophisticated tactic
     that will help with proving assertions throughout the rest of this
@@ -363,17 +365,17 @@ Qed.
     it uses [split] repeatedly to turn all the conjunctions into
     separate subgoals, tries to use several theorems about booleans
     and (in)equalities, then uses [eauto] and [lia] to finish off as
-    many subgoals as possible. What's left after [verify_assn] does
+    many subgoals as possible. What's left after [verify_assertion] does
     its thing should be just the "interesting parts" of the proof --
     which, if we're lucky, might be nothing at all! *)
 
-Ltac verify_assn :=
+Ltac verify_assertion :=
   repeat split;
   simpl;
   unfold assert_implies;
   unfold ap in *; unfold ap2 in *;
-  unfold bassn in *; unfold beval in *; unfold aeval in *;
-  unfold assn_sub; intros;
+  unfold bassertion in *; unfold beval in *; unfold aeval in *;
+  unfold assertion_sub; intros;
   repeat (simpl in *;
           rewrite t_update_eq ||
           (try rewrite t_update_neq;
@@ -404,26 +406,26 @@ Ltac verify_assn :=
   try eauto;
   try lia.
 
-(** This makes it pretty easy to verify [reduce_to_zero']: *)
+(** This makes it pretty easy to verify [reduce_to_zero]: *)
 
 Theorem reduce_to_zero_correct''' :
   {{True}}
-    reduce_to_zero'
+    reduce_to_zero
   {{X = 0}}.
 Proof.
-  unfold reduce_to_zero'.
+  unfold reduce_to_zero.
   eapply hoare_consequence_post.
   - apply hoare_while.
     + eapply hoare_consequence_pre.
       * apply hoare_asgn.
-      * verify_assn.
-  - verify_assn.
+      * verify_assertion.
+  - verify_assertion.
 Qed.
 
 (** This example shows that it is conceptually straightforward to read
     off the main elements of a formal proof from a decorated program.
     Indeed, the process is so straightforward that it can be
-    automated, as we show next. *)
+    automated, as we will see next. *)
 
 (* ################################################################# *)
 (** * Formal Decorated Programs *)
@@ -441,24 +443,46 @@ Qed.
 (* ================================================================= *)
 (** ** Syntax *)
 
-(** The first thing we need to do is to formalize a variant of
-    the syntax of commands that includes embedded assertions --
-    decorations.  We call the new commands _decorated commands_, or
-    [dcom]s.
+(** The first thing we need to do is to formalize a variant of the
+    syntax of Imp commands that includes embedded assertions, which
+    we'll call "decorations."  We call the new commands _decorated
+    commands_, or [dcom]s.
 
     The choice of exactly where to put assertions in the definition of
     [dcom] is a bit subtle.  The simplest thing to do would be to
-    annotate every [dcom] with a precondition and postcondition.  But
-    this would result in very verbose decorated programs with a lot of
-    repeated annotations: for example, a program like [skip;skip]
-    would be decorated like this
+    annotate every [dcom] with a precondition and postcondition --
+    something like this... *)
+
+Module DComFirstTry.
+
+Inductive dcom : Type :=
+| DCSkip (P : Assertion)
+  (* {{ P }} skip {{ P }} *)
+| DCSeq (P : Assertion) (d1 : dcom) (Q : Assertion)
+        (d2 : dcom) (R : Assertion)
+  (* {{ P }} d1 {{Q}}; d2 {{ R }} *)
+| DCAsgn (X : string) (a : aexp) (Q : Assertion)
+  (* etc. *)
+| DCIf (P : Assertion) (b : bexp) (P1 : Assertion) (d1 : dcom)
+       (P2 : Assertion) (d2 : dcom) (Q : Assertion)
+| DCWhile (P : Assertion) (b : bexp)
+          (P1 : Assertion) (d : dcom) (P2 : Assertion)
+          (Q : Assertion)
+| DCPre (P : Assertion) (d : dcom)
+| DCPost (d : dcom) (Q : Assertion).
+
+End DComFirstTry.
+
+(** But this would result in _very_ verbose decorated programs with a
+    lot of repeated annotations: even a simple program like
+    [skip;skip] would be decorated like this,
 
         {{P}} ({{P}} skip {{P}}) ; ({{P}} skip {{P}}) {{P}}
 
     with pre- and post-conditions around each [skip], plus identical
-    pre- and post-conditions on the semicolon!
+    pre- and post-conditions on the semicolon! *)
 
-    In other words, we don't want both preconditions and
+(** In other words, we don't want both preconditions and
     postconditions on each command, because a sequence of two commands
     would contain redundant decorations--the postcondition of the
     first likely being the same as the precondition of the second.
@@ -467,9 +491,8 @@ Qed.
     preconditions whenever possible, trying to embed just the
     postcondition. *)
 
-(** Concretely, we decorate programs as follows... *)
-
-(** - The [skip] command is decorated only with its postcondition
+(** - The [skip] command, for example, is decorated only with its
+      postcondition
 
       skip {{ Q }}
 
@@ -479,15 +502,17 @@ Qed.
       We carry the same assumption through the other syntactic forms:
       each decorated command is assumed to carry its own postcondition
       within itself but take its precondition from its context in
-      which it is used.
-*)
+      which it is used. *)
 
 (** - Sequences [d1 ; d2] need no additional decorations.
 
-      Why?  Inside [d2] there will be a postcondition; this serves as
-      the postcondition of [d1;d2].  Inside [d1] there will also be
-      a postcondition, which additionally serves as the precondition
-      for [d2]. *)
+      Why?
+
+      Because inside [d2] there will be a postcondition; this serves
+      as the postcondition of [d1;d2].
+
+      Similarly, inside [d1] there will also be a postcondition, which
+      additionally serves as the _precondition_ for [d2]. *)
 
 (** - An assignment [X := a] is decorated only with its postcondition:
 
@@ -517,11 +542,12 @@ Qed.
 
       d ->> {{ Q }}
 
-      The former is waiting for another precondition to eventually be
-      supplied (e.g., [{{ P'}} ->> {{ P }} d]); the latter relies on
-      the postcondition already embedded in [d]. *)
+      The former is waiting for another precondition to be supplied by
+      the context (e.g., [{{ P'}} ->> {{ P }} d]); the latter relies
+      on the postcondition already embedded in [d]. *)
 
-(** Here's the formal syntax of decorated commands: *)
+(** Putting this all together gives us the formal syntax of decorated
+    commands: *)
 
 Inductive dcom : Type :=
 | DCSkip (Q : Assertion)
@@ -548,45 +574,51 @@ Inductive decorated : Type :=
   | Decorated : Assertion -> dcom -> decorated.
 
 (** To avoid clashing with the existing [Notation]s for ordinary
-    [com]mands, we introduce these notations in a new grammar scope
+    commands, we introduce these notations in a new grammar scope
     called [dcom]. *)
 
 Declare Scope dcom_scope.
 Notation "'skip' {{ P }}"
       := (DCSkip P)
-      (in custom com at level 0, P constr) : dcom_scope.
+           (in custom com at level 0, P constr) : dcom_scope.
 Notation "l ':=' a {{ P }}"
       := (DCAsgn l a P)
-      (in custom com at level 0, l constr at level 0,
-          a custom com at level 85, P constr, no associativity) : dcom_scope.
+           (in custom com at level 0, l constr at level 0,
+            a custom com at level 85, P constr, no associativity)
+           : dcom_scope.
 Notation "'while' b 'do' {{ Pbody }} d 'end' {{ Ppost }}"
       := (DCWhile b Pbody d Ppost)
            (in custom com at level 89, b custom com at level 99,
-           Pbody constr, Ppost constr) : dcom_scope.
+               Pbody constr, Ppost constr)
+           : dcom_scope.
 Notation "'if' b 'then' {{ P }} d 'else' {{ P' }} d' 'end' {{ Q }}"
       := (DCIf b P d P' d' Q)
            (in custom com at level 89, b custom com at level 99,
-               P constr, P' constr, Q constr) : dcom_scope.
+               P constr, P' constr, Q constr)
+           : dcom_scope.
 Notation "'->>' {{ P }} d"
       := (DCPre P d)
-      (in custom com at level 12, right associativity, P constr) : dcom_scope.
+          (in custom com at level 12, right associativity, P constr)
+          : dcom_scope.
 Notation "d '->>' {{ P }}"
       := (DCPost d P)
-      (in custom com at level 10, right associativity, P constr) : dcom_scope.
+           (in custom com at level 10, right associativity, P constr)
+           : dcom_scope.
 Notation " d ; d' "
       := (DCSeq d d')
-      (in custom com at level 90, right associativity) : dcom_scope.
+           (in custom com at level 90, right associativity)
+           : dcom_scope.
 Notation "{{ P }} d"
       := (Decorated P d)
-      (in custom com at level 91, P constr) : dcom_scope.
+           (in custom com at level 91, P constr)
+           : dcom_scope.
 
 Local Open Scope dcom_scope.
 
-Example dec0 :=
+Example dec0 : dcom :=
   <{ skip {{ True }} }>.
-Example dec1 :=
-  <{ while true do {{ True }} skip {{ True }} end
-  {{ True }} }>.
+Example dec1 : dcom :=
+  <{ while true do {{ True }} skip {{ True }} end {{ True }} }>.
 
 (** Recall that you can [Set Printing All] to see how all that
     notation is desugared. *)
@@ -611,24 +643,24 @@ Example dec_while : decorated :=
 (** It is easy to go from a [dcom] to a [com] by erasing all
     annotations. *)
 
-Fixpoint extract (d : dcom) : com :=
+Fixpoint erase (d : dcom) : com :=
   match d with
   | DCSkip _           => CSkip
-  | DCSeq d1 d2        => CSeq (extract d1) (extract d2)
+  | DCSeq d1 d2        => CSeq (erase d1) (erase d2)
   | DCAsgn X a _       => CAsgn X a
-  | DCIf b _ d1 _ d2 _ => CIf b (extract d1) (extract d2)
-  | DCWhile b _ d _    => CWhile b (extract d)
-  | DCPre _ d          => extract d
-  | DCPost d _         => extract d
+  | DCIf b _ d1 _ d2 _ => CIf b (erase d1) (erase d2)
+  | DCWhile b _ d _    => CWhile b (erase d)
+  | DCPre _ d          => erase d
+  | DCPost d _         => erase d
   end.
 
-Definition extract_dec (dec : decorated) : com :=
+Definition erase_d (dec : decorated) : com :=
   match dec with
-  | Decorated P d => extract d
+  | Decorated P d => erase d
   end.
 
-Example extract_while_ex :
-    extract_dec dec_while
+Example erase_while_ex :
+    erase_d dec_while
   = <{while X <> 0 do X := X - 1 end}>.
 Proof.
   unfold dec_while.
@@ -638,7 +670,7 @@ Qed.
 (** It is also straightforward to extract the precondition and
     postcondition from a decorated program. *)
 
-Definition pre_dec (dec : decorated) : Assertion :=
+Definition precondition_from (dec : decorated) : Assertion :=
   match dec with
   | Decorated P d => P
   end.
@@ -654,22 +686,24 @@ Fixpoint post (d : dcom) : Assertion :=
   | DCPost _ Q              => Q
   end.
 
-Definition post_dec (dec : decorated) : Assertion :=
+Definition postcondition_from (dec : decorated) : Assertion :=
   match dec with
   | Decorated P d => post d
   end.
 
-Example pre_dec_while : pre_dec dec_while = True.
+Example precondition_from_while : precondition_from dec_while = True.
 Proof. reflexivity. Qed.
 
-Example post_dec_while : post_dec dec_while = (X = 0)%assertion.
+Example postcondition_from_while : postcondition_from dec_while = (X = 0)%assertion.
 Proof. reflexivity. Qed.
 
-(** We can then express what it means for a decorated program to
-    be correct as follows: *)
+(** We can then express what it means for a decorated program to be
+    correct as follows: *)
 
 Definition outer_triple_valid (dec : decorated) :=
-  {{pre_dec dec}} extract_dec dec {{post_dec dec}}.
+  {{precondition_from dec}} erase_d dec {{postcondition_from dec}}.
+
+(** For example: *)
 
 Example dec_while_triple_correct :
      outer_triple_valid dec_while
@@ -679,9 +713,9 @@ Example dec_while_triple_correct :
      {{ X = 0 }}.
 Proof. reflexivity. Qed.
 
-(** Remember that the outer Hoare triple of a decorated program is
-    just a [Prop]; thus, to show that it is _valid_, we need to
-    produce a proof of this proposition.
+(** The outer Hoare triple of a decorated program is just a [Prop];
+    thus, to show that it is _valid_, we need to produce a proof of
+    this proposition.
 
     We will do this by extracting "proof obligations" from the
     decorations sprinkled through the program.
@@ -689,7 +723,7 @@ Proof. reflexivity. Qed.
     These obligations are often called _verification conditions_,
     because they are the facts that must be verified to see that the
     decorations are locally consistent and thus constitute a proof of
-    correctness. *)
+    validity of the outer triple. *)
 
 (* ================================================================= *)
 (** ** Extracting Verification Conditions *)
@@ -698,7 +732,7 @@ Proof. reflexivity. Qed.
     [d] together with a precondition [P] and returns a _proposition_
     that, if it can be proved, implies that the triple
 
-     {{P}} (extract d) {{post d}}
+     {{P}} erase d {{post d}}
 
     is valid.
 
@@ -708,9 +742,11 @@ Proof. reflexivity. Qed.
     - local consistency checks for each form of command, plus
 
     - uses of [->>] to bridge the gap between the assertions found
-      inside a decorated command and the assertions imposed by its
-      context; these uses correspond to applications of the
-      consequence rule. *)
+      inside a decorated command and the assertions imposed by the
+      precondition from its context; these uses correspond to
+      applications of the consequence rule. *)
+
+(** _Local consistency_ is defined as follows... *)
 
 (** - The decorated command
 
@@ -721,7 +757,7 @@ Proof. reflexivity. Qed.
 *)
 
 (** - The sequential composition of [d1] and [d2] is locally
-      consistent with respect [P] if [d1] is locally consistent with
+      consistent with respect to [P] if [d1] is locally consistent with
       respect to [P] and [d2] is locally consistent with respect to
       the postcondition of [d1]. *)
 
@@ -736,7 +772,7 @@ Proof. reflexivity. Qed.
 
 (** - A conditional
 
-      if b then {{P1}} d1 else {{P2}} d2 end
+      if b then {{P1}} d1 else {{P2}} d2 end {{Q}}
 
       is locally consistent with respect to precondition [P] if
 
@@ -747,6 +783,10 @@ Proof. reflexivity. Qed.
          (3) [d1] is locally consistent with respect to [P1]
 
          (4) [d2] is locally consistent with respect to [P2]
+
+         (5) [post d1 ->> Q]
+
+         (6) [post d2 ->> Q]
 *)
 (** - A loop
 
@@ -785,6 +825,16 @@ Proof. reflexivity. Qed.
         (2) [post d ->> Q]
 *)
 
+(** With all this in mind, we can write is a _verification condition
+    generator_ that takes a decorated command and reads off a
+    proposition saying that all its decorations are locally
+    consistent.
+
+    Formally, since a decorated command is "waiting for its
+    precondition" the main VC generator takes a [dcom] plus a given
+    predondition as arguments.
+*)
+
 Fixpoint verification_conditions (P : Assertion) (d : dcom) : Prop :=
   match d with
   | DCSkip Q =>
@@ -800,13 +850,13 @@ Fixpoint verification_conditions (P : Assertion) (d : dcom) : Prop :=
       /\ (post d1 ->> Q) /\ (post d2 ->> Q)
       /\ verification_conditions P1 d1
       /\ verification_conditions P2 d2
-  | DCWhile b Pbody d Ppost =>
-      (* post d is the loop invariant and the initial
+  | DCWhile b Q d R =>
+      (* post d is both the loop invariant and the initial
          precondition *)
       (P ->> post d)
-      /\ ((post d  /\ b) ->> Pbody)%assertion
-      /\ ((post d  /\ ~ b) ->> Ppost)%assertion
-      /\ verification_conditions Pbody d
+      /\ ((post d  /\ b) ->> Q)%assertion
+      /\ ((post d  /\ ~ b) ->> R)%assertion
+      /\ verification_conditions Q d
   | DCPre P' d =>
       (P ->> P')
       /\ verification_conditions P' d
@@ -815,12 +865,12 @@ Fixpoint verification_conditions (P : Assertion) (d : dcom) : Prop :=
       /\ (post d ->> Q)
   end.
 
-(** The key theorem states that [verification_conditions] does its job
-    correctly.  Not surprisingly, we need to use each of the Hoare
-    Logic rules at some point in the proof. *)
+(** The following key theorem states that [verification_conditions]
+    does its job correctly.  Not surprisingly, each of the Hoare Logic
+    rules gets used at some point in the proof. *)
 
 Theorem verification_correct : forall d P,
-  verification_conditions P d -> {{P}} extract d {{post d}}.
+  verification_conditions P d -> {{P}} erase d {{post d}}.
 Proof.
   induction d; intros; simpl in *.
   - (* Skip *)
@@ -859,26 +909,28 @@ Qed.
 (** Now that all the pieces are in place, we can define what it means
     to verify an entire program. *)
 
-Definition verification_conditions_dec
+Definition verification_conditions_from
               (dec : decorated) : Prop :=
   match dec with
   | Decorated P d => verification_conditions P d
   end.
 
-Corollary verification_correct_dec : forall dec,
-  verification_conditions_dec dec ->
+(** This brings us to the main theorem of this section: *)
+
+Corollary verification_conditions_correct : forall dec,
+  verification_conditions_from dec ->
   outer_triple_valid dec.
 Proof.
   intros [P d]. apply verification_correct.
 Qed.
 
 (* ================================================================= *)
-(** ** Automation *)
+(** ** More Automation *)
 
 (** The propositions generated by [verification_conditions] are fairly
     big and contain many conjuncts that are essentially trivial. *)
 
-Eval simpl in verification_conditions_dec dec_while.
+Eval simpl in verification_conditions_from dec_while.
 (* ==>
    ((fun _ : state => True) ->>
            (fun _ : state => True)) /\
@@ -893,19 +945,19 @@ Eval simpl in verification_conditions_dec dec_while.
 : Prop
 *)
 
-(** Fortunately, our [verify_assn] tactic can generally take care of
+(** Fortunately, our [verify_assertion] tactic can generally take care of
     most or all of them. *)
-Example vc_dec_while : verification_conditions_dec dec_while.
-Proof. verify_assn. Qed.
+Example vc_dec_while : verification_conditions_from dec_while.
+Proof. verify_assertion. Qed.
 
 (** To automate the overall process of verification, we can use
     [verification_correct] to extract the verification conditions, use
-    [verify_assn] to verify them as much as it can, and finally tidy
+    [verify_assertion] to verify them as much as it can, and finally tidy
     up any remaining bits by hand.  *)
 Ltac verify :=
   intros;
   apply verification_correct;
-  verify_assn.
+  verify_assertion.
 
 (** Here's the final, formal proof that dec_while is correct. *)
 
@@ -940,14 +992,12 @@ Definition positive_difference_dec :=
     {{True}}
     if X <= Y then
           {{True /\ X <= Y}} ->>
-          {{(Y - X) + X = Y
-                   \/ (Y - X) + Y = X}}
+          {{(Y - X) + X = Y \/ (Y - X) + Y = X}}
       Z := Y - X
           {{Z + X = Y \/ Z + Y = X}}
     else
           {{True /\ ~(X <= Y)}} ->>
-          {{(X - Y) + X = Y
-                   \/ (X - Y) + Y = X}}
+          {{(X - Y) + X = Y \/ (X - Y) + Y = X}}
       Z := X - Y
           {{Z + X = Y \/ Z + Y = X}}
     end
@@ -1031,11 +1081,11 @@ Proof.
       postcondition of the loop body, but it also means that the loop
       body's postcondition is stronger and thus harder to prove.
 
-    - Strengthening an _induction hypothesis_ means that you have a
-      stronger assumption to work with when trying to complete the
-      induction step of the proof, but it also means that the
-      statement being proved inductively is stronger and thus harder
-      to prove.
+    - Similarly, strengthening an _induction hypothesis_ means that
+      you have a stronger assumption to work with when trying to
+      complete the induction step of the proof, but it also means that
+      the statement being proved inductively is stronger and thus
+      harder to prove.
 
     This section explains how to approach the challenge of finding
     loop invariants through a series of examples and exercises. *)
@@ -1082,14 +1132,14 @@ Proof.
       precondition, i.e., (1) must imply (2);
     - (b) it must be _strong_ enough to imply the program's postcondition,
       i.e., (7) must imply (8);
-    - (c) it must be _preserved_ by each iteration of the loop (given
-      that the loop guard evaluates to true), i.e., (3) must imply (4). *)
+    - (c) it must be _preserved_ by a single iteration of the loop, assuming
+      that the loop guard also evaluates to true, i.e., (3) must imply (4). *)
 
 (** These conditions are actually independent of the particular
     program and specification we are considering: every loop
     invariant has to satisfy them.
 
-    One way to find an invariant that simultaneously satisfies these
+    One way to find a loop invariant that simultaneously satisfies these
     three conditions is by using an iterative process: start with a
     "candidate" invariant (e.g., a guess or a heuristic choice) and
     check the three conditions above; if any of the checks fails, try
@@ -1097,7 +1147,7 @@ Proof.
     another -- hopefully better -- candidate invariant, and repeat.
 
     For instance, in the reduce-to-zero example above, we saw that,
-    for a very simple loop, choosing [True] as an invariant did the
+    for a very simple loop, choosing [True] as a loop invariant did the
     job.  Maybe it will work here too.  To find out, let's try
     instantiating [Inv] with [True] in the skeleton above and
     see what we get...
@@ -1121,9 +1171,9 @@ Proof.
     completely unrelated, so it is very easy to find a counterexample
     to the implication (say, [Y = X = m = 0] and [n = 1]).
 
-    If we want (b) to hold, we need to strengthen the invariant so
+    If we want (b) to hold, we need to strengthen the loop invariant so
     that it implies the postcondition (8).  One simple way to do
-    this is to let the invariant _be_ the postcondition.  So let's
+    this is to let the loop invariant _be_ the postcondition.  So let's
     return to our skeleton, instantiate [Inv] with [Y = n - m], and
     try checking conditions (a) to (c) again.
 
@@ -1148,13 +1198,13 @@ Proof.
     that [n - m - 1 = n - m], which fails, for instance, for [n = 1]
     and [m = 0]. So, although [Y = n - m] holds at the end of the loop,
     it does not hold from the start, and it doesn't hold on each
-    iteration; it is not a correct invariant.
+    iteration; it is not a correct loop invariant.
 
     This failure is not very surprising: the variable [Y] changes
     during the loop, while [m] and [n] are constant, so the assertion
-    we chose didn't have much chance of being an invariant!
+    we chose didn't have much chance of being a loop invariant!
 
-    To do better, we need to generalize (8) to some statement that is
+    To do better, we need to generalize (7) to some statement that is
     equivalent to (8) when [X] is [0], since this will be the case
     when the loop terminates, and that "fills the gap" in some
     appropriate way when [X] is nonzero.  Looking at how the loop
@@ -1181,31 +1231,32 @@ Proof.
     (8)    {{ Y = n - m }}
 
     Success!  Conditions (a), (b) and (c) all hold now.  (To
-    verify (c), we need to check that, under the assumption that [X <>
-    0], we have [Y - X = (Y - 1) - (X - 1)]; this holds for all
+    verify (c), we need to check that, under the assumption that
+    [X <> 0], we have [Y - X = (Y - 1) - (X - 1)]; this holds for all
     natural numbers [X] and [Y].)
 
     Here is the final version of the decorated program: *)
 
-Example subtract_slowly_dec (m : nat) (p : nat) : decorated :=
+Example subtract_slowly_dec (m : nat) (n : nat) : decorated :=
   <{
-  {{ X = m /\  Z = p }} ->>
-  {{ Z - X = p - m }}
+  {{ X = m /\  Y = n }} ->>
+  {{ Y - X = n - m }}
     while X <> 0 do
-                  {{ Z - X = p - m /\ X  <>  0 }} ->>
-                  {{ (Z - 1) - (X - 1) = p - m }}
-       Z := Z - 1
-                  {{ Z - (X - 1) = p - m }} ;
+                  {{ Y - X = n - m /\ X  <>  0 }} ->>
+                  {{ (Y - 1) - (X - 1) = n - m }}
+       Y := Y - 1
+                  {{ Y - (X - 1) = n - m }} ;
        X := X - 1
-                  {{ Z - X = p - m }}
+                  {{ Y - X = n - m }}
     end
-  {{ Z - X = p - m /\ X = 0 }} ->>
-  {{ Z = p - m }} }>.
+  {{ Y - X = n - m /\ X = 0 }} ->>
+  {{ Y = n - m }} }>.
 
-Theorem subtract_slowly_outer_triple_valid : forall m p,
-  outer_triple_valid (subtract_slowly_dec m p).
+Theorem subtract_slowly_outer_triple_valid : forall m n,
+  outer_triple_valid (subtract_slowly_dec m n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  verify. (* this grinds for a bit! *)
+Qed.
 
 (* ================================================================= *)
 (** ** Exercise: Slow Assignment *)
@@ -1265,10 +1316,10 @@ Fixpoint parity x :=
 
 (** The postcondition does not hold at the beginning of the loop,
     since [m = parity m] does not hold for an arbitrary [m], so we
-    cannot hope to use that as an invariant.  To find an invariant that works,
-    let's think a bit about what this loop does.  On each iteration it
-    decrements [X] by [2], which preserves the parity of [X].  So the
-    parity of [X] does not change, i.e., it is invariant.  The initial
+    cannot hope to use that as a loop invariant.  To find a loop invariant
+    that works, let's think a bit about what this loop does.  On each
+    iteration it decrements [X] by [2], which preserves the parity of [X].
+    So the parity of [X] does not change, i.e., it is invariant.  The initial
     value of [X] is [m], so the parity of [X] is always equal to the
     parity of [m]. Using [parity X = parity m] as an invariant we
     obtain the following decorated program:
@@ -1284,23 +1335,22 @@ Fixpoint parity x :=
       {{ parity X = parity m /\ ~(2 <= X) }} ->>              (b - OK)
       {{ X = parity m }}
 
-    With this invariant, conditions (a), (b), and (c) are all
+    With this loop invariant, conditions (a), (b), and (c) are all
     satisfied. For verifying (b), we observe that, when [X < 2], we
     have [parity X = X] (we can easily see this in the definition of
     [parity]).  For verifying (c), we observe that, when [2 <= X], we
     have [parity X = parity (X-2)]. *)
 
-(** **** Exercise: 3 stars, standard, optional (parity_formal)
+(** **** Exercise: 3 stars, standard, optional (parity)
 
     Translate the above informal decorated program into a formal one
     and prove it correct.
 
     Hint: There are actually several possible loop invariants that all
     lead to good proofs; one that leads to a particularly simple proof
-    is [parity X = parity m /\ 2 <= X] -- or more formally, using the
+    is [parity X = parity m] -- or more formally, using the
     [ap] operator to lift the application of the [parity] function
-    into the syntax of assertions, [{{ ap parity X = parity m /\ 2 <=
-    X }}]. *)
+    into the syntax of assertions, [{{ ap parity X = parity m }}]. *)
 
 Definition parity_dec (m:nat) : decorated :=
   <{
@@ -1315,20 +1365,18 @@ Definition parity_dec (m:nat) : decorated :=
   {{ FILL_IN_HERE }} ->>
   {{ X = parity m }} }>.
 
-(** If you use the suggested invariant, you may find the following
+(** If you use the suggested loop invariant, you may find the following
     lemmas helpful (as well as [leb_complete] and [leb_correct]). *)
 
 Lemma parity_ge_2 : forall x,
   2 <= x ->
   parity (x - 2) = parity x.
 Proof.
-  induction x; intros; simpl.
+  destruct x; intros; simpl.
   - reflexivity.
-  - destruct x.
+  - destruct x; simpl.
     + lia.
-    + inversion H; subst; simpl.
-      * reflexivity.
-      * rewrite sub_0_r. reflexivity.
+    + rewrite sub_0_r. reflexivity.
 Qed.
 
 Lemma parity_lt_2 : forall x,
@@ -1364,14 +1412,15 @@ Proof.
 *)
 
 (** As we did before, we can try to use the postcondition as a
-    candidate invariant, obtaining the following decorated program:
+    candidate loop invariant, obtaining the following decorated program:
 
-    (1)  {{ X=m }} ->>                   (a - second conjunct of (2) WRONG!)
+    (1)  {{ X=m }} ->>               (a - second conjunct of (2) WRONG!)
     (2)  {{ 0*0 <= m /\ m<(0+1)*(0+1) }}
             Z := 0
     (3)            {{ Z*Z <= m /\ m<(Z+1)*(Z+1) }};
             while (Z+1)*(Z+1) <= X do
-    (4)            {{ Z*Z<=m /\ (Z+1)*(Z+1)<=X }} ->>            (c - WRONG!)
+    (4)            {{ Z*Z<=m /\ m<(Z+1)*(Z+1)
+                             /\ (Z+1)*(Z+1)<=X }} ->>   (c - WRONG!)
     (5)            {{ (Z+1)*(Z+1)<=m /\ m<((Z+1)+1)*((Z+1)+1) }}
               Z := Z+1
     (6)            {{ Z*Z<=m /\ m<(Z+1)*(Z+1) }}
@@ -1415,7 +1464,7 @@ Proof.
     specification and it is not changed by the loop), it is necessary
     to record the fact that it doesn't change in the loop invariant. *)
 
-(** **** Exercise: 3 stars, standard, optional (sqrt_formal)
+(** **** Exercise: 3 stars, standard, optional (sqrt)
 
     Translate the above informal decorated program into a formal one
     and prove it correct.
@@ -1460,9 +1509,9 @@ Proof. (* FILL IN HERE *) Admitted.
 
 (** The first thing to note is that the loop reads [X] but doesn't
     change its value. As we saw in the previous example, it can be a good idea
-    in such cases to add [X = m] to the invariant.  The other thing
-    that we know is often useful in the invariant is the postcondition,
-    so let's add that too, leading to the candidate invariant
+    in such cases to add [X = m] to the loop invariant.  The other thing
+    that we know is often useful in the loop invariant is the postcondition,
+    so let's add that too, leading to the candidate loop invariant
     [Z = m * m /\ X = m].
 
     {{ X = m }} ->>                                       (a - WRONG)
@@ -1488,33 +1537,33 @@ Proof. (* FILL IN HERE *) Admitted.
     in the loop, after the 1st iteration [Z = m], after the 2nd
     iteration [Z = 2*m], and at the end [Z = m*m].  Since the variable
     [Y] tracks how many times we go through the loop, this leads us to
-    derive a new invariant candidate: [Z = Y*m /\ X = m].
+    derive a new loop invariant candidate: [Z = Y*m /\ X = m].
 
     {{ X = m }} ->>                                        (a - OK)
     {{ 0 = 0*m /\ X = m }}
-      Y := 0;
-                    {{ 0 = Y*m /\ X = m }}
-      Z := 0;
-                    {{ Z = Y*m /\ X = m }}
+      Y := 0
+                    {{ 0 = Y*m /\ X = m }};
+      Z := 0
+                    {{ Z = Y*m /\ X = m }};
       while Y <> X do
                     {{ Z = Y*m /\ X = m /\ Y <> X }} ->>   (c - OK)
                     {{ Z+X = (Y+1)*m /\ X = m }}
-        Z := Z + X;
-                    {{ Z = (Y+1)*m /\ X = m }}
+        Z := Z + X
+                    {{ Z = (Y+1)*m /\ X = m }};
         Y := Y + 1
                     {{ Z = Y*m /\ X = m }}
       end
     {{ Z = Y*m /\ X = m /\ ~(Y <> X) }} ->>                (b - OK)
     {{ Z = m*m }}
 
-    This new invariant makes the proof go through: all three
+    This new loop invariant makes the proof go through: all three
     conditions are easy to check.
 
     It is worth comparing the postcondition [Z = m*m] and the [Z =
-    Y*m] conjunct of the invariant. It is often the case that one has
+    Y*m] conjunct of the loop invariant. It is often the case that one has
     to replace parameters with variables -- or with expressions
     involving both variables and parameters, like [m - Y] -- when
-    going from postconditions to invariants. *)
+    going from postconditions to loop invariants. *)
 
 (** [] *)
 
@@ -1552,14 +1601,14 @@ Compute fact 5. (* ==> 120 *)
     and subtraction can behave differently than with real numbers.
     Excluding both operations from your loop invariant is advisable!
 
-    Then state a theorem named [factorial_outer_triple_valid] that says
+    Then state a theorem named [factorial_correct] that says
     [factorial_dec] is correct, and prove the theorem.  If all goes
     well, [verify] will leave you with just two subgoals, each of
     which requires establishing some mathematical property of [fact],
     rather than proving anything about your program.
 
     Hint: if those two subgoals become tedious to prove, give some
-    though to how you could restate your assertions such that the
+    thought to how you could restate your assertions such that the
     mathematical operations are more amenable to manipulation in Coq.
     For example, recall that [1 + ...] is easier to work with than
     [... + 1]. *)
@@ -1580,15 +1629,15 @@ Proof. (* FILL IN HERE *) Admitted.
 (** **** Exercise: 3 stars, standard (minimum_correct)
 
     Fill in decorations for the following program and prove them
-    correct.  As with [factorial], be careful about natural numbers,
-    especially subtraction.
+    correct.  As with [factorial], be careful about mathematical
+    reasoning involving natural numbers, especially subtraction.
 
     Also, remember that applications of Coq functions in assertions
     need an [ap] or [ap2] to be parsed correctly.  E.g., [min a b]
     needs to be written [ap2 min a b] in an assertion.
 
-    Hint: You may find [andb_true_eq] useful (perhaps after using
-    symmetry to get an equality the right way around). *)
+    You may find [andb_true_eq] useful (perhaps after using symmetry
+    to get an equality the right way around). *)
 
 Definition minimum_dec (a b : nat) : decorated :=
   <{
@@ -1613,17 +1662,6 @@ Definition minimum_dec (a b : nat) : decorated :=
     {{ FILL_IN_HERE }} ->>
     {{ Z = min a b }}
   }>.
-
-(* HIDE
-    - The first implication holds by substitution and algebra.
-    - The second holds because:
-        + by lemma2 we can rewrite [Z+1 + min (X-1) (Y-1)] as
-          [Z+1 + (min x y) - 1]
-        + by lemma1 and [X<>0 /\ Y<>0], [min x y <> 0],
-          so [(min x y) - 1] is not zero-truncated.
-        + so we can rewrite [Z+1 + (min x y) - 1] as [Z + min x y].
-    - The third holds because the second conjunct implies [X] and [Y]
-      are both [0]. *)
 
 Theorem minimum_correct : forall a b,
   outer_triple_valid (minimum_dec a b).
@@ -1763,124 +1801,6 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(* ################################################################# *)
-(** * Weakest Preconditions (Optional) *)
-
-(** Some preconditions are more interesting than others.
-    For example, the Hoare triple
-
-      {{ False }}  X := Y + 1  {{ X <= 5 }}
-
-    is _not_ very interesting: although it is perfectly valid , it
-    tells us nothing useful.  Since the precondition isn't
-    satisfied by any state, it doesn't describe any situations where
-    we can use the command [X := Y + 1] to achieve the postcondition
-    [X <= 5].
-
-    By contrast,
-
-      {{ Y <= 4 /\ Z = 0 }}  X := Y + 1 {{ X <= 5 }}
-
-    has a useful precondition: it tells us that, if we can somehow
-    create a situation in which we know that [Y <= 4 /\ Z = 0], then
-    running this command will produce a state satisfying the
-    postcondition.  However, this precondition is not as useful as it
-    could be, because the [Z = 0] clause in the precondition actually
-    has nothing to do with the postcondition [X <= 5].
-
-    The _most_ useful precondition for this command is this one:
-
-      {{ Y <= 4 }}  X := Y + 1  {{ X <= 5 }}
-
-    The assertion [Y <= 4] is called the _weakest precondition_ of
-    [X := Y + 1] with respect to the postcondition [X <= 5]. *)
-
-(** Assertion [Y <= 4] is a _weakest precondition_ of command [X :=
-    Y + 1] with respect to postcondition [X <= 5].  Think of _weakest_
-    here as meaning "easiest to satisfy": a weakest precondition is
-    one that as many states as possible can satisfy. *)
-
-(** [P] is a weakest precondition of command [c] for postcondition [Q]
-    if
-
-      - [P] is a precondition, that is, [{{P}} c {{Q}}]; and
-      - [P] is at least as weak as all other preconditions, that is,
-        if [{{P'}} c {{Q}}] then [P' ->> P].
- *)
-
-(** Note that weakest preconditions need not be unique.  For
-    example, [Y <= 4] was a weakest precondition above, but so are the
-    logically equivalent assertions [Y < 5], [Y <= 2 * 2], etc.  *)
-
-Definition is_wp P c Q :=
-  {{P}} c {{Q}} /\
-  forall P', {{P'}} c {{Q}} -> (P' ->> P).
-
-(** **** Exercise: 1 star, standard, optional (wp)
-
-    What are weakest preconditions of the following commands
-    for the following postconditions?
-
-  1) {{ ? }}  skip  {{ X = 5 }}
-
-  2) {{ ? }}  X := Y + Z {{ X = 5 }}
-
-  3) {{ ? }}  X := Y  {{ X = Y }}
-
-  4) {{ ? }}
-     if X = 0 then Y := Z + 1 else Y := W + 2 end
-     {{ Y = 5 }}
-
-  5) {{ ? }}
-     X := 5
-     {{ X = 0 }}
-
-  6) {{ ? }}
-     while true do X := 0 end
-     {{ X = 0 }}
-*)
-(* FILL IN HERE
-
-    [] *)
-
-(** **** Exercise: 3 stars, advanced, optional (is_wp_formal)
-
-    Prove formally, using the definition of [hoare_triple], that [Y <= 4]
-    is indeed a weakest precondition of [X := Y + 1] with respect to
-    postcondition [X <= 5]. *)
-
-Theorem is_wp_example :
-  is_wp (Y <= 4) <{X := Y + 1}> (X <= 5).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
-
-(** **** Exercise: 2 stars, advanced, optional (hoare_asgn_weakest)
-
-    Show that the precondition in the rule [hoare_asgn] is in fact the
-    weakest precondition. *)
-
-Theorem hoare_asgn_weakest : forall Q X a,
-  is_wp (Q [X |-> a]) <{ X := a }> Q.
-Proof.
-(* FILL IN HERE *) Admitted.
-(** [] *)
-
-(** **** Exercise: 2 stars, advanced, optional (hoare_havoc_weakest)
-
-    Show that your [havoc_pre] function from the [himp_hoare] exercise
-    in the [Hoare] chapter returns a weakest precondition. *)
-Module Himp2.
-Import Himp.
-
-Lemma hoare_havoc_weakest : forall (P Q : Assertion) (X : string),
-  {{ P }} havoc X {{ Q }} ->
-  P ->> havoc_pre X Q.
-Proof.
-(* FILL IN HERE *) Admitted.
-End Himp2.
-(** [] *)
-
 (** **** Exercise: 2 stars, advanced, optional (fib_eqn)
 
     The Fibonacci function is usually written like this:
@@ -1968,7 +1888,8 @@ Definition dfib (n : nat) : decorated :=
 
 Theorem dfib_correct : forall n,
   outer_triple_valid (dfib n).
-(* FILL IN HERE *) Admitted.
+Proof.
+  (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 5 stars, advanced, optional (improve_dcom)
@@ -1986,4 +1907,122 @@ Theorem dfib_correct : forall n,
 
     [] *)
 
-(* 2023-03-25 11:16 *)
+(* ################################################################# *)
+(** * Weakest Preconditions (Optional) *)
+
+(** Some preconditions are more interesting than others.
+    For example, the Hoare triple
+
+      {{ False }}  X := Y + 1  {{ X <= 5 }}
+
+    is _not_ very interesting: although it is perfectly valid , it
+    tells us nothing useful.  Since the precondition isn't
+    satisfied by any state, it doesn't describe any situations where
+    we can use the command [X := Y + 1] to achieve the postcondition
+    [X <= 5].
+
+    By contrast,
+
+      {{ Y <= 4 /\ Z = 0 }}  X := Y + 1 {{ X <= 5 }}
+
+    has a useful precondition: it tells us that, if we can somehow
+    create a situation in which we know that [Y <= 4 /\ Z = 0], then
+    running this command will produce a state satisfying the
+    postcondition.  However, this precondition is not as useful as it
+    could be, because the [Z = 0] clause in the precondition actually
+    has nothing to do with the postcondition [X <= 5].
+
+    The _most_ useful precondition for this command is this one:
+
+      {{ Y <= 4 }}  X := Y + 1  {{ X <= 5 }}
+
+    The assertion [Y <= 4] is called the _weakest precondition_ of
+    [X := Y + 1] with respect to the postcondition [X <= 5]. *)
+
+(** Assertion [Y <= 4] is a _weakest precondition_ of command [X :=
+    Y + 1] with respect to postcondition [X <= 5].  Think of _weakest_
+    here as meaning "easiest to satisfy": a weakest precondition is
+    one that as many states as possible can satisfy. *)
+
+(** [P] is a weakest precondition of command [c] for postcondition [Q]
+    if
+
+      - [P] is a precondition, that is, [{{P}} c {{Q}}]; and
+      - [P] is at least as weak as all other preconditions, that is,
+        if [{{P'}} c {{Q}}] then [P' ->> P].
+ *)
+
+(** Note that weakest preconditions need not be unique.  For
+    example, [Y <= 4] was a weakest precondition above, but so are the
+    logically equivalent assertions [Y < 5], [Y <= 2 * 2], etc.  *)
+
+Definition is_wp P c Q :=
+  {{P}} c {{Q}} /\
+  forall P', {{P'}} c {{Q}} -> (P' ->> P).
+
+(** **** Exercise: 1 star, standard, optional (wp)
+
+    What are weakest preconditions of the following commands
+    for the following postconditions?
+
+  1) {{ ? }}  skip  {{ X = 5 }}
+
+  2) {{ ? }}  X := Y + Z {{ X = 5 }}
+
+  3) {{ ? }}  X := Y  {{ X = Y }}
+
+  4) {{ ? }}
+     if X = 0 then Y := Z + 1 else Y := W + 2 end
+     {{ Y = 5 }}
+
+  5) {{ ? }}
+     X := 5
+     {{ X = 0 }}
+
+  6) {{ ? }}
+     while true do X := 0 end
+     {{ X = 0 }}
+*)
+(* FILL IN HERE
+
+    [] *)
+
+(** **** Exercise: 3 stars, advanced, optional (is_wp)
+
+    Prove formally, using the definition of [valid_hoare_triple], that [Y <= 4]
+    is indeed a weakest precondition of [X := Y + 1] with respect to
+    postcondition [X <= 5]. *)
+
+Theorem is_wp_example :
+  is_wp (Y <= 4) <{X := Y + 1}> (X <= 5).
+Proof.
+  (* FILL IN HERE *) Admitted.
+(** [] *)
+
+(** **** Exercise: 2 stars, advanced, optional (hoare_asgn_weakest)
+
+    Show that the precondition in the rule [hoare_asgn] is in fact the
+    weakest precondition. *)
+
+Theorem hoare_asgn_weakest : forall Q X a,
+  is_wp (Q [X |-> a]) <{ X := a }> Q.
+Proof.
+(* FILL IN HERE *) Admitted.
+(** [] *)
+
+(** **** Exercise: 2 stars, advanced, optional (hoare_havoc_weakest)
+
+    Show that your [havoc_pre] function from the [himp_hoare] exercise
+    in the [Hoare] chapter returns a weakest precondition. *)
+Module Himp2.
+Import Himp.
+
+Lemma hoare_havoc_weakest : forall (P Q : Assertion) (X : string),
+  {{ P }} havoc X {{ Q }} ->
+  P ->> havoc_pre X Q.
+Proof.
+(* FILL IN HERE *) Admitted.
+End Himp2.
+(** [] *)
+
+(* 2024-01-02 21:54 *)

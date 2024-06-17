@@ -1,8 +1,8 @@
 (** * Stlc: The Simply Typed Lambda-Calculus *)
 
 (** The simply typed lambda-calculus (STLC) is a tiny core
-    calculus embodying the key concept of _functional abstraction_,
-    which shows up in pretty much every real-world programming
+    calculus embodying the key concept of _functional abstraction_.
+    This concept shows up in pretty much every real-world programming
     language in some form (functions, procedures, methods, etc.).
 
     We will follow exactly the same pattern as in the previous chapter
@@ -12,21 +12,50 @@
     _variable binding_ and _substitution_.  It will take some work to
     deal with these. *)
 
+(** The STLC lives in the lower-left front corner of the famous
+    _lambda cube_  (also called the _Barendregt Cube_), which
+    visualizes three sets of features that can be added to its
+    simple core:
+
+                               Calculus of Constructions
+      type operators +--------+
+                    /|       /|
+                   / |      / |
+     polymorphism +--------+  |
+                  |  |     |  |
+                  |  +-----|--+
+                  | /      | /
+                  |/       |/
+                  +--------+ dependent types
+                STLC
+
+    Moving from bottom to top in the cube corresponds to adding
+    _polymorphic types_ like [forall X, X -> X].  Adding _just_
+    polymorphism gives us the famous Girard-Reynolds calculus, System F.
+
+    Moving from front to back corresponds to adding _type operators_
+    like [list].
+
+    Moving from left to right corresponds to adding _dependent types_
+    like [forall n, array-of-size n].
+
+    The top right corner on the back, which combines all three features,
+    is called the _Calculus of Constructions_.  First studied by
+    Coquand and Huet, it forms the foundation of Coq's logic. *)
+
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From Coq Require Import Strings.String.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
 Set Default Goal Selector "!".
 
-Hint Resolve update_eq : core.
-
 (* ################################################################# *)
 (** * Overview *)
 
 (** The STLC is built on some collection of _base types_:
     booleans, numbers, strings, etc.  The exact choice of base types
-    doesn't matter much -- the construction of the language and its
-    theoretical properties work out the same no matter what we
+    doesn't matter much -- the definition of the language as well as
+    its theoretical properties work out the same no matter what we
     choose -- so for the sake of brevity let's take just [Bool] for
     the moment.  At the end of the chapter we'll see how to add more
     base types, and in later chapters we'll enrich the pure STLC with
@@ -57,10 +86,10 @@ Hint Resolve update_eq : core.
     specifies the type of arguments that the function can be applied
     to. *)
 
-(** If you've seen lambda-calculus notation elsewhere, you might be
-    wondering why abstraction is written here as [\x:T,t] instead of
-    the usual "[\x:T.t]". The reason is that some front ends for
-    interacting with Coq use periods to separate a file into
+(** If you've seen lambda-calculus notation elsewhere, you might
+    be wondering why abstraction is written here as [\x:T,t] instead
+    of the usual "[\x:T.t]". The reason is that some user interfaces
+    for interacting with Coq use periods to separate a file into
     "sentences" to be passed separately to the Coq top level. *)
 
 (** Some examples:
@@ -86,9 +115,9 @@ Hint Resolve update_eq : core.
       - [\x:Bool, \y:Bool, x]
 
         A two-argument function that takes two booleans and returns
-        the first one.  (As in Coq, a two-argument function is really
-        a one-argument function whose body is also a one-argument
-        function.)
+        the first one.  (As in Coq, a two-argument function in the
+        lambda-calculus is really a one-argument function whose body
+        is also a one-argument function.)
 
       - [(\x:Bool, \y:Bool, x) false true]
 
@@ -115,10 +144,9 @@ Hint Resolve update_eq : core.
     results.
 
     The STLC doesn't provide any primitive syntax for defining _named_
-    functions -- all functions are "anonymous."  We'll see in chapter
-    [MoreStlc] that it is easy to add named functions to what we've
-    got -- indeed, the fundamental naming and binding mechanisms are
-    exactly the same.
+    functions: i.e., all functions are "anonymous."  We'll see in chapter
+    [MoreStlc] that it is easy to add named functions -- indeed, the
+    fundamental naming and binding mechanisms are exactly the same.
 
     The _types_ of the STLC include [Bool], which classifies the
     boolean constants [true] and [false] as well as more complex
@@ -169,6 +197,9 @@ Inductive tm : Type :=
   | tm_false : tm
   | tm_if    : tm -> tm -> tm -> tm.
 
+(** We need some notation magic to set up the concrete syntax, as
+    we did in the [Imp] chapter... *)
+
 Declare Custom Entry stlc.
 Notation "<{ e }>" := e (e custom stlc at level 99).
 Notation "( x )" := x (in custom stlc, x at level 99).
@@ -194,9 +225,6 @@ Notation "'true'"  := tm_true (in custom stlc at level 0).
 Notation "'false'"  := false (at level 1).
 Notation "'false'"  := tm_false (in custom stlc at level 0).
 
-(** Now we need some notation magic to set up the concrete syntax, as
-    we did in the [Imp] chapter... *)
-
 Definition x : string := "x".
 Definition y : string := "y".
 Definition z : string := "z".
@@ -208,7 +236,7 @@ Hint Unfold z : core.
     always annotated with the type [T] of its parameter, in contrast
     to Coq (and other functional languages like ML, Haskell, etc.),
     which use type inference to fill in missing annotations.  We're
-    not considering type inference here. *)
+    not considering type inference at all here. *)
 
 (** Examples... *)
 
@@ -270,10 +298,12 @@ Notation notB := <{\x:Bool, if x then false else true}>.
 
          fun x:bool => 7
 
-    Most real-world functional programming languages make the second
-    choice -- reduction of a function's body only begins when the
-    function is actually applied to an argument.  We also make the
-    second choice here. *)
+    But Gallina is rather unusual in this respect.  Most real-world
+    functional programming languages make the second choice --
+    reduction of a function's body only begins when the function is
+    actually applied to an argument.
+
+    We also make the second choice here. *)
 
 Inductive value : tm -> Prop :=
   | v_abs : forall x T2 t1,
@@ -289,11 +319,11 @@ Hint Constructors value : core.
 
     Intuitively, a "complete program" must not refer to any undefined
     variables.  We'll see shortly how to define the _free_ variables
-    in a STLC term.  A complete program is _closed_ -- that is, it
-    contains no free variables.
+    in a STLC term.  A complete program, then, is one that is
+    _closed_ -- that is, that contains no free variables.
 
-    (Conversely, a term with free variables is often called an _open
-    term_.) *)
+    (Conversely, a term that may contain free variables is often
+    called an _open term_.) *)
 
 (** Having made the choice not to reduce under abstractions, we don't
     need to worry about whether variables are values, since we'll
@@ -320,9 +350,9 @@ Hint Constructors value : core.
     function.
 
     In general, we need to be able to substitute some given term [s]
-    for occurrences of some variable [x] in another term [t].  In
-    informal discussions, this is usually written [ [x:=s]t ] and
-    pronounced "substitute [s] for [x] in [t]." *)
+    for occurrences of some variable [x] in another term [t].
+    Informally, this is written [ [x:=s]t ] and pronounced "substitute
+    [s] for [x] in [t]." *)
 
 (** Here are some examples:
 
@@ -346,7 +376,7 @@ Hint Constructors value : core.
 
       - [[x:=true] (\x:Bool, x)] yields [\x:Bool, x]
 
-    The last example is very important: substituting [x] with [true] in
+    The last example is key: substituting [x] with [true] in
     [\x:Bool, x] does _not_ yield [\x:Bool, true]!  The reason for
     this is that the [x] in the body of [\x:Bool, x] is _bound_ by the
     abstraction: it is a new, local name that just happens to be
@@ -362,7 +392,7 @@ Hint Constructors value : core.
        [x:=s]true            = true
        [x:=s]false           = false
        [x:=s](if t1 then t2 else t3) =
-              if [x:=s]t1 then [x:=s]t2 else [x:=s]t3
+                       if [x:=s]t1 then [x:=s]t2 else [x:=s]t3
 *)
 
 (** ... and formally: *)
@@ -389,26 +419,20 @@ where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
 
 (** Note on notations: You might be wondering why we need parentheses
     around the substitution notation in the above definition, and why
-    do we need to redefine the substitution notation in the [stlc]
+    we need to redefine the substitution notation in the [stlc]
     custom grammar. The reason is that reserved notations in
     definitions have to be defined in the general Coq grammar (and not
     a custom one like [stlc]). This restriction only applies to the
-    [subst] definition, that is before the [where ...] part. From now
+    [subst] definition -- that is, before the [where ...] part. From now
     on, using the substitution notation in the [stlc] custom grammar
     doesn't need any curly braces. *)
 
 (** For example... *)
 Check <{[x:=true] x}>.
 
-(** _Technical note_: Substitution becomes trickier to define if we
-    consider the case where [s], the term being substituted for a
-    variable in some other term, may itself contain free variables.
-
-    Fortunately, since we are only interested here in defining the
-    [step] relation on _closed_ terms (i.e., terms like [\x:Bool, x]
-    that include binders for all of the variables they mention), we
-    can sidestep this extra complexity, but it must be dealt with when
-    formalizing richer languages. *)
+(** _Technical note_: Substitution also becomes trickier to define if
+    we consider the case where [s], the term being substituted for a
+    variable in some other term, may itself contain free variables. *)
 
 (** For example, using the definition of substitution above to
     substitute the _open_ term
@@ -425,9 +449,9 @@ Check <{[x:=true] x}>.
       \r:Bool, \x:Bool, r
 
     where the free reference to [r] in [s] has been "captured" by
-    the binder at the beginning of [t].
+    the binder at the beginning of [t]. *)
 
-    Why would this be bad?  Because it violates the principle that the
+(** Why would this be bad?  Because it violates the principle that the
     names of bound variables do not matter.  For example, if we rename
     the bound variable in [t], e.g., let
 
@@ -446,6 +470,12 @@ Check <{[x:=true] x}>.
 
 (** See, for example, [Aydemir 2008] (in Bib.v) for further discussion
     of this issue. *)
+
+(** Fortunately, since we are only interested here in defining the
+    [step] relation on _closed_ terms (i.e., terms like [\x:Bool, x]
+    that include binders for all of the variables they mention), we
+    can sidestep this extra complexity, but it must be dealt with when
+    formalizing richer languages. *)
 
 (** **** Exercise: 3 stars, standard (substi_correct)
 
@@ -483,7 +513,7 @@ Proof.
     variable in the body of the abstraction.  This last rule, written
     informally as
 
-      (\x:T,t12) v2 --> [x:=v2]t12
+      (\x:T,t12) v2 --> [x:=v2] t12
 
     is traditionally called _beta-reduction_. *)
 
@@ -521,7 +551,7 @@ Reserved Notation "t '-->' t'" (at level 40).
 Inductive step : tm -> tm -> Prop :=
   | ST_AppAbs : forall x T2 t1 v2,
          value v2 ->
-         <{(\x:T2, t1) v2}> --> <{ [x:=v2]t1 }>
+         <{(\x:T2, t1) v2}> --> <{[x:=v2]t1}>
   | ST_App1 : forall t1 t1' t2,
          t1 --> t1' ->
          <{t1 t2}> --> <{t1' t2}>
@@ -679,17 +709,36 @@ Proof.
 (* ================================================================= *)
 (** ** Contexts *)
 
-(** _Question_: What is the type of the term "[x y]"?
+(** Although we are primarily interested in the binary relation
+    [|-- t \in T], relating a closed term [t] to its type [T], we need
+    to generalize a bit to make the definitions work.
 
-    _Answer_: It depends on the types of [x] and [y]!
-
-    I.e., in order to assign a type to a term, we need to know
-    what assumptions we should make about the types of its free
+    Consider checking that [\x:T11,t12] has type
+    [T11->T12]. Intuitively, we need to check that [t12] has type
+    [T12]. However, we have removed the binder [\x], so [x] may occur
+    free in [t12] (that is, [t12] may be _open_).  While checking that
+    [t12] has type [T12], we must remember that [x] has type [T11], in
+    order to deal with these free occurrences of [x]. Similarly, [t12]
+    itself could contain abstractions, and typechecking their bodies
+    could require looking up the declared types of yet more free
     variables.
 
-    This leads us to a three-place _typing judgment_, informally
-    written [Gamma |-- t \in T], where [Gamma] is a
-    "typing context" -- a mapping from variables to their types. *)
+    To keep track of all this, we add a third element to the relation,
+    a _typing context_ [Gamma], which records the types of the
+    variables that may occur free in a term -- that is, Gamma is a
+    partial map from variables to types.
+
+    The new _typing judgment_ is written [Gamma |-- t \in T] and
+    informally read as "term [t] has type [T], given the types of free
+    variables in [t] as specified by [Gamma]".
+
+    We'll also write [x |-> T ; Gamma] for "update the partial map
+    [Gamma] so that it maps [x] to [T]," following the notation from
+    the [Maps] chapter.
+
+    With these refinements, we are ready to give informal and formal
+    specifications of the typing relation.
+*)
 
 (** Following the usual notation for partial maps, we write [(X |->
     T, Gamma)] for "update the partial function [Gamma] so that it
@@ -701,13 +750,13 @@ Definition context := partial_map ty.
 (** ** Typing Relation *)
 
 (** 
-                              Gamma x = T1
-                            ------------------                           (T_Var)
-                            Gamma |-- x \in T1
+                            Gamma x = T1
+                          ------------------                             (T_Var)
+                          Gamma |-- x \in T1
 
-                        x |-> T2 ; Gamma |-- t1 \in T1
-                        ------------------------------                   (T_Abs)
-                         Gamma |-- \x:T2,t1 \in T2->T1
+                      x |-> T2 ; Gamma |-- t1 \in T1
+                      ------------------------------                     (T_Abs)
+                       Gamma |-- \x:T2,t1 \in T2->T1
 
                         Gamma |-- t1 \in T2->T1
                           Gamma |-- t2 \in T2
@@ -717,11 +766,11 @@ Definition context := partial_map ty.
                          -----------------------                         (T_True)
                          Gamma |-- true \in Bool
 
-                         ------------------------                        (T_False)
+                         ------------------------                       (T_False)
                          Gamma |-- false \in Bool
 
     Gamma |-- t1 \in Bool    Gamma |-- t2 \in T1    Gamma |-- t3 \in T1
-    -------------------------------------------------------------------  (T_If)
+    -------------------------------------------------------------------    (T_If)
                   Gamma |-- if t1 then t2 else t3 \in T1
 
     We can read the three-place relation [Gamma |-- t \in T] as:
@@ -730,7 +779,6 @@ Definition context := partial_map ty.
 Reserved Notation "Gamma '|--' t '\in' T"
             (at level 101,
              t custom stlc, T custom stlc at level 0).
- Print Grammar constr.
 Inductive has_type : context -> tm -> ty -> Prop :=
   | T_Var : forall Gamma x T1,
       Gamma x = Some T1 ->
@@ -865,4 +913,4 @@ Proof.
 
 End STLC.
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

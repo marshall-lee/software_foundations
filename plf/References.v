@@ -30,6 +30,7 @@
     preservation theorem. *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
+Set Warnings "-deprecated-syntactic-definition".
 From Coq Require Import Strings.String.
 From Coq Require Import Init.Nat.
 From Coq Require Import Arith.Arith.
@@ -37,7 +38,9 @@ From Coq Require Import Arith.PeanoNat.
 From Coq Require Import Lia.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
-From Coq Require Import Lists.List.
+From Coq Require Import Lists.List. Import Datatypes.
+Check length.
+
 Import Nat.
 
 (* ################################################################# *)
@@ -129,9 +132,9 @@ Inductive ty : Type :=
 (* ----------------------------------------------------------------- *)
 (** *** Terms *)
 
-(** Besides variables, abstractions, applications,
-    natural-number-related terms, and [unit], we need four more sorts
-    of terms in order to handle mutable references:
+(** Besides the usual variables, abstractions, applications,
+    terms related to natural numbers, and [unit], we need four
+    more sorts of terms in order to handle mutable references:
 
       t ::= ...              Terms
           | ref t              allocation
@@ -225,16 +228,16 @@ Notation " e1 ':=' e2 " := (tm_assign e1 e2) (in custom stlc at level 21).
 (** Informally, the typing rules for allocation, dereferencing, and
     assignment will look like this:
 
-                           Gamma |-- t1 : T1
-                       -------------------------                      (T_Ref)
-                       Gamma |-- ref t1 : Ref T1
+                           Gamma |-- t1 \in T1
+                       ---------------------------                    (T_Ref)
+                       Gamma |-- ref t1 \in Ref T1
 
-                        Gamma |-- t1 : Ref T1
-                        ---------------------                       (T_Deref)
-                          Gamma |-- !t1 : T1
+                        Gamma |-- t1 \in Ref T1
+                        -----------------------                     (T_Deref)
+                          Gamma |-- !t1 \in T1
 
-                        Gamma |-- t1 : Ref T2
-                          Gamma |-- t2 : T2
+                        Gamma |-- t1 \in Ref T2
+                          Gamma |-- t2 \in T2
                        -------------------------                   (T_Assign)
                        Gamma |-- t1 := t2 : Unit
 
@@ -315,7 +318,7 @@ where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
 
     as an abbreviation for
 
-       (\x:Unit. !r) (r:=succ(!r)).
+       (\x:Unit, !r) (r:=succ(!r)).
 
     This has the effect of reducing two expressions in order and
     returning the value of the second.  Restricting the type of the
@@ -396,8 +399,8 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc at level 3).
     two functions that manipulate its contents:
 
       let c = ref 0 in
-      let incc = \_:Unit. (c := succ (!c); !c) in
-      let decc = \_:Unit. (c := pred (!c); !c) in
+      let incc = \_:Unit, (c := succ (!c); !c) in
+      let decc = \_:Unit, (c := pred (!c); !c) in
       ...
 *)
 
@@ -427,10 +430,10 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc at level 3).
     record, and returns this record:
 
       newcounter =
-          \_:Unit.
+          \_:Unit,
              let c = ref 0 in
-             let incc = \_:Unit. (c := succ (!c); !c) in
-             let decc = \_:Unit. (c := pred (!c); !c) in
+             let incc = \_:Unit, (c := succ (!c); !c) in
+             let decc = \_:Unit, (c := pred (!c); !c) in
              {i=incc, d=decc}
 *)
 
@@ -473,8 +476,8 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc at level 3).
 
       equal =
         fix
-          (\eq:Nat->Nat->Bool.
-             \m:Nat. \n:Nat.
+          (\eq:Nat->Nat->Bool,
+             \m:Nat, \n:Nat,
                if m=0 then iszero n
                else if n=0 then false
                else eq (pred m) (pred n))
@@ -483,13 +486,13 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc at level 3).
 (** To build a new array, we allocate a reference cell and fill
     it with a function that, when given an index, always returns [0].
 
-      newarray = \_:Unit. ref (\n:Nat.0)
+      newarray = \_:Unit, ref (\n:Nat,0)
 *)
 
 (** To look up an element of an array, we simply apply
     the function to the desired index.
 
-      lookup = \a:NatArray. \n:Nat. (!a) n
+      lookup = \a:NatArray, \n:Nat, (!a) n
 *)
 
 (** The interesting part of the encoding is the [update] function.  It
@@ -499,9 +502,9 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc at level 3).
     value that was given to [update], while on all other indices it passes the
     lookup to the function that was previously stored in the reference.
 
-      update = \a:NatArray. \m:Nat. \v:Nat.
+      update = \a:NatArray, \m:Nat, \v:Nat,
                    let oldf = !a in
-                   a := (\n:Nat. if equal m n then v else oldf n);
+                   a := (\n:Nat, if equal m n then v else oldf n);
 *)
 
 (** References to values containing other references can also be very
@@ -512,8 +515,8 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc at level 3).
 
     If we defined [update] more compactly like this
 
-      update = \a:NatArray. \m:Nat. \v:Nat.
-                  a := (\n:Nat. if equal m n then v else (!a) n)
+      update = \a:NatArray, \m:Nat, \v:Nat,
+                  a := (\n:Nat, if equal m n then v else (!a) n)
 
 would it behave the same? *)
 
@@ -552,13 +555,13 @@ Definition manual_grade_for_compact_update : option (nat*string) := None.
 (* ================================================================= *)
 (** ** Garbage Collection *)
 
-(** A last issue that we should mention before we move on with
-    formalizing references is storage _de_-allocation.  We have not
-    provided any primitives for freeing reference cells when they are
-    no longer needed.  Instead, like many modern languages (including
-    ML and Java) we rely on the run-time system to perform _garbage
-    collection_, automatically identifying and reusing cells that can
-    no longer be reached by the program. *)
+(** A last issue that we should mention before we move on with formalizing
+    references is storage _de_-allocation.  We have not provided any
+    primitives for freeing reference cells when they are no longer needed.
+    Instead, like many modern languages (including OCaml, Haskell, Java,
+    etc.) we rely on the run-time system to perform _garbage collection_,
+    automatically identifying and reusing cells that can no longer be
+    reached by the program. *)
 
 (** This is _not_ just a question of taste in language design: it is
     extremely difficult to achieve type safety in the presence of an
@@ -775,7 +778,7 @@ Qed.
 
                                value v2
                 ------------------------------------- (ST_AppAbs)
-                (\x:T2.t1) v2 / st --> [x:=v2]t1 / st
+                (\x:T2,t1) v2 / st --> [x:=v2]t1 / st
 
                         t1 / st --> t1' / st'
                      --------------------------- (ST_App1)
@@ -995,8 +998,8 @@ Naturally, the key question is, "What is the type of a location?"
     concrete locations, the type of the result depends on the contents
     of the store that we start with.  For example, if we reduce the
     term [!(loc 1)] in the store [[unit, unit]], the result is [unit];
-    if we reduce the same term in the store [[unit, \x:Unit.x]], the
-    result is [\x:Unit.x].  With respect to the former store, the
+    if we reduce the same term in the store [[unit, \x:Unit,x]], the
+    result is [\x:Unit,x].  With respect to the former store, the
     location [1] has type [Unit], and with respect to the latter it
     has type [Unit->Unit]. This observation leads us immediately to a
     first attempt at a typing rule for locations:
@@ -1038,11 +1041,11 @@ Naturally, the key question is, "What is the type of a location?"
     [t].  Worse, if [v] itself contains locations, then we will have to
     recalculate _their_ types each time they appear.  Worse yet, the
     proposed typing rule for locations may not allow us to derive
-    anything at all, if the store contains a _cycle_.  For example,
+    anything at all if the store contains a _cycle_.  For example,
     there is no finite typing derivation for the location [0] with respect
     to this store:
 
-   [\x:Nat. (!(loc 1)) x, \x:Nat. (!(loc 0)) x]
+   [\x:Nat, (!(loc 1)) x, \x:Nat, (!(loc 0)) x]
 *)
 (** **** Exercise: 3 stars, standard (cyclic_store)
 
@@ -1352,7 +1355,7 @@ Proof with eauto.
     - inversion Hlen.
     - simpl in *.
       destruct l; try lia.
-        apply lt_n_S. apply IHextends. lia.
+        apply ->Nat.succ_lt_mono. apply IHextends. lia.
 Qed.
 
 (** Finally, [ST ++ T] extends [ST], and [extends] is reflexive. *)
@@ -1533,7 +1536,7 @@ Proof with auto.
     unfold store_lookup, store_Tlookup.
     apply le_lt_eq_dec in Hl; destruct Hl as [Hlt | Heq].
     + (* l < length st *)
-      apply lt_S_n in Hlt.
+      apply <-Nat.succ_lt_mono in Hlt.
       rewrite !app_nth1...
       * apply store_weakening with ST. apply extends_app.
         apply Hmatch...
@@ -1542,11 +1545,11 @@ Proof with auto.
       injection Heq as Heq; subst.
       rewrite app_nth2; try lia.
       rewrite <- Hlen.
-      rewrite minus_diag. simpl.
+      rewrite sub_diag. simpl.
       apply store_weakening with ST...
       { apply extends_app. }
       rewrite app_nth2; [|lia].
-      rewrite minus_diag. simpl. assumption.
+      rewrite sub_diag. simpl. assumption.
 Qed.
 
 (* ================================================================= *)
@@ -1789,15 +1792,15 @@ Qed.
     another function stored in a reference cell; the trick is that we
     then smuggle in a reference to itself!
 
-   (\r:Ref (Unit -> Unit).
-        r := (\x:Unit.(!r) unit); (!r) unit)
-   (ref (\x:Unit.unit))
+   (\r:Ref (Unit -> Unit),
+        r := (\x:Unit,(!r) unit); (!r) unit)
+   (ref (\x:Unit,unit))
 *)
 
-(** First, [ref (\x:Unit.unit)] creates a reference to a cell of type
+(** First, [ref (\x:Unit,unit)] creates a reference to a cell of type
     [Unit -> Unit].  We then pass this reference as the argument to a
     function which binds it to the name [r], and assigns to it the
-    function [\x:Unit.(!r) unit] -- that is, the function which ignores
+    function [\x:Unit,(!r) unit] -- that is, the function which ignores
     its argument and calls the function stored in [r] on the argument
     [unit]; but of course, that function is itself!  To start the
     divergent loop, we execute the function stored in the cell by
@@ -1933,7 +1936,7 @@ Qed.
 (* ################################################################# *)
 (** * Additional Exercises *)
 
-(** **** Exercise: 5 stars, standard, optional (garabage_collector)
+(** **** Exercise: 5 stars, standard, optional (garbage_collector)
 
     Challenge problem: modify our formalization to include an account
     of garbage collection, and prove that it satisfies whatever nice
@@ -1944,4 +1947,4 @@ Qed.
 End RefsAndNontermination.
 End STLCRef.
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

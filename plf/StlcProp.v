@@ -21,9 +21,9 @@ Import STLC.
     reduction and types is to identify the possible _canonical
     forms_ (i.e., well-typed values) belonging to each type.  For
     [Bool], these are again the boolean values [true] and [false]; for
-    arrow types, they are lambda-abstractions.
+    arrow types, they are lambda-abstractions. *)
 
-    Formally, we will need these lemmas only for terms that are not
+(** Formally, we will need these lemmas only for terms that are not
     only well typed but _closed_ -- i.e., well typed in the empty
     context. *)
 
@@ -925,27 +925,33 @@ Coercion tm_const : nat >-> tm.
     definition and properties of the STLC extended with arithmetic.
     Specifically:
 
-    Fill in the core definitions for STLCArith, by starting
-    with the rules and terms which are the same as STLC.
-    Then prove the key lemmas and theorems we provide.
-    You will need to define and prove helper lemmas, as before.
+    Fill in the core definitions for STLCArith, by starting with the rules
+    and terms which are the same as STLC.  Then prove the key lemmas and
+    theorems we provide.  You will need to define and prove helper lemmas,
+    as before.
 
-    It will be necessary to also fill in "Reserved Notation",
-    "Notation", and "Hint Constructors".
+    It will be necessary to also fill in "Reserved Notation", "Notation",
+    and "Hint Constructors".
 
-    Hint: If you get an error "STLC.tm" found instead of term "tm" then Coq is picking
-    up the old notation for ie: subst instead of the new notation
-    for STLCArith, so you need to overwrite the old with the notation
-    before you can use it.
+    Hint: If you get an error "STLC.tm" found instead of term "tm" then Coq
+    is picking up the old notation for ie: subst instead of the new
+    notation for STLCArith, so you need to overwrite the old with the
+    notation before you can use it.
 
-    Make sure Coq accepts the whole file before submitting
-*)
+    Make sure Coq accepts the whole file before submitting. *)
 
 Reserved Notation "'[' x ':=' s ']' t" (in custom stlc at level 20, x constr).
 
 (** **** Exercise: 5 stars, standard (STLCArith.subst) *)
 Fixpoint subst (x : string) (s : tm) (t : tm) : tm
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+
+(** (You'll need to add remove the period at the end of this
+    definition and add
+
+    where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
+
+    when you fill it in.) *)
 
 Inductive value : tm -> Prop :=
   (* FILL IN HERE *)
@@ -1030,4 +1036,4 @@ Proof with eauto. (* FILL IN HERE *) Admitted.
 
 End STLCArith.
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)

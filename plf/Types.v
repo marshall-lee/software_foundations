@@ -76,9 +76,9 @@ Notation "'if' c 'then' t 'else' e" := (ite c t e)
                   t custom tm at level 80, e custom tm at level 80): tm_scope.
 Local Open Scope tm_scope.
 
-(** _Values_ are [<{true}>], [<{false}>], and numeric values... *)
+(** _Values_ are [true], [false], and numeric values... *)
 Inductive bvalue : tm -> Prop :=
-  | bv_True : bvalue <{ true }>
+  | bv_true : bvalue <{ true }>
   | bv_false : bvalue <{ false }>.
 
 Inductive nvalue : tm -> Prop :=
@@ -171,10 +171,10 @@ Hint Constructors step : core.
 (** Notice that the [step] relation doesn't care about whether the
     expression being stepped makes global sense -- it just checks that
     the operation in the _next_ reduction step is being applied to the
-    right kinds of operands.  For example, the term <{ succ true }> cannot
+    right kinds of operands.  For example, the term [succ true] cannot
     take a step, but the almost as obviously nonsensical term
 
-       <{ succ (if true then true else true) }>
+       succ (if true then true else true)
 
     can take a step (once, before becoming stuck). *)
 
@@ -186,7 +186,8 @@ Hint Constructors step : core.
     chapter fails here.  That is, there are terms that are normal
     forms (they can't take a step) but not values (they are not
     included in our definition of possible "results of reduction").
-    Such terms are said to be _stuck_. *)
+
+    Such terms are _stuck_. *)
 
 Notation step_normal_form := (normal_form step).
 
@@ -202,10 +203,11 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** However, although values and normal forms are _not_ the same in
-    this language, the set of values is a subset of the set of normal
-    forms.  This is important because it shows we did not accidentally
-    define things so that some value could still take a step. *)
+(** However, although values and normal forms are _not_ the same in this
+    language, the set of values is a subset of the set of normal forms.
+
+    This is important because it shows we did not accidentally define
+    things so that some value could still take a step. *)
 
 (** **** Exercise: 3 stars, standard (value_is_nf) *)
 Lemma value_is_nf : forall t,
@@ -344,7 +346,7 @@ Proof.
 (* ----------------------------------------------------------------- *)
 (** *** Canonical forms *)
 
-(** The following two lemmas capture the fundamental property that the
+(** The following two lemmas capture the fundamental fact that the
     definitions of boolean and numeric values agree with the typing
     relation. *)
 
@@ -369,10 +371,11 @@ Qed.
 (* ================================================================= *)
 (** ** Progress *)
 
-(** The typing relation enjoys two critical properties.  The first is
-    that well-typed normal forms are not stuck -- or conversely, if a
-    term is well typed, then either it is a value or it can take at
-    least one step.  We call this _progress_. *)
+(** The typing relation enjoys two critical properties.
+
+    The first is that well-typed normal forms are not stuck -- or
+    conversely, if a term is well typed, then either it is a value or it
+    can take at least one step.  We call this _progress_. *)
 
 (** **** Exercise: 3 stars, standard (finish_progress) *)
 Theorem progress : forall t T,
@@ -675,15 +678,15 @@ Definition manual_grade_for_variation2 : option (nat*string) := None.
 (** **** Exercise: 1 star, standard (remove_pred0)
 
     The reduction rule [ST_Pred0] is a bit counter-intuitive: we
-    might feel that it makes more sense for the predecessor of [<{0}>] to
-    be undefined, rather than being defined to be [<{0}>].  Can we
+    might feel that it makes more sense for the predecessor of [0] to
+    be undefined, rather than being defined to be [0].  Can we
     achieve this simply by removing the rule from the definition of
     [step]?  Would doing so create any problems elsewhere?
 
 (* FILL IN HERE *)
 *)
 (* Do not modify the following line: *)
-Definition manual_grade_for_remove_pred0 : option (nat*string) := None.
+Definition manual_grade_for_remove_pred0  : option (nat*string) := None.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (prog_pres_bigstep)
@@ -703,4 +706,4 @@ Definition manual_grade_for_prog_pres_bigstep : option (nat*string) := None.
 (** [] *)
 End TM.
 
-(* 2023-03-25 11:16 *)
+(* 2024-01-03 15:04 *)
