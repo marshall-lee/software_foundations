@@ -8,43 +8,57 @@
 
 From LF Require Export Basics.
 
-(** For this [Require Export] command to work, Coq needs to be
-    able to find a compiled version of [Basics.v], called [Basics.vo],
-    in a directory associated with the prefix [LF].  This file is
-    analogous to the [.class] files compiled from [.java] source files
-    and the [.o] files compiled from [.c] files.
+(** For this [Require] command to work, Coq needs to be able to
+    find a compiled version of the previous chapter ([Basics.v]).
+    This compiled version, called [Basics.vo], is analogous to the
+    [.class] files compiled from [.java] source files and the [.o]
+    files compiled from [.c] files.
 
-    First create a file named [_CoqProject] containing the following
-    line (if you obtained the whole volume "Logical Foundations" as a
-    single archive, a [_CoqProject] should already exist and you can
-    skip this step):
+    To compile [Basics.v] and obtain [Basics.vo], first make sure that
+    the files [Basics.v], [Induction.v], and [_CoqProject] are in
+    the current directory.
+
+    The [_CoqProject] file should contain just the following line:
 
       -Q . LF
 
     This maps the current directory ("[.]", which contains [Basics.v],
     [Induction.v], etc.) to the prefix (or "logical directory")
-    "[LF]".  Proof General and CoqIDE read [_CoqProject]
-    automatically, so they know to where to look for the file
+    "[LF]". Proof General, CoqIDE, and VSCoq read [_CoqProject]
+    automatically, to find out to where to look for the file
     [Basics.vo] corresponding to the library [LF.Basics].
 
-    Once [_CoqProject] is thus created, there are various ways to
-    build [Basics.vo]:
+    Once the files are in place, there are various ways to build
+    [Basics.vo] from an IDE, or you can build it from the command
+    line.  From an IDE...
 
-     - In Proof General or CoqIDE, the compilation should happen
-       automatically when you submit the [Require] line above to PG.
+     - In Proof General: The compilation can be made to happen
+       automatically when you submit the [Require] line above to PG, by
+       setting the emacs variable [coq-compile-before-require] to [t].
+       This can also be found in the menu: "Coq" > "Auto Compilation" >
+       "Compile Before Require".
 
-     - If you want to compile from the command line, generate a
-       [Makefile] using the [coq_makefile] utility, which comes
-       installed with Coq (if you obtained the whole volume as a
-       single archive, a [Makefile] should already exist and you can
-       skip this step):
+     - In CoqIDE: One thing you can do on all platforms is open
+       [Basics.v]; then, in the "Compile" menu, click on "Compile Buffer".
+
+     - For VSCode users, open the terminal pane at the bottom and then
+       follow the command line instructions below.  (If you downloaded
+       the project setup .tgz file, just doing `make` should build all
+       the code.)
+
+    To compile [Basics.v] from the command line...
+
+     - First, generate a [Makefile] using the [coq_makefile] utility,
+       which comes installed with Coq. (If you obtained the whole volume as
+       a single archive, a [Makefile] should already exist and you can
+       skip this step.)
 
          coq_makefile -f _CoqProject *.v -o Makefile
 
-       Note: You should rerun that command whenever you add or remove
-       Coq files to the directory.
+       You should rerun that command whenever you add or remove
+       Coq files in this directory.
 
-       Now you can compile [Basics.v] by running [make] with the
+     - Now you can compile [Basics.v] by running [make] with the
        corresponding [.vo] file as a target:
 
          make Basics.vo
@@ -54,44 +68,73 @@ From LF Require Export Basics.
 
          make
 
-       Under the hood, [make] uses the Coq compiler, [coqc].  You can
+     - Under the hood, [make] uses the Coq compiler, [coqc].  You can
        also run [coqc] directly:
 
          coqc -Q . LF Basics.v
 
-       But [make] also calculates dependencies between source files to
-       compile them in the right order, so [make] should generally be
-       preferred over explicit [coqc].
+     - Since [make] also calculates dependencies between source files
+       to compile them in the right order, [make] should generally be
+       preferred over running [coqc] explicitly.  But as a last (but
+       not terrible) resort, you can simply compile each file manually
+       as you go.  For example, before starting work on the present
+       chapter, you would need to run the following command:
 
-    If you have trouble (e.g., if you get complaints about missing
-    identifiers later in the file), it may be because the "load path"
-    for Coq is not set up correctly.  The [Print LoadPath.] command
-    may be helpful in sorting out such issues.
+        coqc -Q . LF Basics.v
 
-    In particular, if you see a message like
+       Then, once you've finished this chapter, you'd do
 
-        Compiled library Foo makes inconsistent assumptions over
-        library Bar
+        coqc -Q . LF Induction.v
 
-    check whether you have multiple installations of Coq on your
-    machine.  It may be that commands (like [coqc]) that you execute
-    in a terminal window are getting a different version of Coq than
-    commands executed by Proof General or CoqIDE.
+       to get ready to work on the next one.  If you ever remove the
+       .vo files, you'd need to give both commands again (in that
+       order).
 
-    - Another common reason is that the library [Bar] was modified and
-      recompiled without also recompiling [Foo] which depends on it.
-      Recompile [Foo], or everything if too many files are
-      affected.  (Using the third solution above: [make clean; make].)
+    Troubleshooting:
 
-    One more tip for CoqIDE users: If you see messages like [Error:
-    Unable to locate library Basics], a likely reason is
-    inconsistencies between compiling things _within CoqIDE_ vs _using
-    [coqc] from the command line_.  This typically happens when there
-    are two incompatible versions of [coqc] installed on your
-    system (one associated with CoqIDE, and one associated with [coqc]
-    from the terminal).  The workaround for this situation is
-    compiling using CoqIDE only (i.e. choosing "make" from the menu),
-    and avoiding using [coqc] directly at all. *)
+     - For many of the alternatives above you need to make sure that
+       the [coqc] executable is in your [PATH].
+
+     - If you get complaints about missing identifiers, it may be
+       because the "load path" for Coq is not set up correctly.  The
+       [Print LoadPath.] command may be helpful in sorting out such
+       issues.
+
+     - When trying to compile a later chapter, if you see a message like
+
+        Compiled library Induction makes inconsistent assumptions over
+        library Basics
+
+       a common reason is that the library [Basics] was modified and
+       recompiled without also recompiling [Induction] which depends
+       on it.  Recompile [Induction], or everything if too many files
+       are affected (for instance by running [make] and if even this
+       doesn't work then [make clean; make]).
+
+     - If you get complaints about missing identifiers later in this
+       file it may be because the "load path" for Coq is not set up
+       correctly.  The [Print LoadPath.] command may be helpful in
+       sorting out such issues.
+
+       In particular, if you see a message like
+
+           Compiled library Foo makes inconsistent assumptions over
+           library Bar
+
+       check whether you have multiple installations of Coq on your
+       machine.  It may be that commands (like [coqc]) that you execute
+       in a terminal window are getting a different version of Coq than
+       commands executed by Proof General or CoqIDE.
+
+     - One more tip for CoqIDE users: If you see messages like [Error:
+       Unable to locate library Basics], a likely reason is
+       inconsistencies between compiling things _within CoqIDE_ vs _using
+       [coqc] from the command line_.  This typically happens when there
+       are two incompatible versions of [coqc] installed on your
+       system (one associated with CoqIDE, and one associated with [coqc]
+       from the terminal).  The workaround for this situation is
+       compiling using CoqIDE only (i.e. choosing "make" from the menu),
+       and avoiding using [coqc] directly at all. *)
 
 (* ################################################################# *)
 (** * Proof by Induction *)
@@ -136,20 +179,20 @@ Abort.
     inductively defined sets, we often need a more powerful reasoning
     principle: _induction_.
 
-    Recall (from high school, a discrete math course, etc.) the
-    _principle of induction over natural numbers_: If [P(n)] is some
-    proposition involving a natural number [n] and we want to show
-    that [P] holds for all numbers [n], we can reason like this:
+    Recall (from a discrete math course, probably) the _principle of
+    induction over natural numbers_: If [P(n)] is some proposition
+    involving a natural number [n] and we want to show that [P] holds for
+    all numbers [n], we can reason like this:
          - show that [P(O)] holds;
-         - show that, for any [n'], if [P(n')] holds, then so does
-           [P(S n')];
+         - show that, for any [n'], if [P(n')] holds, then so does [P(S
+           n')];
          - conclude that [P(n)] holds for all [n].
 
     In Coq, the steps are the same: we begin with the goal of proving
     [P(n)] for all [n] and break it down (by applying the [induction]
-    tactic) into two separate subgoals: one where we must show [P(O)]
-    and another where we must show [P(n') -> P(S n')].  Here's how
-    this works for the theorem at hand: *)
+    tactic) into two separate subgoals: one where we must show [P(O)] and
+    another where we must show [P(n') -> P(S n')].  Here's how this works
+    for the theorem at hand: *)
 
 Theorem add_0_r : forall n:nat, n + 0 = n.
 Proof.
@@ -297,16 +340,6 @@ Proof.
     rewrite -> negb_involutive.
     reflexivity.
 Qed.
-(** [] *)
-
-(** **** Exercise: 1 star, standard, optional (destruct_induction)
-
-    Briefly explain the difference between the tactics [destruct]
-    and [induction].
-
-(* [induction] adds an Induction Hypothesis to the context which is helpful *)
-*)
-
 (** [] *)
 
 (* ################################################################# *)
@@ -928,13 +961,11 @@ Proof. reflexivity. Qed.
 (** Finally, prove the main theorem. The inductive cases could be a
     bit tricky.
 
-    Hint 1: Start by trying to prove the main statement, see where you
+    Hint: Start by trying to prove the main statement, see where you
     get stuck, and see if you can find a lemma -- perhaps requiring
     its own inductive proof -- that will allow the main proof to make
-    progress. You might end up with a couple of these.
-
-    Hint 2: Lemma [double_incr_bin] that you proved above will be
-    helpful, too.*)
+    progress. We have one lemma for the [B0] case (which also makes
+    use of [double_incr_bin]) and another for the [B1] case. *)
 
 Lemma nat_to_bin_double : forall n : nat,
   nat_to_bin(double n) = double_bin(nat_to_bin n).
@@ -960,6 +991,7 @@ Proof.
     rewrite <- double_plus. rewrite -> nat_to_bin_double.
     reflexivity.
 Qed.
+
 (** [] *)
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
