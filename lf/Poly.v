@@ -894,11 +894,11 @@ Fixpoint fold {X Y: Type} (f : X->Y->Y) (l : list X) (b : Y)
 Check (fold andb) : list bool -> bool -> bool.
 
 Example fold_example1 :
-  fold mult [1;2;3;4] 1 = 24.
+  fold andb [true;true;false;true] true = false.
 Proof. reflexivity. Qed.
 
 Example fold_example2 :
-  fold andb [true;true;false;true] true = false.
+  fold mult [1;2;3;4] 1 = 24.
 Proof. reflexivity. Qed.
 
 Example fold_example3 :
@@ -1003,8 +1003,8 @@ Qed.
 Definition fold_map {X Y: Type} (f: X -> Y) (l: list X) : list Y
   := fold (fun x l => cons (f x) l) l [].
 
-(** Write down a theorem [fold_map_correct] in Coq stating that
-    [fold_map] is correct, and prove it.  (Hint: again, remember that
+(** Write down a theorem [fold_map_correct] stating that [fold_map] is
+    correct, and prove it in Coq.  (Hint: again, remember that
     [reflexivity] simplifies expressions a bit more aggressively than
     [simpl].) *)
 
@@ -1285,4 +1285,4 @@ Proof. reflexivity. Qed.
 End Church.
 End Exercises.
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
