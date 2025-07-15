@@ -30,15 +30,17 @@ Proof.
   intros n m eq.
 
 (** Here, we could finish with "[rewrite -> eq.  reflexivity.]" as we
-    have done several times before.  Alternatively, we can finish in
-    a single step by using the [apply] tactic: *)
+    have done several times before.  Or we can finish in a single step
+    by using [apply]: *)
 
   apply eq.  Qed.
 
 (** The [apply] tactic also works with _conditional_ hypotheses
     and lemmas: if the statement being applied is an implication, then
     the premises of this implication will be added to the list of
-    subgoals needing to be proved. *)
+    subgoals needing to be proved.
+
+    [apply] also works with _conditional_ hypotheses: *)
 
 Theorem silly2 : forall (n m o p : nat),
   n = m ->
@@ -50,11 +52,13 @@ Proof.
 
 (** Typically, when we use [apply H], the statement [H] will
     begin with a [forall] that introduces some _universally quantified
-    variables_.  When Coq matches the current goal against the
-    conclusion of [H], it will try to find appropriate values for
-    these variables.  For example, when we do [apply eq2] in the
-    following proof, the universal variable [q] in [eq2] gets
-    instantiated with [n], and [r] gets instantiated with [m]. *)
+    variables_.
+
+    When Coq matches the current goal against the conclusion of [H],
+    it will try to find appropriate values for these variables.  For
+    example, when we do [apply eq2] in the following proof, the
+    universal variable [q] in [eq2] gets instantiated with [n], and
+    [r] gets instantiated with [m]. *)
 
 Theorem silly2a : forall (n m : nat),
   (n,n) = (m,m)  ->
@@ -96,7 +100,7 @@ Proof.
   Fail apply H.
 
   (** but we can use the [symmetry] tactic, which switches the left
-     and right sides of an equality in the goal. *)
+      and right sides of an equality in the goal. *)
 
   symmetry. apply H.  Qed.
 
@@ -222,7 +226,7 @@ Qed.
     additional facts:
 
     - The constructor [S] is _injective_ (or _one-to-one_).  That is,
-      if [S n = S m], it must be that [n = m].
+      if [S n = S m], it must also be that [n = m].
 
     - The constructors [O] and [S] are _disjoint_.  That is, [O] is not
       equal to [S n] for any [n]. *)
@@ -230,10 +234,10 @@ Qed.
 (** Similar principles apply to every inductively defined type:
     all constructors are injective, and the values built from distinct
     constructors are never equal.  For lists, the [cons] constructor
-    is injective and [nil] is different from every non-empty list.
-    For booleans, [true] and [false] are different.  (Since [true] and
-    [false] take no arguments, their injectivity is neither here nor
-    there.)  And so on. *)
+    is injective and the empty list [nil] is different from every
+    non-empty list.  For booleans, [true] and [false] are different.
+    (Since [true] and [false] take no arguments, their injectivity is
+    neither here nor there.)  And so on. *)
 
 (** We can _prove_ the injectivity of [S] by using the [pred] function
     defined in [Basics.v]. *)
@@ -265,8 +269,8 @@ Proof.
 (** By writing [injection H as Hmn] at this point, we are asking Coq
     to generate all equations that it can infer from [H] using the
     injectivity of constructors (in the present example, the equation
-    [n = m]). Each such equation is added as a hypothesis (with the
-    name [Hmn] in this case) into the context. *)
+    [n = m]). Each such equation is added as a hypothesis (called
+    [Hmn] in this case) into the context. *)
 
   injection H as Hnm. apply Hnm.
 Qed.
@@ -308,8 +312,8 @@ Qed.
     we are justified in concluding anything we want, since the
     assumption is nonsensical. *)
 
-(** The [discriminate] tactic embodies this principle: It is used on a
-    hypothesis involving an equality between different
+(** The [discriminate] tactic embodies this principle: It is used
+    on a hypothesis involving an equality between different
     constructors (e.g., [false = true]), and it solves the current
     goal immediately.  Some examples: *)
 
@@ -332,7 +336,7 @@ Proof.
 (** If you find the principle of explosion confusing, remember
     that these proofs are _not_ showing that the conclusion of the
     statement holds.  Rather, they are showing that, _if_ the
-    nonsensical situation described by the premise did somehow arise,
+    nonsensical situation described by the premise did somehow hold,
     _then_ the nonsensical conclusion would also follow, because we'd
     be living in an inconsistent universe where every statement is
     true.
@@ -351,9 +355,9 @@ Proof.
 Qed.
 (** [] *)
 
-(** For a slightly more involved example, we can use [discriminate] to
-    make a connection between the two different notions of
-    equality ([=] and [=?]) on natural numbers. *)
+(** For a more useful example, we can use [discriminate] to make a
+    connection between the two different notions of equality ([=] and
+    [=?]) that we have seen for natural numbers. *)
 Theorem eqb_0_l : forall n,
    0 =? n = true -> n = 0.
 Proof.
@@ -383,8 +387,8 @@ Qed.
 (** The injectivity of constructors allows us to reason that
     [forall (n m : nat), S n = S m -> n = m].  The converse of this
     implication is an instance of a more general fact about both
-    constructors and functions, which we will find convenient in a few
-    places below: *)
+    constructors and functions, which we will find convenient
+    below: *)
 
 Theorem f_equal : forall (A B : Type) (f: A -> B) (x y: A),
   x = y -> f x = f y.
@@ -394,12 +398,13 @@ Theorem eq_implies_succ_equal : forall (n m : nat),
   n = m -> S n = S m.
 Proof. intros n m H. apply f_equal. apply H. Qed.
 
-(** There is also a tactic named `f_equal` that can prove such
-    theorems directly.  Given a goal of the form [f a1 ... an = g b1
-    ... bn], the tactic [f_equal] will produce subgoals of the form [f
-    = g], [a1 = b1], ..., [an = bn]. At the same time, any of these
-    subgoals that are simple enough (e.g., immediately provable by
-    [reflexivity]) will be automatically discharged by [f_equal]. *)
+(** Indeed, there is also a tactic named `f_equal` that can
+    prove such theorems directly.  Given a goal of the form [f a1
+    ... an = g b1 ... bn], the tactic [f_equal] will produce subgoals
+    of the form [f = g], [a1 = b1], ..., [an = bn]. At the same time,
+    any of these subgoals that are simple enough (e.g., immediately
+    provable by [reflexivity]) will be automatically discharged by
+    [f_equal]. *)
 
 Theorem eq_implies_succ_equal' : forall (n m : nat),
   n = m -> S n = S m.
@@ -459,24 +464,71 @@ Proof.
     forward style can be easier to think about. *)
 
 (* ################################################################# *)
+(** * Specializing Hypotheses *)
+
+(** Another handy tactic for fiddling with hypotheses is [specialize].
+    It is essentially just a combination of [assert] and [apply], but
+    it often provides a pleasingly smooth way to nail down overly
+    general assumptions.  It works like this:
+
+    If [H] is a quantified hypothesis in the current context -- i.e.,
+    [H : forall (x:T), P] -- then [specialize H with (x := e)] will
+    change [H] so that it looks like [[x:=e]P], that is, [P] with [x]
+    replaced by [e].
+
+    For example: *)
+
+Theorem specialize_example: forall n,
+     (forall m, m*n = 0)
+  -> n = 0.
+Proof.
+  intros n H.
+  specialize H with (m := 1).
+  simpl in H.
+  rewrite add_comm in H.
+  simpl in H.
+  apply H. Qed.
+
+(** Using [specialize] before [apply] gives us yet another way to
+    control where [apply] does its work. *)
+Example trans_eq_example''' : forall (a b c d e f : nat),
+     [a;b] = [c;d] ->
+     [c;d] = [e;f] ->
+     [a;b] = [e;f].
+Proof.
+  intros a b c d e f eq1 eq2.
+  specialize trans_eq with (m:=[c;d]) as H.
+  apply H.
+  apply eq1.
+  apply eq2. Qed.
+(** Note:
+    - We can [specialize] facts in the global context, not just
+      local hypotheses.
+    - The [as...] clause at the end tells [specialize] how to name
+      the new hypothesis in this case. *)
+
+(* ################################################################# *)
 (** * Varying the Induction Hypothesis *)
 
 (** Sometimes it is important to control the exact form of the
     induction hypothesis when carrying out inductive proofs in Coq.
-    In particular, we sometimes need to be careful about which of the
+    In particular, we may need to be careful about which of the
     assumptions we move (using [intros]) from the goal to the context
-    before invoking the [induction] tactic.  For example, suppose
-    we want to show that [double] is injective -- i.e., that it maps
-    different arguments to different results:
+    before invoking the [induction] tactic.
+
+    For example, suppose we want to show that [double] is injective --
+    i.e., that it maps different arguments to different results:
 
        Theorem double_injective: forall n m,
-         double n = double m -> n = m.
+         double n = double m ->
+         n = m.
 
     The way we start this proof is a bit delicate: if we begin it with
 
        intros n. induction n.
 
-    then all is well.  But if we begin it with introducing both variables
+    then all is well.  But if we begin it with introducing both
+    variables
 
        intros n m. induction n.
 
@@ -492,7 +544,7 @@ Proof.
     + (* m = S m' *) discriminate eq.
   - (* n = S n' *) intros eq. destruct m as [| m'] eqn:E.
     + (* m = O *) discriminate eq.
-    + (* m = S m' *) apply f_equal.
+    + (* m = S m' *) f_equal.
 
 (** At this point, the induction hypothesis ([IHn']) does _not_ give us
     [n' = m'] -- there is an extra [S] in the way -- so the goal is
@@ -502,11 +554,12 @@ Abort.
 
 (** What went wrong? *)
 
-(** The problem is that, at the point we invoke the induction
-    hypothesis, we have already introduced [m] into the context --
-    intuitively, we have told Coq, "Let's consider some particular [n]
-    and [m]..." and we now have to prove that, if [double n = double
-    m] for _these particular_ [n] and [m], then [n = m].
+(** The problem is that, at the point where we invoke the
+    induction hypothesis, we have already introduced [m] into the
+    context -- intuitively, we have told Coq, "Let's consider some
+    particular [n] and [m]..." and we now have to prove that, if
+    [double n = double m] for _these particular_ [n] and [m], then
+    [n = m].
 
     The next tactic, [induction n] says to Coq: We are going to show
     the goal by induction on [n].  That is, we are going to prove, for
@@ -543,16 +596,17 @@ Abort.
 
       - [R] = "if [double (S n) = 10] then [S n = 5]".
 
-    But knowing [Q] doesn't give us any help at all with proving
-    [R]!  If we tried to prove [R] from [Q], we would start with
-    something like "Suppose [double (S n) = 10]..." but then we'd be
-    stuck: knowing that [double (S n)] is [10] tells us nothing
-    helpful about whether [double n] is [10] (indeed, it strongly
-    suggests that [double n] is _not_ [10]!!), so [Q] is useless. *)
+    But knowing [Q] doesn't give us any help at all with proving [R]!
+    If we tried to prove [R] from [Q], we would start with something
+    like "Suppose [double (S n) = 10]..." but then we'd be stuck:
+    knowing that [double (S n)] is [10] tells us nothing helpful about
+    whether [double n] is [10] (indeed, it strongly suggests that
+    [double n] is _not_ [10]!!), so [Q] is useless. *)
 
 (** Trying to carry out this proof by induction on [n] when [m] is
     already in the context doesn't work because we are then trying to
-    prove a statement involving _every_ [n] but just a _single_ [m]. *)
+    prove a statement involving _every_ [n] but just a _particular_
+    [m]. *)
 
 (** A successful proof of [double_injective] leaves [m] universally
     quantified in the goal statement at the point where the
@@ -572,8 +626,8 @@ Proof.
 (** Notice that both the goal and the induction hypothesis are
     different this time: the goal asks us to prove something more
     general (i.e., we must prove the statement for _every_ [m]), but
-    the IH is correspondingly more flexible, allowing us to choose any
-    [m] we like when we apply the IH. *)
+    the induction hypothesis [IH'] is correspondingly more flexible,
+    allowing us to choose any [m] we like when we apply it. *)
 
     intros m eq.
 
@@ -588,27 +642,26 @@ Proof.
 
     discriminate eq.
     + (* m = S m' *)
-      apply f_equal.
+      f_equal.
 
-(** At this point, since we are in the second branch of the [destruct
-    m], the [m'] mentioned in the context is the predecessor of the
-    [m] we started out talking about.  Since we are also in the [S]
-    branch of the induction, this is perfect: if we instantiate the
-    generic [m] in the IH with the current [m'] (this instantiation is
-    performed automatically by the [apply] in the next step), then
-    [IHn'] gives us exactly what we need to finish the proof. *)
+(** Since we are now in the second branch of the [destruct m], the
+    [m'] mentioned in the context is the predecessor of the [m] we
+    started out talking about.  Since we are also in the [S] branch of
+    the induction, this is perfect: if we instantiate the generic [m]
+    in the IH with the current [m'] (this instantiation is performed
+    automatically by the [apply] in the next step), then [IHn'] gives
+    us exactly what we need to finish the proof. *)
 
       apply IHn'. simpl in eq. injection eq as goal. apply goal. Qed.
 
 (** The thing to take away from all this is that you need to be
     careful, when using induction, that you are not trying to prove
-    something too specific: When proving a property involving two
+    something too specific: When proving a property quantified over
     variables [n] and [m] by induction on [n], it is sometimes crucial
     to leave [m] generic. *)
 
 (** The following exercise, which further strengthens the link between
     [=?] and [=], follows the same pattern. *)
-
 (** **** Exercise: 2 stars, standard (eqb_true) *)
 Theorem eqb_true : forall n m,
   n =? m = true -> n = m.
@@ -666,10 +719,10 @@ Qed.
 (** [] *)
 
 (** The strategy of doing fewer [intros] before an [induction] to
-    obtain a more general IH doesn't always work by itself; sometimes
-    some _rearrangement_ of quantified variables is needed.  Suppose,
-    for example, that we wanted to prove [double_injective] by
-    induction on [m] instead of [n]. *)
+    obtain a more general IH doesn't always work; sometimes some
+    _rearrangement_ of quantified variables is needed.  Suppose, for
+    example, that we wanted to prove [double_injective] by induction
+    on [m] instead of [n]. *)
 
 Theorem double_injective_take2_FAILED : forall n m,
   double n = double m ->
@@ -681,12 +734,12 @@ Proof.
     + (* n = S n' *) discriminate eq.
   - (* m = S m' *) intros eq. destruct n as [| n'] eqn:E.
     + (* n = O *) discriminate eq.
-    + (* n = S n' *) apply f_equal.
+    + (* n = S n' *) f_equal.
         (* We are stuck here, just like before. *)
 Abort.
 
 (** The problem is that, to do induction on [m], we must first
-    introduce [n].  (And if we simply say [induction m] without
+    introduce [n].  (If we simply say [induction m] without
     introducing anything first, Coq will automatically introduce [n]
     for us!)  *)
 
@@ -718,7 +771,7 @@ Proof.
     + (* n = S n' *) discriminate eq.
   - (* m = S m' *) intros n eq. destruct n as [| n'] eqn:E.
     + (* n = O *) discriminate eq.
-    + (* n = S n' *) apply f_equal.
+    + (* n = S n' *) f_equal.
       apply IHm'. injection eq as goal. apply goal. Qed.
 
 (** Let's look at an informal proof of this theorem.  Note that
@@ -784,18 +837,20 @@ Qed.
 
 (** It sometimes happens that we need to manually unfold a name that
     has been introduced by a [Definition] so that we can manipulate
-    the expression it denotes.  For example, if we define... *)
+    the expression it stands for.
+
+    For example, if we define... *)
 
 Definition square n := n * n.
 
-(** ... and try to prove a simple fact about [square]... *)
+(** ...and try to prove a simple fact about [square]... *)
 
 Lemma square_mult : forall n m, square (n * m) = square n * square m.
 Proof.
   intros n m.
   simpl.
 
-(** ... we appear to be stuck: [simpl] doesn't simplify anything, and
+(** ...we appear to be stuck: [simpl] doesn't simplify anything, and
     since we haven't proved any other facts about [square], there is
     nothing we can [apply] or [rewrite] with. *)
 
@@ -816,7 +871,7 @@ Proof.
   rewrite H. rewrite mult_assoc. reflexivity.
 Qed.
 
-(** At this point, some deeper discussion of unfolding and
+(** At this point, a bit deeper discussion of unfolding and
     simplification is in order.
 
     We already have observed that tactics like [simpl], [reflexivity],
@@ -828,7 +883,7 @@ Definition foo (x: nat) := 5.
 
 (** .... then the [simpl] in the following proof (or the
     [reflexivity], if we omit the [simpl]) will unfold [foo m] to
-    [(fun x => 5) m] and then further simplify this expression to just
+    [(fun x => 5) m] and further simplify this expression to just
     [5]. *)
 
 Fact silly_fact_1 : forall m, foo m + 1 = foo (m + 1) + 1.
@@ -896,7 +951,7 @@ Proof.
 
 (** Now it is apparent that we are stuck on the [match] expressions on
     both sides of the [=], and we can use [destruct] to finish the
-    proof without thinking too hard. *)
+    proof without thinking so hard. *)
 
   destruct m eqn:E.
   - reflexivity.
@@ -1017,14 +1072,14 @@ Abort.
     that the substitution performed by [destruct] is quite brutal --
     in this case, it throws away every occurrence of [n =? 3], but we
     need to keep some memory of this expression and how it was
-    destructed, because we need to be able to reason that, since [n =?
-    3 = true] in this branch of the case analysis, it must be that [n
-    = 3], from which it follows that [n] is odd.
+    destructed, because we need to be able to reason that, since we
+    are assuming [n =? 3 = true] in this branch of the case analysis,
+    it must be that [n = 3], from which it follows that [n] is odd.
 
-    What we want here is to substitute away all existing occurrences of
-    [n =? 3], but at the same time add an equation to the context that
-    records which case we are in.  This is precisely what the [eqn:]
-    qualifier does. *)
+    What we want here is to substitute away all existing occurrences
+    of [n =? 3], but at the same time add an equation to the context
+    that records which case we are in.  This is precisely what the
+    [eqn:] qualifier does. *)
 
 Theorem sillyfun1_odd : forall (n : nat),
   sillyfun1 n = true ->
@@ -1033,16 +1088,16 @@ Proof.
   intros n eq. unfold sillyfun1 in eq.
   destruct (n =? 3) eqn:Heqe3.
   (** Now we have the same state as at the point where we got
-     stuck above, except that the context contains an extra
-     equality assumption, which is exactly what we need to
-     make progress. *)
+      stuck above, except that the context contains an extra
+      equality assumption, which is exactly what we need to
+      make progress. *)
     - (* e3 = true *) apply eqb_true in Heqe3.
       rewrite -> Heqe3. reflexivity.
     - (* e3 = false *)
      (** When we come to the second equality test in the body
-        of the function we are reasoning about, we can use
-        [eqn:] again in the same way, allowing us to finish the
-        proof. *)
+         of the function we are reasoning about, we can use
+         [eqn:] again in the same way, allowing us to finish the
+         proof. *)
       destruct (n =? 5) eqn:Heqe5.
         + (* e5 = true *)
           apply eqb_true in Heqe5.
@@ -1319,4 +1374,4 @@ Qed.
 
 (** [] *)
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
