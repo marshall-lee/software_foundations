@@ -1,6 +1,8 @@
 (** * Logic: Logic in Coq *)
 
-Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
+Set Warnings "-notation-overridden,-parsing".
+Set Warnings "-deprecated-hint-without-locality".
+Require Nat.
 From LF Require Export Tactics.
 
 (** We have now seen many examples of factual claims (_propositions_)
@@ -18,12 +20,10 @@ From LF Require Export Tactics.
     we might try to prove in Coq has a type, namely [Prop], the type
     of _propositions_.  We can see this with the [Check] command: *)
 
-Check (3 = 3) : Prop.
-
 Check (forall n m : nat, n + m = m + n) : Prop.
 
 (** Note that _all_ syntactically well-formed propositions have type
-    [Prop] in Coq, regardless of whether they are true.
+    [Prop] in Coq, regardless of whether they are true or not.
 
     Simply _being_ a proposition is one thing; being _provable_ is
     a different thing! *)
@@ -34,11 +34,11 @@ Check 3 = 2 : Prop.
 
 Check forall n : nat, n = 2 : Prop.
 
-(** Indeed, propositions not only have types: they are
-    _first-class_ entities that can be manipulated in all the same
-    ways as any of the other things in Coq's world. *)
+(** Indeed, propositions don't just have types -- they are
+    _first-class_ entities that can be manipulated in all the same ways as
+    any of the other things in Coq's world. *)
 
-(** So far, we've seen one primary place that propositions can appear:
+(** So far, we've seen one primary place where propositions can appear:
     in [Theorem] (and [Lemma] and [Example]) declarations. *)
 
 Theorem plus_2_2_is_4 :
@@ -77,20 +77,21 @@ Check is_three : nat -> Prop.
     For instance, here's a (polymorphic) property defining the
     familiar notion of an _injective function_. *)
 
-Definition injective {A B} (f : A -> B) :=
+Definition injective {A B} (f : A -> B) : Prop :=
   forall x y : A, f x = f y -> x = y.
 
 Lemma succ_inj : injective S.
 Proof.
-  intros n m H. injection H as H1. apply H1.
+  intros x y H. injection H as H1. apply H1.
 Qed.
 
-(** The equality operator [=] is a (binary) function that returns a
-    [Prop].
+(** The familiar equality operator [=] is a (binary) function that returns
+    a [Prop].
 
     The expression [n = m] is syntactic sugar for [eq n m] (defined in
-    Coq's standard library using the [Notation] mechanism). Because
-    [eq] can be used with elements of any type, it is also
+    Coq's standard library using the [Notation] mechanism).
+
+    Because [eq] can be used with elements of any type, it is also
     polymorphic: *)
 
 Check @eq : forall A : Type, A -> A -> Prop.
@@ -106,13 +107,13 @@ Check @eq : forall A : Type, A -> A -> Prop.
 (* ================================================================= *)
 (** ** Conjunction *)
 
-(** The _conjunction_, or _logical and_, of propositions [A] and [B]
-    is written [A /\ B], representing the claim that both [A] and [B]
-    are true. *)
+(** The _conjunction_, or _logical and_, of propositions [A] and [B] is
+    written [A /\ B]; it represents the claim that both [A] and [B] are
+    true. *)
 
 Example and_example : 3 + 4 = 7 /\ 2 * 2 = 4.
 
-(** To prove a conjunction, use the [split] tactic.  It will generate
+(** To prove a conjunction, use the [split] tactic.  This will generate
     two subgoals, one for each part of the statement: *)
 
 Proof.
@@ -121,31 +122,26 @@ Proof.
   - (* 2 * 2 = 4 *) reflexivity.
 Qed.
 
-(** For any propositions [A] and [B], if we assume that [A] is true
-    and that [B] is true, we can conclude that [A /\ B] is also
-    true. *)
+(** For any propositions [A] and [B], if we assume that [A] is true and
+    that [B] is true, we can conclude that [A /\ B] is also true.  The Coq
+    library provides a function [conj] that does this. *)
 
-Lemma and_intro : forall A B : Prop, A -> B -> A /\ B.
-Proof.
-  intros A B HA HB. split.
-  - apply HA.
-  - apply HB.
-Qed.
+Check @conj : forall A B : Prop, A -> B -> A /\ B.
 
-(** Since applying a theorem with hypotheses to some goal has the
-    effect of generating as many subgoals as there are hypotheses for
-    that theorem, we can apply [and_intro] to achieve the same effect
-    as [split]. *)
+(** Since applying a theorem with hypotheses to some goal has the effect of
+    generating as many subgoals as there are hypotheses for that theorem,
+    we can apply [conj] to achieve the same effect as [split]. *)
 
 Example and_example' : 3 + 4 = 7 /\ 2 * 2 = 4.
 Proof.
-  apply and_intro.
+  apply conj.
   - (* 3 + 4 = 7 *) reflexivity.
   - (* 2 + 2 = 4 *) reflexivity.
 Qed.
 
-(** **** Exercise: 2 stars, standard (and_exercise) *)
-Example and_exercise :
+(** **** Exercise: 2 stars, standard (plus_is_O) *)
+
+Example plus_is_O :
   forall n m : nat, n + m = 0 -> n = 0 /\ m = 0.
 Proof.
   intros n m H.
@@ -161,9 +157,9 @@ Qed.
 
 (** So much for proving conjunctive statements.  To go in the other
     direction -- i.e., to _use_ a conjunctive hypothesis to help prove
-    something else -- we employ the [destruct] tactic.
+    something else -- we employ the [destruct] tactic. *)
 
-    When the current proof context contains a hypothesis [H] of the
+(** When the current proof context contains a hypothesis [H] of the
     form [A /\ B], writing [destruct H as [HA HB]] will remove [H]
     from the context and replace it with two new hypotheses: [HA],
     stating that [A] is true, and [HB], stating that [B] is true.  *)
@@ -189,9 +185,9 @@ Proof.
   reflexivity.
 Qed.
 
-(** You may wonder why we bothered packing the two hypotheses [n = 0]
-    and [m = 0] into a single conjunction, since we could have also
-    stated the theorem with two separate premises: *)
+(** You may wonder why we bothered packing the two hypotheses [n = 0] and
+    [m = 0] into a single conjunction, since we could also have stated the
+    theorem with two separate premises: *)
 
 Lemma and_example2'' :
   forall n m : nat, n = 0 -> m = 0 -> n + m = 0.
@@ -212,16 +208,16 @@ Lemma and_example3 :
 Proof.
   (* WORKED IN CLASS *)
   intros n m H.
-  apply and_exercise in H.
+  apply plus_is_O in H.
   destruct H as [Hn Hm].
   rewrite Hn. reflexivity.
 Qed.
 
-(** Another common situation with conjunctions is that we know
-    [A /\ B] but in some context we need just [A] or just [B].
-    In such cases we can do a [destruct] (possibly as part of
-    an [intros]) and use an underscore pattern [_] to indicate
-    that the unneeded conjunct should just be thrown away. *)
+(** Another common situation is that we know [A /\ B] but in some context
+    we need just [A] or just [B].  In such cases we can do a
+    [destruct] (possibly as part of an [intros]) and use an underscore
+    pattern [_] to indicate that the unneeded conjunct should just be
+    thrown away. *)
 
 Lemma proj1 : forall P Q : Prop,
   P /\ Q -> P.
@@ -240,9 +236,9 @@ Qed.
 (** [] *)
 
 (** Finally, we sometimes need to rearrange the order of conjunctions
-    and/or the grouping of multi-way conjunctions.  The following
-    commutativity and associativity theorems are handy in such
-    cases. *)
+    and/or the grouping of multi-way conjunctions. We can see this
+    at work in the proofs of the following commutativity and
+    associativity theorems *)
 
 Theorem and_commut : forall P Q : Prop,
   P /\ Q -> Q /\ P.
@@ -252,12 +248,11 @@ Proof.
     - (* left *) apply HQ.
     - (* right *) apply HP.  Qed.
 
-(** **** Exercise: 2 stars, standard (and_assoc)
+(** **** Exercise: 1 star, standard (and_assoc)
 
     (In the following proof of associativity, notice how the _nested_
     [intros] pattern breaks the hypothesis [H : P /\ (Q /\ R)] down into
-    [HP : P], [HQ : Q], and [HR : R].  Finish the proof from
-    there.) *)
+    [HP : P], [HQ : Q], and [HR : R].  Finish the proof.) *)
 
 Theorem and_assoc : forall P Q R : Prop,
   P /\ (Q /\ R) -> (P /\ Q) /\ R.
@@ -269,9 +264,9 @@ Proof.
 Qed.
 (** [] *)
 
-(** By the way, the infix notation [/\] is actually just syntactic
-    sugar for [and A B].  That is, [and] is a Coq operator that takes
-    two propositions as arguments and yields a proposition. *)
+(** Finally, the infix notation [/\] is actually just syntactic sugar for
+    [and A B].  That is, [and] is a Coq operator that takes two
+    propositions as arguments and yields a proposition. *)
 
 Check and : Prop -> Prop -> Prop.
 
@@ -279,9 +274,9 @@ Check and : Prop -> Prop -> Prop.
 (** ** Disjunction *)
 
 (** Another important connective is the _disjunction_, or _logical or_,
-    of two propositions: [A \/ B] is true when either [A] or [B]
-    is.  (This infix notation stands for [or A B], where [or : Prop ->
-    Prop -> Prop].) *)
+    of two propositions: [A \/ B] is true when either [A] or [B] is.
+    (This infix notation stands for [or A B], where
+    [or : Prop -> Prop -> Prop].) *)
 
 (** To use a disjunctive hypothesis in a proof, we proceed by case
     analysis -- which, as with other data types like [nat], can be done
@@ -301,11 +296,19 @@ Proof.
     reflexivity.
 Qed.
 
-(** Conversely, to show that a disjunction holds, it suffices to show
-    that one of its sides holds. This can be done via two tactics,
-    [left] and [right].  As their names imply, the first one requires
-    proving the left side of the disjunction, while the second
-    requires proving its right side.  Here is a trivial use... *)
+(** We can see in this example that, when we perform case analysis on a
+    disjunction [A \/ B], we must separately discharge two proof
+    obligations, each showing that the conclusion holds under a different
+    assumption -- [A] in the first subgoal and [B] in the second.
+
+    The case analysis pattern [[Hn | Hm]] allows
+    us to name the hypotheses that are generated for the subgoals. *)
+
+(** Conversely, to show that a disjunction holds, it suffices to show that
+    one of its sides holds. This can be done via the tactics [left] and
+    [right].  As their names imply, the first one requires proving the left
+    side of the disjunction, while the second requires proving the right
+    side.  Here is a trivial use... *)
 
 Lemma or_intro_l : forall A B : Prop, A -> A \/ B.
 Proof.
@@ -326,7 +329,7 @@ Proof.
   - right. reflexivity.
 Qed.
 
-(** **** Exercise: 1 star, standard (mult_is_O) *)
+(** **** Exercise: 2 stars, standard (mult_is_O) *)
 Lemma mult_is_O :
   forall n m, n * m = 0 -> n = 0 \/ m = 0.
 Proof.
@@ -352,37 +355,36 @@ Qed.
 (* ================================================================= *)
 (** ** Falsehood and Negation
 
-    So far, we have mostly been concerned with proving "positive"
-    statements -- addition is commutative, appending lists is
-    associative, etc.  Of course, we may also be interested in
-    negative results, demonstrating that some given proposition is
-    _not_ true. Such statements are expressed with the logical
-    negation operator [~]. *)
+    Up to this point, we have mostly been concerned with proving "positive"
+    statements -- addition is commutative, appending lists is associative,
+    etc.  Of course, we are sometimes also interested in negative results,
+    demonstrating that some given proposition is _not_ true. Such
+    statements are expressed with the logical negation operator [~]. *)
 
 (** To see how negation works, recall the _principle of explosion_
     from the [Tactics] chapter, which asserts that, if we assume a
     contradiction, then any other proposition can be derived.
 
     Following this intuition, we could define [~ P] ("not [P]") as
-    [forall Q, P -> Q].
+    [forall Q, P -> Q]. *)
 
-    Coq actually makes a slightly different (but equivalent) choice,
+(** Coq actually makes a slightly different (but equivalent) choice,
     defining [~ P] as [P -> False], where [False] is a specific
-    contradictory proposition defined in the standard library. *)
+    un-provable proposition defined in the standard library. *)
 
 Module NotPlayground.
 
 Definition not (P:Prop) := P -> False.
 
-Notation "~ x" := (not x) : type_scope.
-
 Check not : Prop -> Prop.
+
+Notation "~ x" := (not x) : type_scope.
 
 End NotPlayground.
 
 (** Since [False] is a contradictory proposition, the principle of
-    explosion also applies to it. If we get [False] into the proof
-    context, we can use [destruct] on it to complete any goal: *)
+    explosion also applies to it. If we can get [False] into the context,
+    we can use [destruct] on it to complete any goal: *)
 
 Theorem ex_falso_quodlibet : forall (P:Prop),
   False -> P.
@@ -398,9 +400,10 @@ Proof.
 (** **** Exercise: 2 stars, standard, optional (not_implies_our_not)
 
     Show that Coq's definition of negation implies the intuitive one
-    mentioned above. Hint: while getting accustomed to Coq's
-    definition of [not], you might find it helpful to [unfold not]
-    near the beginning of proofs. *)
+    mentioned above.
+
+    Hint: while getting accustomed to Coq's definition of [not], you might
+    find it helpful to [unfold not] near the beginning of proofs. *)
 
 Theorem not_implies_our_not : forall (P:Prop),
   ~ P -> (forall (Q:Prop), P -> Q).
@@ -411,14 +414,12 @@ Proof.
 Qed.
 (** [] *)
 
-(** Inequality is a frequent enough form of negated statement
-    that there is a special notation for it, [x <> y]:
-
-      Notation "x <> y" := (~(x = y)).
+(** Inequality is a very common form of negated statement, so there is a
+    special notation for it:
 *)
+Notation "x <> y" := (~(x = y)) : type_scope.
 
-(** We can use [not] to state that [0] and [1] are different elements
-    of [nat]: *)
+(** For example: *)
 
 Theorem zero_not_one : 0 <> 1.
 Proof.
@@ -437,11 +438,12 @@ Proof.
   discriminate contra.
 Qed.
 
-(** It takes a little practice to get used to working with negation in
-    Coq.  Even though _you_ can see perfectly well why a statement
-    involving negation is true, it can be a little tricky at first to
-    make Coq understand it!  Here are proofs of a few familiar facts
-    to get you warmed up. *)
+(** It takes a little practice to get used to working with negation in Coq.
+    Even though _you_ can see perfectly well why a statement involving
+    negation is true, it can be a little tricky at first to see how to make
+    Coq understand it!
+
+    Here are proofs of a few familiar facts to help get you warmed up. *)
 
 Theorem not_False :
   ~ False.
@@ -452,8 +454,8 @@ Theorem contradiction_implies_anything : forall P Q : Prop,
   (P /\ ~P) -> Q.
 Proof.
   (* WORKED IN CLASS *)
-  intros P Q [HP HNA]. unfold not in HNA.
-  apply HNA in HP. destruct HP.  Qed.
+  intros P Q [HP HNP]. unfold not in HNP.
+  apply HNP in HP. destruct HP.  Qed.
 
 Theorem double_neg : forall P : Prop,
   P -> ~~P.
@@ -461,19 +463,19 @@ Proof.
   (* WORKED IN CLASS *)
   intros P H. unfold not. intros G. apply G. apply H.  Qed.
 
-(** **** Exercise: 2 stars, advanced (double_neg_inf)
+(** **** Exercise: 2 stars, advanced (double_neg_informal)
 
-    Write an informal proof of [double_neg]:
+    Write an _informal_ proof of [double_neg]:
 
    _Theorem_: [P] implies [~~P], for any proposition [P]. *)
 
 (* FILL IN HERE *)
 
 (* Do not modify the following line: *)
-Definition manual_grade_for_double_neg_inf : option (nat*string) := None.
+Definition manual_grade_for_double_neg_informal : option (nat*string) := None.
 (** [] *)
 
-(** **** Exercise: 2 stars, standard, especially useful (contrapositive) *)
+(** **** Exercise: 1 star, standard, especially useful (contrapositive) *)
 Theorem contrapositive : forall (P Q : Prop),
   (P -> Q) -> (~Q -> ~P).
 Proof.
@@ -492,7 +494,7 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 1 star, advanced (informal_not_PNP)
+(** **** Exercise: 1 star, advanced (not_PNP_informal)
 
     Write an informal proof (in English) of the proposition [forall P
     : Prop, ~(P /\ ~P)]. *)
@@ -500,7 +502,7 @@ Qed.
 (* FILL IN HERE *)
 
 (* Do not modify the following line: *)
-Definition manual_grade_for_informal_not_PNP : option (nat*string) := None.
+Definition manual_grade_for_not_PNP_informal : option (nat*string) := None.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (de_morgan_not_or)
@@ -508,8 +510,8 @@ Definition manual_grade_for_informal_not_PNP : option (nat*string) := None.
     _De Morgan's Laws_, named for Augustus De Morgan, describe how
     negation interacts with conjunction and disjunction.  The
     following law says that "the negation of a disjunction is the
-    conjunction of the negations." There is a corresponding law
-    [de_morgan_not_and_not] that we will return to at the end of this
+    conjunction of the negations." There is a dual law
+    [de_morgan_not_and_not] to which we will return at the end of this
     chapter. *)
 Theorem de_morgan_not_or : forall (P Q : Prop),
     ~ (P \/ Q) -> ~P /\ ~Q.
@@ -522,9 +524,20 @@ Proof.
 Qed.
 (** [] *)
 
+(** **** Exercise: 1 star, standard, optional (not_S_inverse_pred)
+
+    Since we are working with natural numbers, we can disprove that
+    [S] and [pred] are inverses of each other: *)
+Lemma not_S_pred_n : ~(forall n : nat, S (pred n) = n).
+Proof.
+  intros H.
+  specialize H with (n := 0) as contra. discriminate.
+Qed.
+(** [] *)
+
 (** Since inequality involves a negation, it also requires a little
     practice to be able to work with it fluently.  Here is one useful
-    trick:
+    trick.
 
     If you are trying to prove a goal that is nonsensical (e.g., the
     goal state is [false = true]), apply [ex_falso_quodlibet] to
@@ -537,8 +550,7 @@ Qed.
 Theorem not_true_is_false : forall b : bool,
   b <> true -> b = false.
 Proof.
-  intros b H.
-  destruct b eqn:HE.
+  intros b H. destruct b eqn:HE.
   - (* b = true *)
     unfold not in H.
     apply ex_falso_quodlibet.
@@ -577,12 +589,12 @@ Proof. apply I. Qed.
     uninteresting) to prove as a goal, and conversely it provides no
     interesting information when used as a hypothesis. *)
 
-(** However, [True] can be quite useful when defining complex [Prop]s
-    using conditionals or as a parameter to higher-order
-    [Prop]s. We'll come back to this later.
+(** However, [True] can be quite useful when defining complex [Prop]s using
+    conditionals or as a parameter to higher-order [Prop]s. We'll come back
+    to this later.
 
     For now, let's take a look at how we can use [True] and [False] to
-    achieve a similar effect as the [discriminate] tactic, without
+    achieve an effect similar to that of the [discriminate] tactic, without
     literally using [discriminate]. *)
 
 (** Pattern-matching lets us do different things for different
@@ -599,18 +611,35 @@ Definition disc_fn (n: nat) : Prop :=
 
 Theorem disc_example : forall n, ~ (O = S n).
 Proof.
-  intros n H1.
-  assert (H2 : disc_fn O). { simpl. apply I. }
-  rewrite H1 in H2. simpl in H2. apply H2.
+  intros n contra.
+  assert (H : disc_fn O). { simpl. apply I. }
+  rewrite contra in H. simpl in H. apply H.
 Qed.
 
-(** To generalize this to other constructors, we simply have to
-    provide the appropriate generalization of [disc_fn]. To generalize
-    it to other conclusions, we can use [exfalso] to replace them with
-    [False].
+(** To generalize this to other constructors, we simply have to provide an
+    appropriate variant of [disc_fn]. To generalize it to other
+    conclusions, we can use [exfalso] to replace them with [False].
 
-    The built-in [discriminate] tactic takes care of all this for
-    us! *)
+    The built-in [discriminate] tactic takes care of all this for us! *)
+
+(** **** Exercise: 2 stars, advanced, optional (nil_is_not_cons) *)
+
+(** Use the same technique as above to show that [nil <> x :: xs].
+    Do not use the [discriminate] tactic. *)
+
+Definition list_disc_fn (X : Type) (n: list X) : Prop :=
+  match n with
+  | nil => True
+  | cons _ _ => False
+  end.
+
+Theorem nil_is_not_cons : forall X (x : X) (xs : list X), ~ (nil = x :: xs).
+Proof.
+  intros X x xs contra.
+  assert (H : list_disc_fn X nil). { simpl. apply I. }
+  rewrite contra in H. simpl in H. apply H.
+Qed.
+(** [] *)
 
 (* ================================================================= *)
 (** ** Logical Equivalence *)
@@ -648,18 +677,20 @@ Proof.
     intros H. rewrite H. intros H'. discriminate H'.
 Qed.
 
-(** The [apply] tactic can also be used with [<->]. We can use
-    [apply] on an [<->] in either direction, without explicitly thinking
-    about the fact that it is really an [and] underneath. *)
+(** We can also use [apply] with an [<->] in either direction,
+    without explicitly thinking about the fact that it is really an
+    [and] underneath. *)
 
 Lemma apply_iff_example1:
   forall P Q R : Prop, (P <-> Q) -> (Q -> R) -> (P -> R).
-  intros P Q R Hiff H HP. apply H.  apply Hiff. apply HP.
+Proof.
+  intros P Q R Hiff H HP. apply H. apply Hiff. apply HP.
 Qed.
 
 Lemma apply_iff_example2:
   forall P Q R : Prop, (P <-> Q) -> (P -> R) -> (Q -> R).
-  intros P Q R Hiff H HQ. apply H.  apply Hiff. apply HQ.
+Proof.
+  intros P Q R Hiff H HQ. apply H. apply Hiff. apply HQ.
 Qed.
 
 (** **** Exercise: 1 star, standard, optional (iff_properties)
@@ -695,36 +726,38 @@ Proof.
     + left. apply HP1.
     + left. apply HP1.
     + left. apply HP2.
-    + right. apply and_intro. apply HQ. apply HR.
+    + right. apply conj. apply HQ. apply HR.
 Qed.
 (** [] *)
 
 (* ================================================================= *)
 (** ** Setoids and Logical Equivalence *)
 
-(** Some of Coq's tactics treat [iff] statements specially, avoiding
-    the need for some low-level proof-state manipulation.  In
-    particular, [rewrite] and [reflexivity] can be used with [iff]
-    statements, not just equalities.  To enable this behavior, we have
-    to import the Coq library that supports it: *)
+(** Some of Coq's tactics treat [iff] statements specially, avoiding some
+    low-level proof-state manipulation.  In particular, [rewrite] and
+    [reflexivity] can be used with [iff] statements, not just equalities.
+    To enable this behavior, we have to import the Coq library that
+    supports it: *)
 
 From Coq Require Import Setoids.Setoid.
 
-(** A "setoid" is a set equipped with an equivalence relation --
-    that is, a relation that is reflexive, symmetric, and transitive.
-    When two elements of a set are equivalent according to the
-    relation, [rewrite] can be used to replace one element with the
-    other. We've seen that already with the equality relation [=] in
-    Coq: when [x = y], we can use [rewrite] to replace [x] with [y],
-    or vice-versa.
+(** A "setoid" is a set equipped with an equivalence relation -- that
+    is, a relation that is reflexive, symmetric, and transitive.  When two
+    elements of a set are equivalent according to the relation, [rewrite]
+    can be used to replace one by the other.
+
+    We've seen this already with the equality relation [=] in Coq: when
+    [x = y], we can use [rewrite] to replace [x] with [y] or vice-versa.
 
     Similarly, the logical equivalence relation [<->] is reflexive,
-    symmetric, and transitive, so we can use it to replace one part of
-    a proposition with another: if [P <-> Q], then we can use
-    [rewrite] to replace [P] with [Q], or vice-versa. *)
+    symmetric, and transitive, so we can use it to replace one part of a
+    proposition with another: if [P <-> Q], then we can use [rewrite] to
+    replace [P] with [Q], or vice-versa. *)
 
 (** Here is a simple example demonstrating how these tactics work with
-    [iff].  First, let's prove a couple of basic iff equivalences. *)
+    [iff].
+
+    First, let's prove a couple of basic iff equivalences. *)
 
 Lemma mul_eq_0 : forall n m, n * m = 0 <-> n = 0 \/ m = 0.
 Proof.
@@ -747,10 +780,8 @@ Proof.
     + right. right. apply H.
 Qed.
 
-(** We can now use these facts with [rewrite] and [reflexivity]
-    to give smooth proofs of statements involving equivalences.  For
-    example, here is a ternary version of the previous [mult_0]
-    result: *)
+(** We can now use these facts with [rewrite] and [reflexivity] to
+    prove a ternary version of the [mult_eq_0] fact above: *)
 
 Lemma mul_eq_0_ternary :
   forall n m p, n * m * p = 0 <-> n = 0 \/ m = 0 \/ p = 0.
@@ -763,21 +794,21 @@ Qed.
 (* ================================================================= *)
 (** ** Existential Quantification *)
 
-(** Another basic logical connective is _existential
-    quantification_.  To say that there is some [x] of type [T] such
-    that some property [P] holds of [x], we write [exists x : T,
-    P]. As with [forall], the type annotation [: T] can be omitted if
-    Coq is able to infer from the context what the type of [x] should
-    be. *)
+(** Another basic logical connective is _existential quantification_.
+    To say that there is some [x] of type [T] such that some property [P]
+    holds of [x], we write [exists x : T, P]. As with [forall], the type
+    annotation [: T] can be omitted if Coq is able to infer from the
+    context what the type of [x] should be. *)
 
-(** To prove a statement of the form [exists x, P], we must show that
-    [P] holds for some specific choice of value for [x], known as the
-    _witness_ of the existential.  This is done in two steps: First,
-    we explicitly tell Coq which witness [t] we have in mind by
-    invoking the tactic [exists t].  Then we prove that [P] holds after
-    all occurrences of [x] are replaced by [t]. *)
+(** To prove a statement of the form [exists x, P], we must show that [P]
+    holds for some specific choice for [x], known as the _witness_ of the
+    existential.  This is done in two steps: First, we explicitly tell Coq
+    which witness [t] we have in mind by invoking the tactic [exists t].
+    Then we prove that [P] holds after all occurrences of [x] are replaced
+    by [t]. *)
 
 Definition Even x := exists n : nat, x = double n.
+Check Even : nat -> Prop.
 
 Lemma four_is_Even : Even 4.
 Proof.
@@ -793,7 +824,7 @@ Theorem exists_example_2 : forall n,
   (exists o, n = 2 + o).
 Proof.
   (* WORKED IN CLASS *)
-  intros n [m Hm]. (* note implicit [destruct] here *)
+  intros n [m Hm]. (* note the implicit [destruct] here *)
   exists (2 + m).
   apply Hm.  Qed.
 
@@ -856,6 +887,7 @@ Proof.
       rewrite add_comm in H.
       apply IHn in H. apply H.
 Qed.
+
 (** [] *)
 
 (* ################################################################# *)
@@ -905,10 +937,7 @@ Qed.
 (** (Notice the use of the empty pattern to discharge the last case
     _en passant_.) *)
 
-(** We can also prove more generic, higher-level lemmas about [In]. *)
-
-(** (Note how [In] starts out applied to a variable and only
-    gets expanded when we do case analysis on this variable.) *)
+(** We can also reason about more generic statements involving [In]. *)
 
 Theorem In_map :
   forall (A B : Type) (f : A -> B) (l : list A) (x : A),
@@ -925,32 +954,34 @@ Proof.
     + right. apply IHl'. apply H.
 Qed.
 
-(** This way of defining propositions recursively, though convenient
-    in some cases, also has some drawbacks.  In particular, it is
-    subject to Coq's usual restrictions regarding the definition of
-    recursive functions, e.g., the requirement that they be "obviously
-    terminating."  In the next chapter, we will see how to define
-    propositions _inductively_ -- a different technique with its own set
-    of strengths and limitations. *)
+(** (Note here how [In] starts out applied to a variable and only
+    gets expanded when we do case analysis on this variable.) *)
 
-(** **** Exercise: 3 stars, standard (In_map_iff) *)
+(** This way of defining propositions recursively is very convenient in
+    some cases, less so in others.  In particular, it is subject to Coq's
+    usual restrictions regarding the definition of recursive functions,
+    e.g., the requirement that they be "obviously terminating."
+
+    In the next chapter, we will see how to define propositions
+    _inductively_ -- a different technique with its own strengths and
+    limitations. *)
+
+(** **** Exercise: 2 stars, standard (In_map_iff) *)
 Theorem In_map_iff :
   forall (A B : Type) (f : A -> B) (l : list A) (y : B),
          In y (map f l) <->
          exists x, f x = y /\ In x l.
 Proof.
   intros A B f l y. split.
-  - (* -> *)
-    induction l as [| x' l'].
+  - induction l as [|x l' IHl'].
     + simpl. intros [].
     + simpl. intros [H | H].
       * (* f x' = y *)
-        exists x'. split. apply H. left. reflexivity.
+        exists x. split. apply H. left. reflexivity.
       * (* In y (map f l') *)
-        apply IHl' in H. destruct H as [x [H1 H2]].
-        exists x. split. apply H1. right. apply H2.
-  - (* <- *)
-    intros [x [H1 H2]]. rewrite <- H1. apply In_map. apply H2.
+        apply IHl' in H. destruct H as [x' [H1 H2]].
+        exists x'. split. apply H1. right. apply H2.
+  - intros [x [H1 H2]]. rewrite <- H1. apply In_map. apply H2.
 Qed.
 (** [] *)
 
@@ -974,9 +1005,9 @@ Qed.
 
 (** **** Exercise: 3 stars, standard, especially useful (All)
 
-    Recall that functions returning propositions can be seen as
+    We noted above that functions returning propositions can be seen as
     _properties_ of their arguments. For instance, if [P] has type
-    [nat -> Prop], then [P n] states that property [P] holds of [n].
+    [nat -> Prop], then [P n] says that property [P] holds of [n].
 
     Drawing inspiration from [In], write a recursive function [All]
     stating that some property [P] holds of all elements of a list
@@ -1020,11 +1051,10 @@ Qed.
 
 (** **** Exercise: 2 stars, standard, optional (combine_odd_even)
 
-    Complete the definition of the [combine_odd_even] function below.
-    It takes as arguments two properties of numbers, [Podd] and
-    [Peven], and it should return a property [P] such that [P n] is
-    equivalent to [Podd n] when [n] is [odd] and equivalent to [Peven n]
-    otherwise. *)
+    Complete the definition of [combine_odd_even] below.  It takes as
+    arguments two properties of numbers, [Podd] and [Peven], and it should
+    return a property [P] such that [P n] is equivalent to [Podd n] when
+    [n] is [odd] and equivalent to [Peven n] otherwise. *)
 
 Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop
   := fun n => if odd n then Podd n else Peven n.
@@ -1078,36 +1108,48 @@ Qed.
 (* ################################################################# *)
 (** * Applying Theorems to Arguments *)
 
-(** One feature that distinguishes Coq from some other popular
-    proof assistants (e.g., ACL2 and Isabelle) is that it treats
-    _proofs_ as first-class objects.
+(** One feature that distinguishes Coq from some other popular proof
+    assistants (e.g., ACL2 and Isabelle) is that it treats _proofs_ as
+    first-class objects.
 
-    There is a great deal to be said about this, but it is not
-    necessary to understand it all, in order to use Coq.  This section
-    gives just a taste, while a deeper exploration can be found in the
-    optional chapters [ProofObjects] and [IndPrinciples]. *)
+    There is a great deal to be said about this, but it is not necessary to
+    understand it all in order to use Coq.  This section gives just a
+    taste, leaving a deeper exploration for the optional chapters
+    [ProofObjects] and [IndPrinciples]. *)
 
-(** We have seen that we can use [Check] to ask Coq to print the type
-    of an expression.  We can also use it to ask what theorem a
-    particular identifier refers to. *)
+(** We have seen that we can use [Check] to ask Coq to check whether
+    an expression has a given type: *)
 
-Check plus     : nat -> nat -> nat.
-Check add_comm : forall n m : nat, n + m = m + n.
+Check plus : nat -> nat -> nat.
+Check @rev : forall X, list X -> list X.
 
-(** Coq checks the _statement_ of the [add_comm] theorem (or prints
-    it for us, if we leave off the part beginning with the colon) in
-    the same way that it checks the _type_ of any term (e.g., plus)
-    that we ask it to [Check].
+(** We can also use it to check the theorem a particular identifier
+    refers to: *)
+
+Check add_comm        : forall n m : nat, n + m = m + n.
+Check plus_id_example : forall n m : nat, n = m -> n + n = m + m.
+
+(** Coq checks the _statements_ of the [add_comm] and
+    [plus_id_example] theorems in the same way that it checks the
+    _type_ of any term (e.g., plus). If we leave off the colon and
+    type, Coq will print these types for us.
 
     Why? *)
 
 (** The reason is that the identifier [add_comm] actually refers to a
-    _proof object_, which represents a logical derivation establishing
-    of the truth of the statement [forall n m : nat, n + m = m + n].  The
-    type of this object is the proposition that it is a proof of. *)
+    _proof object_ -- a logical derivation establishing the truth of the
+    statement [forall n m : nat, n + m = m + n].  The type of this object
+    is the proposition that it is a proof of.
 
-(** Intuitively, this makes sense because the statement of a
-    theorem tells us what we can use that theorem for. *)
+    The type of an ordinary function tells us what we can do with it.
+       - If we have a term of type [nat -> nat -> nat], we can give it two
+         [nat]s as arguments and get a [nat] back.
+
+    Similarly, the statement of a theorem tells us what we can use that
+    theorem for.
+       - If we have a term of type [forall n m, n = m -> n + n = m + m] and we
+         provide it two numbers [n] and [m] and a third "argument" of type
+         [n = m], we can derive [n + n = m + m]. *)
 
 (** Operationally, this analogy goes even further: by applying a
     theorem as if it were a function, i.e., applying it to values and
@@ -1118,10 +1160,10 @@ Check add_comm : forall n m : nat, n + m = m + n.
 Lemma add_comm3 :
   forall x y z, x + (y + z) = (z + y) + x.
 
-(** It appears at first sight that we ought to be able to prove this
-    by rewriting with [add_comm] twice to make the two sides match.
-    The problem, however, is that the second [rewrite] will undo the
-    effect of the first. *)
+(** It appears at first sight that we ought to be able to prove this by
+    rewriting with [add_comm] twice to make the two sides match.  The
+    problem is that the second [rewrite] will undo the effect of the
+    first. *)
 
 Proof.
   intros x y z.
@@ -1130,10 +1172,10 @@ Proof.
   (* We are back where we started... *)
 Abort.
 
-(** We saw similar problems back in Chapter [Induction], and we saw one
-    way to work around them by using [assert] to derive a specialized
-    version of [add_comm] that can be used to rewrite exactly where
-    we want. *)
+(** We encountered similar issues back in [Induction], and we saw
+    one way to work around them by using [assert] to derive a specialized
+    version of [add_comm] that can be used to rewrite exactly where we
+    want. *)
 
 Lemma add_comm3_take2 :
   forall x y z, x + (y + z) = (z + y) + x.
@@ -1159,10 +1201,22 @@ Proof.
   reflexivity.
 Qed.
 
-(** Let's see another example of using a theorem like a function.
+(** If we really wanted, we could in fact do it for both rewrites. *)
 
-    The following theorem says: any list [l] containing some element
-    must be nonempty. *)
+Lemma add_comm3_take4 :
+  forall x y z, x + (y + z) = (z + y) + x.
+Proof.
+  intros x y z.
+  rewrite (add_comm x (y + z)).
+  rewrite (add_comm y z).
+  reflexivity.
+Qed.
+
+(** Here's another example of using a trivial theorem about lists like
+    a function.
+
+    The theorem says: if a list [l] contains some
+    element [x], then [l] must be nonempty. *)
 
 Theorem in_not_nil :
   forall A (x : A) (l : list A), In x l -> l <> [].
@@ -1176,9 +1230,9 @@ Qed.
 (** What makes this interesting is that one quantified variable
     ([x]) does not appear in the conclusion ([l <> []]). *)
 
-(** We should be able to use this theorem to prove the special case
-    where [x] is [42]. However, naively, the tactic [apply in_not_nil]
-    will fail because it cannot infer the value of [x]. *)
+(** Intuitively, we should be able to use this theorem to prove the special
+    case where [x] is [42]. However, simply invoking the tactic [apply
+    in_not_nil] will fail because it cannot infer the value of [x]. *)
 
 Lemma in_not_nil_42 :
   forall l : list nat, In 42 l -> l <> [].
@@ -1216,7 +1270,8 @@ Proof.
   apply H.
 Qed.
 
-(** Explicitly apply the lemma to a hypothesis. *)
+(** Explicitly apply the lemma to a hypothesis (causing the values of the
+    other parameters to be inferred). *)
 Lemma in_not_nil_42_take5 :
   forall l : list nat, In 42 l -> l <> [].
 Proof.
@@ -1249,159 +1304,9 @@ Qed.
 (** We will see many more examples in later chapters. *)
 
 (* ################################################################# *)
-(** * Coq vs. Set Theory *)
+(** * Working with Decidable Properties *)
 
-(** Coq's logical core, the _Calculus of Inductive
-    Constructions_, differs in some important ways from other formal
-    systems that are used by mathematicians to write down precise and
-    rigorous definitions and proofs -- in particular, from
-    Zermelo-Fraenkel Set Theory (ZFC), the most popular foundation for
-    paper-and-pencil mathematics.
-
-    We conclude this chapter with a brief discussion of some of the
-    most significant differences between the two worlds. *)
-
-(* ================================================================= *)
-(** ** Functional Extensionality *)
-
-(** Coq's logic is intentionally quite minimal.  This means that there
-    are occasionally some cases where translating standard
-    mathematical reasoning into Coq can be cumbersome or even
-    impossible, unless we enrich the core logic with additional
-    axioms. *)
-
-(** The equality assertions that we have seen so far mostly have
-    concerned elements of inductive types ([nat], [bool], etc.).  But,
-    since Coq's equality operator is polymorphic, we can use it at
-    _any_ type -- in particular, we can write propositions claiming
-    that two _functions_ are equal to each other: *)
-
-Example function_equality_ex1 :
-  (fun x => 3 + x) = (fun x => (pred 4) + x).
-Proof. reflexivity. Qed.
-
-(** In common mathematical practice, two functions [f] and [g] are
-    considered equal if they produce the same output on every input:
-
-    (forall x, f x = g x) -> f = g
-
-    This is known as the principle of _functional extensionality_. *)
-
-(** Informally, an "extensional property" is one that pertains to an
-    object's observable behavior.  Thus, functional extensionality
-    simply means that a function's identity is completely determined
-    by what we can observe from it -- i.e., the results we obtain
-    after applying it. *)
-
-(** However, functional extensionality is not part of Coq's built-in
-    logic.  This means that some apparently "obvious" propositions are
-    not provable. *)
-
-Example function_equality_ex2 :
-  (fun x => plus x 1) = (fun x => plus 1 x).
-Proof.
-   (* Stuck *)
-Abort.
-
-(** However, if we like, we can add functional extensionality to Coq's
-    core using the [Axiom] command. *)
-
-Axiom functional_extensionality : forall {X Y: Type}
-                                    {f g : X -> Y},
-  (forall (x:X), f x = g x) -> f = g.
-
-(** Defining something as an [Axiom] has the same effect as stating a
-    theorem and skipping its proof using [Admitted], but it alerts the
-    reader that this isn't just something we're going to come back and
-    fill in later! *)
-
-(** We can now invoke functional extensionality in proofs: *)
-
-Example function_equality_ex2 :
-  (fun x => plus x 1) = (fun x => plus 1 x).
-Proof.
-  apply functional_extensionality. intros x.
-  apply add_comm.
-Qed.
-
-(** Naturally, we must be careful when adding new axioms into Coq's
-    logic, as this can render it _inconsistent_ -- that is, it may
-    become possible to prove every proposition, including [False],
-    [2+2=5], etc.!
-
-    Unfortunately, there is no simple way of telling whether an axiom
-    is safe to add: hard work by highly trained mathematicians is
-    often required to establish the consistency of any particular
-    combination of axioms.
-
-    Fortunately, it is known that adding functional extensionality, in
-    particular, _is_ consistent. *)
-
-(** To check whether a particular proof relies on any additional
-    axioms, use the [Print Assumptions] command:
-    [Print Assumptions function_equality_ex2]. *)
-
-(* ===>
-     Axioms:
-     functional_extensionality :
-         forall (X Y : Type) (f g : X -> Y),
-                (forall x : X, f x = g x) -> f = g
-
-    (If you try this yourself, you may also see [add_comm] listed as
-    an assumption, depending on whether the copy of [Tactics.v] in the
-    local directory has the proof of [add_comm] filled in.) *)
-
-(** **** Exercise: 4 stars, standard (tr_rev_correct)
-
-    One problem with the definition of the list-reversing function
-    [rev] that we have is that it performs a call to [app] on each
-    step; running [app] takes time asymptotically linear in the size
-    of the list, which means that [rev] is asymptotically quadratic.
-    We can improve this with the following definitions: *)
-
-Fixpoint rev_append {X} (l1 l2 : list X) : list X :=
-  match l1 with
-  | [] => l2
-  | x :: l1' => rev_append l1' (x :: l2)
-  end.
-
-Definition tr_rev {X} (l : list X) : list X :=
-  rev_append l [].
-
-(** This version of [rev] is said to be _tail-recursive_, because the
-    recursive call to the function is the last operation that needs to
-    be performed (i.e., we don't have to execute [++] after the
-    recursive call); a decent compiler will generate very efficient
-    code in this case.
-
-    Prove that the two definitions are indeed equivalent. *)
-
-Lemma rev_append_nil : forall X (l1 l2 : list X), rev_append l1 l2 = rev_append l1 [] ++ l2.
-Proof.
-  intros X l1 l2.
-  generalize dependent l2.
-  induction l1.
-  - reflexivity.
-  - intros l2.
-    simpl.
-    rewrite -> IHl1. rewrite -> (IHl1 [x]). rewrite <- app_assoc. reflexivity.
-Qed.
-
-Theorem tr_rev_correct : forall X, @tr_rev X = @rev X.
-Proof.
-  intros X.
-  apply functional_extensionality.
-  intros l.
-  induction l.
-  + reflexivity.
-  + simpl. rewrite <- IHl. unfold tr_rev. simpl. apply rev_append_nil.
-Qed.
-(** [] *)
-
-(* ================================================================= *)
-(** ** Propositions vs. Booleans
-
-    We've seen two different ways of expressing logical claims in Coq:
+(** We've seen two different ways of expressing logical claims in Coq:
     with _booleans_ (of type [bool]), and with _propositions_ (of type
     [Prop]).
 
@@ -1409,46 +1314,44 @@ Qed.
 
                                            bool     Prop
                                            ====     ====
-           decidable?                       yes       no
+           decidable?                      yes       no
            useable with match?             yes       no
-           equalities rewritable?          no        yes
+           works with rewrite tactic?      no        yes
 *)
 
-(** The most essential difference between the two worlds is
-    _decidability_.  Every Coq expression of type [bool] can be
-    simplified in a finite number of steps to either [true] or
-    [false] -- i.e., there is a terminating mechanical procedure for
-    deciding whether or not it is [true].  This means that, for
-    example, the type [nat -> bool] is inhabited only by functions
-    that, given a [nat], always return either [true] or [false]; and
-    this, in turn, means that there is no function in [nat -> bool]
-    that checks whether a given number is the code of a terminating
-    Turing machine.  By contrast, the type [Prop] includes both
-    decidable and undecidable mathematical propositions; in
-    particular, the type [nat -> Prop] does contain functions
-    representing properties like "the nth Turing machine halts."
+(** The crucial difference between the two worlds is _decidability_.
+    Every (closed) Coq expression of type [bool] can be simplified in a
+    finite number of steps to either [true] or [false] -- i.e., there is a
+    terminating mechanical procedure for deciding whether or not it is
+    [true].
 
-    The second row in the table above follow directly from this
-    essential difference.  To evaluate a pattern match (or
-    conditional) on a boolean, we need to know whether the scrutinee
-    evaluates to [true] or [false]; this only works for [bool], not
-    [Prop].  The third row highlights another important practical
-    difference: equality functions like [eqb_nat] that return a
-    boolean cannot be used directly to justify rewriting, whereas
-    the propositional [eq] can be. *)
+    This means that, for example, the type [nat -> bool] is inhabited only
+    by functions that, given a [nat], always yield either [true] or [false]
+    in finite time; and this, in turn, means (by a standard computability
+    argument) that there is _no_ function in [nat -> bool] that checks
+    whether a given number is the code of a terminating Turing machine.
 
-(* ================================================================= *)
-(** ** Working with Decidable Properties *)
+    By contrast, the type [Prop] includes both decidable and undecidable
+    mathematical propositions; in particular, the type [nat -> Prop] does
+    contain functions representing properties like "the nth Turing machine
+    halts."
 
-(** Since [Prop] includes _both_ decidable and undecidable properties,
-    we have two choices when when we want to formalize a property that
-    happens to be decidable: we can express it as a boolean
-    computation or as a function into [Prop].
+    The second row in the table follows directly from this essential
+    difference.  To evaluate a pattern match (or conditional) on a boolean,
+    we need to know whether the scrutinee evaluates to [true] or [false];
+    this only works for [bool], not [Prop].
 
-    For instance, to claim that a number [n] is even, we can say
-    either... *)
+    The third row highlights another important practical difference:
+    equality functions like [eqb_nat] that return a boolean cannot be used
+    directly to justify rewriting with the [rewrite] tactic; propositional
+    equality is required for this. *)
 
-(** ... that [even n] evaluates to [true]... *)
+
+(** Since [Prop] includes _both_ decidable and undecidable properties, we
+    have two options when we want to formalize a property that happens to
+    be decidable: we can express it either as a boolean computation or as a
+    function into [Prop]. *)
+
 Example even_42_bool : even 42 = true.
 Proof. reflexivity. Qed.
 
@@ -1493,7 +1396,7 @@ Proof.
   - intros [k Hk]. rewrite Hk. apply even_double.
 Qed.
 
-(** In view of this theorem, we say that the boolean computation
+(** In view of this theorem, we can say that the boolean computation
     [even n] is _reflected_ in the truth of the proposition
     [exists k, n = double k]. *)
 
@@ -1501,7 +1404,7 @@ Qed.
     say either
       - (1) that [n =? m] returns [true], or
       - (2) that [n = m].
-    Again, these two notions are equivalent. *)
+    Again, these two notions are equivalent: *)
 
 Theorem eqb_eq : forall n1 n2 : nat,
   n1 =? n2 = true <-> n1 = n2.
@@ -1511,52 +1414,50 @@ Proof.
   - intros H. rewrite H. rewrite eqb_refl. reflexivity.
 Qed.
 
-(** Even when the boolean and propositional formulations of a claim
-    are equivalent from a purely _logical_ perspective, they are often
-    not equivalent from the point of view of convenience for some
-    specific purpose. *)
+(** Even when the boolean and propositional formulations of a claim are
+    interchangeable from a purely logical perspective, it can be more
+    convenient to use one over the other. *)
 
-(** In the case of even numbers above, when proving the
-    backwards direction of [even_bool_prop] (i.e., [even_double],
-    going from the propositional to the boolean claim), we used a
-    simple induction on [k].  On the other hand, the converse (the
-    [even_double_conv] exercise) required a clever generalization,
-    since we can't directly prove [(even n = true) -> Even n]. *)
-
-(** Similarly, we cannot _test_ whether or not a [Prop] is
-    true in a function definition; as a consequence, the following
-    code fragment is rejected: *)
+(** For example, there is no effective way to _test_ whether or not a
+    [Prop] is true in a function definition; thus the
+    following definition is rejected: *)
 
 Fail
 Definition is_even_prime n :=
   if n = 2 then true
   else false.
 
-(** Coq complains that [n = 2] has type [Prop], while it expects
-    an element of [bool] (or some other inductive type with two
-    elements).  The reason has to do with the _computational_ nature
-    of Coq's core language, which is designed so that every function
-    it can express is computable and total.  One reason for this is to
-    allow the extraction of executable programs from Coq developments.
-    As a consequence, [Prop] in Coq does _not_ have a universal case
-    analysis operation telling whether any given proposition is true
-    or false, since such an operation would allow us to write
-    non-computable functions.
+(** Coq complains that [n = 2] has type [Prop], while it expects an
+    element of [bool] (or some other inductive type with two constructors).
+    This has to do with the _computational_ nature of Coq's core language,
+    which is designed so that every function it can express is computable
+    and total.  One reason for this is to allow the extraction of
+    executable programs from Coq developments.  As a consequence, [Prop] in
+    Coq does _not_ have a universal case analysis operation telling whether
+    any given proposition is true or false, since such an operation would
+    allow us to write non-computable functions.  *)
 
-    Beyond the fact that non-computable properties are impossible in
+(** Rather, we have to state this definition using a boolean equality
+    test. *)
+
+Definition is_even_prime n :=
+  if n =? 2 then true
+  else false.
+
+(** Beyond the fact that non-computable properties are impossible in
     general to phrase as boolean computations, even many _computable_
     properties are easier to express using [Prop] than [bool], since
     recursive function definitions in Coq are subject to significant
-    restrictions.  For instance, the next chapter shows how to define
-    the property that a regular expression matches a given string
-    using [Prop].  Doing the same with [bool] would amount to writing
-    a regular expression matching algorithm, which would be more
-    complicated, harder to understand, and harder to reason about than
-    a simple (non-algorithmic) definition of this property.
+    restrictions.  For instance, the next chapter shows how to define the
+    property that a regular expression matches a given string using [Prop].
+    Doing the same with [bool] would amount to writing a regular expression
+    matching algorithm, which would be more complicated, harder to
+    understand, and harder to reason about than a simple (non-algorithmic)
+    definition of this property.
 
-    Conversely, an important side benefit of stating facts using
-    booleans is enabling some proof automation through computation
-    with Coq terms, a technique known as _proof by reflection_.
+    Conversely, an important side benefit of stating facts using booleans
+    is enabling some proof automation through computation with Coq terms, a
+    technique known as _proof by reflection_.
 
     Consider the following statement: *)
 
@@ -1567,41 +1468,51 @@ Example even_1000 : Even 1000.
 
 Proof. unfold Even. exists 500. reflexivity. Qed.
 
-(** The proof of the corresponding boolean statement is even
-    simpler, because we don't have to invent the witness: Coq's
-    computation mechanism does it for us! *)
+(** The proof of the corresponding boolean statement is simpler, because we
+    don't have to invent the witness [500]: Coq's computation mechanism
+    does it for us! *)
 
 Example even_1000' : even 1000 = true.
 Proof. reflexivity. Qed.
 
-(** What is interesting is that, since the two notions are equivalent,
-    we can use the boolean formulation to prove the other one without
-    mentioning the value 500 explicitly: *)
+(** Now, the useful observation is that, since the two notions are
+    equivalent, we can use the boolean formulation to prove the other one
+    without mentioning the value 500 explicitly: *)
 
 Example even_1000'' : Even 1000.
 Proof. apply even_bool_prop. reflexivity. Qed.
 
 (** Although we haven't gained much in terms of proof-script
-    size in this case, larger proofs can often be made considerably
+    line count in this case, larger proofs can often be made considerably
     simpler by the use of reflection.  As an extreme example, a famous
     Coq proof of the even more famous _4-color theorem_ uses
     reflection to reduce the analysis of hundreds of different cases
     to a boolean computation. *)
 
-(** Another notable difference is that the negation of a "boolean
-    fact" is straightforward to state and prove: simply flip the
-    expected boolean result. *)
+(** Another advantage of booleans is that the negation of a "boolean fact"
+    is straightforward to state and prove: simply flip the expected boolean
+    result. *)
 
 Example not_even_1001 : even 1001 = false.
 Proof.
-  (* WORKED IN CLASS *)
   reflexivity.
 Qed.
 
-(** In contrast, propositional negation can be more difficult
-    to work with directly. *)
+(** In contrast, propositional negation can be difficult to work with
+    directly.
+
+    For example, suppose we state the non-evenness of [1001]
+    propositionally: *)
 
 Example not_even_1001' : ~(Even 1001).
+
+(** Proving this directly -- by assuming that there is some [n] such that
+    [1001 = double n] and then somehow reasoning to a contradiction --
+    would be rather complicated.
+
+    But if we convert it to a claim about the boolean [even] function, we
+    can let Coq do the work for us. *)
+
 Proof.
   (* WORKED IN CLASS *)
   rewrite <- even_bool_prop.
@@ -1611,30 +1522,31 @@ Proof.
   discriminate H.
 Qed.
 
-(** Equality provides a complementary example, where it is sometimes
-    easier to work in the propositional world.
+(** Conversely, there are complementary situations where it can be easier
+    to work with propositions rather than booleans.
 
-    Knowing that [(n =? m) = true] is generally of little direct help in
-    the middle of a proof involving [n] and [m]; however, if we
-    convert the statement to the equivalent form [n = m], we can
-    rewrite with it. *)
+    In particular, knowing that [(n =? m) = true] is generally of little
+    direct help in the middle of a proof involving [n] and [m], but if we
+    convert the statement to the equivalent form [n = m], we can rewrite
+    with it. *)
 
 Lemma plus_eqb_example : forall n m p : nat,
   n =? m = true -> n + p =? m + p = true.
 Proof.
   (* WORKED IN CLASS *)
   intros n m p H.
-    rewrite eqb_eq in H.
+  rewrite eqb_eq in H.
   rewrite H.
   rewrite eqb_eq.
   reflexivity.
 Qed.
 
-(** We won't discuss reflection any further for the moment, but it
-    serves as a good example showing the different strengths of
-    booleans and general propositions; being able to cross back and
-    forth between the boolean and propositional worlds will often be
-    convenient in later chapters. *)
+(** We won't discuss reflection any further for the moment, but
+    it serves as a good example showing the different strengths of
+    booleans and general propositions.
+
+    Being able to cross back and forth between the boolean and
+    propositional worlds will often be convenient in later chapters. *)
 
 (** **** Exercise: 2 stars, standard (logical_connectives)
 
@@ -1773,6 +1685,166 @@ Qed.
 
     [] *)
 
+(* ################################################################# *)
+(** * The Logic of Coq *)
+
+(** Coq's logical core, the _Calculus of Inductive
+    Constructions_, differs in some important ways from other formal
+    systems that are used by mathematicians to write down precise and
+    rigorous definitions and proofs -- in particular from
+    Zermelo-Fraenkel Set Theory (ZFC), the most popular foundation for
+    paper-and-pencil mathematics.
+
+    We conclude this chapter with a brief discussion of some of the
+    most significant differences between these two worlds. *)
+
+(* ================================================================= *)
+(** ** Functional Extensionality *)
+
+(** Coq's logic is quite minimalistic.  This means that one occasionally
+    encounters cases where translating standard mathematical reasoning into
+    Coq is cumbersome -- or even impossible -- unless we enrich its core
+    logic with additional axioms. *)
+
+(** For example, the equality assertions that we have seen so far
+    mostly have concerned elements of inductive types ([nat], [bool],
+    etc.).  But, since Coq's equality operator is polymorphic, we can use
+    it at _any_ type -- in particular, we can write propositions claiming
+    that two _functions_ are equal to each other:
+
+    In certain cases Coq can successfully prove equality propositions stating
+    that two _functions_ are equal to each other: **)
+
+Example function_equality_ex1 :
+  (fun x => 3 + x) = (fun x => (pred 4) + x).
+Proof. reflexivity. Qed.
+
+(** This works when Coq can simplify the functions to the same expression,
+    but this doesn't always happen. **)
+
+(** These two functions are equal just by simplification, but in general
+    functions can be equal for more interesting reasons.
+
+    In common mathematical practice, two functions [f] and [g] are
+    considered equal if they produce the same output on every input:
+
+    (forall x, f x = g x) -> f = g
+
+    This is known as the principle of _functional extensionality_. *)
+
+(** (Informally, an "extensional property" is one that pertains to an
+    object's observable behavior.  Thus, functional extensionality
+    simply means that a function's identity is completely determined
+    by what we can observe from it -- i.e., the results we obtain
+    after applying it.) *)
+
+(** However, functional extensionality is not part of Coq's built-in logic.
+    This means that some intuitively obvious propositions are not
+    provable. *)
+
+Example function_equality_ex2 :
+  (fun x => plus x 1) = (fun x => plus 1 x).
+Proof.
+  Fail reflexivity. Fail rewrite add_comm.
+  (* Stuck *)
+Abort.
+
+(** However, if we like, we can add functional extensionality to Coq
+    using the [Axiom] command. *)
+
+Axiom functional_extensionality : forall {X Y: Type}
+                                    {f g : X -> Y},
+  (forall (x:X), f x = g x) -> f = g.
+
+(** Defining something as an [Axiom] has the same effect as stating a
+    theorem and skipping its proof using [Admitted], but it alerts the
+    reader that this isn't just something we're going to come back and
+    fill in later! *)
+
+(** We can now invoke functional extensionality in proofs: *)
+
+Example function_equality_ex2 :
+  (fun x => plus x 1) = (fun x => plus 1 x).
+Proof.
+  apply functional_extensionality. intros x.
+  apply add_comm.
+Qed.
+
+(** Naturally, we need to be quite careful when adding new axioms into
+    Coq's logic, as this can render it _inconsistent_ -- that is, it may
+    become possible to prove every proposition, including [False], [2+2=5],
+    etc.!
+
+    In general, there is no simple way of telling whether an axiom is safe
+    to add: hard work by highly trained mathematicians is often required to
+    establish the consistency of any particular combination of axioms.
+
+    Fortunately, it is known that adding functional extensionality, in
+    particular, _is_ consistent. *)
+
+(** To check whether a particular proof relies on any additional
+    axioms, use the [Print Assumptions] command:
+
+      Print Assumptions function_equality_ex2
+*)
+(* ===>
+     Axioms:
+     functional_extensionality :
+         forall (X Y : Type) (f g : X -> Y),
+                (forall x : X, f x = g x) -> f = g
+
+    (If you try this yourself, you may also see [add_comm] listed as
+    an assumption, depending on whether the copy of [Tactics.v] in the
+    local directory has the proof of [add_comm] filled in.) *)
+
+(** **** Exercise: 4 stars, standard (tr_rev_correct)
+
+    One problem with the definition of the list-reversing function [rev]
+    that we have is that it performs a call to [app] on each step.  Running
+    [app] takes time asymptotically linear in the size of the list, which
+    means that [rev] is asymptotically quadratic.
+
+    We can improve this with the following two-argument definition: *)
+
+Fixpoint rev_append {X} (l1 l2 : list X) : list X :=
+  match l1 with
+  | [] => l2
+  | x :: l1' => rev_append l1' (x :: l2)
+  end.
+
+Definition tr_rev {X} (l : list X) : list X :=
+  rev_append l [].
+
+(** This version of [rev] is said to be _tail-recursive_, because the
+    recursive call to the function is the last operation that needs to be
+    performed (i.e., we don't have to execute [++] after the recursive
+    call); a decent compiler will generate very efficient code in this
+    case.
+
+    Prove that the two definitions are indeed equivalent. *)
+
+Lemma rev_append_nil : forall X (l1 l2 : list X), rev_append l1 l2 = rev_append l1 [] ++ l2.
+Proof.
+  intros X l1 l2.
+  generalize dependent l2.
+  induction l1.
+  - reflexivity.
+  - intros l2.
+    simpl.
+    rewrite -> IHl1. rewrite -> (IHl1 [x]). rewrite <- app_assoc. reflexivity.
+Qed.
+
+Theorem tr_rev_correct : forall X, @tr_rev X = @rev X.
+Proof.
+  intros X.
+  apply functional_extensionality.
+  intros l.
+  induction l.
+  + reflexivity.
+  + simpl. rewrite <- IHl. unfold tr_rev. simpl. apply rev_append_nil.
+Qed.
+(** [] *)
+
 (* ================================================================= *)
 (** ** Classical vs. Constructive Logic *)
 
@@ -1795,9 +1867,9 @@ Definition excluded_middle := forall P : Prop,
     information to mechanically decide whether [P] holds or not inside
     a function. *)
 
-(** However, if we happen to know that [P] is reflected in some
-    boolean term [b], then knowing whether it holds or not is trivial:
-    we just have to check the value of [b]. *)
+(** In the special case where we happen to know that [P] is reflected in
+    some boolean term [b], knowing whether it holds or not is trivial: we
+    just have to check the value of [b]. *)
 
 Theorem restricted_excluded_middle : forall P b,
   (P <-> b = true) -> P \/ ~ P.
@@ -1819,13 +1891,14 @@ Proof.
   apply eqb_eq.
 Qed.
 
+(** Sadly, this trick only works for decidable propositions. *)
+
 (** It may seem strange that the general excluded middle is not
-    available by default in Coq, since it is a standard feature of
-    familiar logics like ZFC.  But there is a distinct advantage in
-    not assuming the excluded middle: statements in Coq make stronger
-    claims than the analogous statements in standard mathematics.
-    Notably, when there is a Coq proof of [exists x, P x], it is
-    always possible to explicitly exhibit a value of [x] for which we
+    available by default in Coq, since it is a standard feature of familiar
+    logics like ZFC.  But there is a distinct advantage in _not_ assuming
+    the excluded middle: statements in Coq make stronger claims than the
+    analogous statements in standard mathematics.  Notably, a Coq proof of
+    [exists x, P x] always includes a particular value of [x] for which we
     can prove [P x] -- in other words, every proof of existence is
     _constructive_. *)
 
@@ -1836,55 +1909,51 @@ Qed.
     excluded middle does hold for arbitrary propositions, are referred
     to as _classical_. *)
 
-(** The following example illustrates why assuming the excluded middle
-    may lead to non-constructive proofs:
+(** The following example illustrates why assuming the excluded middle may
+    lead to non-constructive proofs:
 
-    _Claim_: There exist irrational numbers [a] and [b] such that
-    [a ^ b] ([a] to the power [b]) is rational.
+    _Claim_: There exist irrational numbers [a] and [b] such that [a ^
+    b] ([a] to the power [b]) is rational.
 
-    _Proof_: It is not difficult to show that [sqrt 2] is irrational.
-    If [sqrt 2 ^ sqrt 2] is rational, it suffices to take [a = b =
-    sqrt 2] and we are done.  Otherwise, [sqrt 2 ^ sqrt 2] is
-    irrational.  In this case, we can take [a = sqrt 2 ^ sqrt 2] and
-    [b = sqrt 2], since [a ^ b = sqrt 2 ^ (sqrt 2 * sqrt 2) = sqrt 2 ^
-    2 = 2].  []
+    _Proof_: It is not difficult to show that [sqrt 2] is irrational.  If
+    [sqrt 2 ^ sqrt 2] is rational, it suffices to take [a = b = sqrt 2] and
+    we are done.  Otherwise, [sqrt 2 ^ sqrt 2] is irrational.  In this
+    case, we can take [a = sqrt 2 ^ sqrt 2] and [b = sqrt 2], since [a ^ b
+    = sqrt 2 ^ (sqrt 2 * sqrt 2) = sqrt 2 ^ 2 = 2].  []
 
-    Do you see what happened here?  We used the excluded middle to
-    consider separately the cases where [sqrt 2 ^ sqrt 2] is rational
-    and where it is not, without knowing which one actually holds!
-    Because of that, we finish the proof knowing that such [a] and [b]
-    exist but we cannot determine what their actual values are (at least,
-    not from this line of argument).
+    Do you see what happened here?  We used the excluded middle to consider
+    separately the cases where [sqrt 2 ^ sqrt 2] is rational and where it
+    is not, without knowing which one actually holds!  Because of this, we
+    finish the proof knowing that such [a] and [b] exist, but not knowing
+    their actual values.
 
-    As useful as constructive logic is, it does have its limitations:
-    There are many statements that can easily be proven in classical
-    logic but that have only much more complicated constructive proofs, and
-    there are some that are known to have no constructive proof at
-    all!  Fortunately, like functional extensionality, the excluded
-    middle is known to be compatible with Coq's logic, allowing us to
-    add it safely as an axiom.  However, we will not need to do so
-    here: the results that we cover can be developed entirely
-    within constructive logic at negligible extra cost.
+    As useful as constructive logic is, it does have its limitations: There
+    are many statements that can easily be proven in classical logic but
+    that have only much more complicated constructive proofs, and there are
+    some that are known to have no constructive proof at all!  Fortunately,
+    like functional extensionality, the excluded middle is known to be
+    compatible with Coq's logic, allowing us to add it safely as an axiom.
+    However, we will not need to do so here: the results that we cover can
+    be developed entirely within constructive logic at negligible extra
+    cost.
 
-    It takes some practice to understand which proof techniques must
-    be avoided in constructive reasoning, but arguments by
-    contradiction, in particular, are infamous for leading to
-    non-constructive proofs.  Here's a typical example: suppose that
-    we want to show that there exists [x] with some property [P],
-    i.e., such that [P x].  We start by assuming that our conclusion
-    is false; that is, [~ exists x, P x]. From this premise, it is not
-    hard to derive [forall x, ~ P x].  If we manage to show that this
-    intermediate fact results in a contradiction, we arrive at an
-    existence proof without ever exhibiting a value of [x] for which
-    [P x] holds!
+    It takes some practice to understand which proof techniques must be
+    avoided in constructive reasoning, but arguments by contradiction, in
+    particular, are infamous for leading to non-constructive proofs.
+    Here's a typical example: suppose that we want to show that there
+    exists [x] with some property [P], i.e., such that [P x].  We start by
+    assuming that our conclusion is false; that is, [~ exists x, P x]. From
+    this premise, it is not hard to derive [forall x, ~ P x].  If we manage
+    to show that this intermediate fact results in a contradiction, we
+    arrive at an existence proof without ever exhibiting a value of [x] for
+    which [P x] holds!
 
-    The technical flaw here, from a constructive standpoint, is that
-    we claimed to prove [exists x, P x] using a proof of
-    [~ ~ (exists x, P x)].  Allowing ourselves to remove double
-    negations from arbitrary statements is equivalent to assuming the
-    excluded middle, as shown in one of the exercises below.  Thus,
-    this line of reasoning cannot be encoded in Coq without assuming
-    additional axioms. *)
+    The technical flaw here, from a constructive standpoint, is that we
+    claimed to prove [exists x, P x] using a proof of [~ ~ (exists x, P x)].
+    Allowing ourselves to remove double negations from arbitrary
+    statements is equivalent to assuming the excluded middle law, as shown
+    in one of the exercises below.  Thus, this line of reasoning cannot be
+    encoded in Coq without assuming additional axioms. *)
 
 (** **** Exercise: 3 stars, standard (excluded_middle_irrefutable)
 
@@ -1899,7 +1968,7 @@ Qed.
     is safe to add [P \/ ~P] as an axiom for any particular [P].
 
     Succinctly: for any proposition P,
-      [Coq is consistent ==> (Coq + P \/ ~P) is consistent]. *)
+        [Coq is consistent ==> (Coq + P \/ ~P) is consistent]. *)
 
 Theorem excluded_middle_irrefutable: forall (P : Prop),
   ~ ~ (P \/ ~ P).
@@ -1937,14 +2006,14 @@ Qed.
 
 (** **** Exercise: 5 stars, standard, optional (classical_axioms)
 
-    For those who like a challenge, here is an exercise taken from the
+    For those who like a challenge, here is an exercise adapted from the
     Coq'Art book by Bertot and Casteran (p. 123).  Each of the
-    following four statements, together with [excluded_middle], can be
+    following five statements, together with [excluded_middle], can be
     considered as characterizing classical logic.  We can't prove any
     of them in Coq, but we can consistently add any one of them as an
     axiom if we wish to work in classical logic.
 
-    Prove that all five propositions (these four plus [excluded_middle])
+    Prove that all six propositions (these five plus [excluded_middle])
     are equivalent.
 
     Hint: Rather than considering all pairs of statements pairwise,
@@ -1962,6 +2031,9 @@ Definition de_morgan_not_and_not := forall P Q:Prop,
 
 Definition implies_to_or := forall P Q:Prop,
   (P -> Q) -> (~P \/ Q).
+
+Definition consequentia_mirabilis := forall P:Prop,
+  (~P -> P) -> P.
 
 Theorem peirce_double_negation_elimination :
   peirce -> double_negation_elimination.
@@ -2006,7 +2078,7 @@ Proof.
   apply or_commut. apply Hi. intros HP. apply HP.
 Qed.
 
-Theorem  excluded_middle_peirce :
+Theorem excluded_middle_peirce :
   excluded_middle -> peirce.
 Proof.
   unfold excluded_middle.
@@ -2017,6 +2089,12 @@ Proof.
   - apply HPQ. intros HP. exfalso. apply HnP. apply HP.
 Qed.
 
-(** [] *)
+Theorem peirce_consequentia_mirabilis :
+  peirce -> consequentia_mirabilis.
+Proof.
+  intros Peirce.
+  intros P H.
+  apply Peirce with (P:=P) (Q:=False). apply H.
+Qed.
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
