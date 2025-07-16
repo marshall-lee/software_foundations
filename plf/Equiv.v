@@ -2,14 +2,14 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From PLF Require Import Maps.
-From Coq Require Import Bool.Bool.
-From Coq Require Import Arith.Arith.
+From Coq Require Import Bool.
+From Coq Require Import Arith.
 From Coq Require Import Init.Nat.
-From Coq Require Import Arith.PeanoNat. Import Nat.
-From Coq Require Import Arith.EqNat.
+From Coq Require Import PeanoNat. Import Nat.
+From Coq Require Import EqNat.
 From Coq Require Import Lia.
-From Coq Require Import Lists.List. Import ListNotations.
-From Coq Require Import Logic.FunctionalExtensionality.
+From Coq Require Import List. Import ListNotations.
+From Coq Require Import FunctionalExtensionality.
 From PLF Require Export Imp.
 Set Default Goal Selector "!".
 
@@ -1570,7 +1570,7 @@ Proof.
       induction a2.
       * (* ANum *) reflexivity.
       * (* AId *) unfold subst_aexp. destruct (x1 =? x)%string eqn:E.
-        ** assert (x1 = x). { apply String.eqb_eq. apply E. }.
+        ** assert (x1 = x). { apply String.eqb_eq. apply E. }
             rewrite <- H0. simpl. rewrite t_update_eq.
             apply aeval_weakening. assumption.
         ** reflexivity.
@@ -1583,7 +1583,7 @@ Proof.
       induction a2.
       * (* ANum *) reflexivity.
       * (* AId *) unfold subst_aexp. destruct (x1 =? x)%string eqn:E.
-        ** assert (x1 = x). { apply String.eqb_eq. apply E. }.
+        ** assert (x1 = x). { apply String.eqb_eq. apply E. }
             rewrite <- H0. simpl. rewrite t_update_eq.
             symmetry. apply aeval_weakening. assumption.
         ** reflexivity.
@@ -2167,4 +2167,4 @@ Proof.
 Qed.
 (** [] *)
 
-(* 2024-01-02 21:54 *)
+(* 2025-01-06 19:48 *)
