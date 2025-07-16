@@ -47,8 +47,10 @@ idtac "#> TypecheckerExtensions.type_checking_sound".
 idtac "Possible points: 2".
 check_type @TypecheckerExtensions.type_checking_sound (
 (forall (Gamma : MoreStlc.STLCExtended.context)
-   (t : MoreStlc.STLCExtended.tm) (T : MoreStlc.STLCExtended.ty),
- TypecheckerExtensions.type_check Gamma t = return T ->
+   (t : MoreStlc.STLCExtended.tm) (T : MoreStlc.STLCExtended.ty)
+   (_ : @eq (option MoreStlc.STLCExtended.ty)
+          (TypecheckerExtensions.type_check Gamma t)
+          (@Some MoreStlc.STLCExtended.ty T)),
  MoreStlc.STLCExtended.has_type Gamma t T)).
 idtac "Assumptions:".
 Abort.
@@ -63,9 +65,11 @@ idtac "#> TypecheckerExtensions.type_checking_complete".
 idtac "Possible points: 2".
 check_type @TypecheckerExtensions.type_checking_complete (
 (forall (Gamma : MoreStlc.STLCExtended.context)
-   (t : MoreStlc.STLCExtended.tm) (T : MoreStlc.STLCExtended.ty),
- MoreStlc.STLCExtended.has_type Gamma t T ->
- TypecheckerExtensions.type_check Gamma t = return T)).
+   (t : MoreStlc.STLCExtended.tm) (T : MoreStlc.STLCExtended.ty)
+   (_ : MoreStlc.STLCExtended.has_type Gamma t T),
+ @eq (option MoreStlc.STLCExtended.ty)
+   (TypecheckerExtensions.type_check Gamma t)
+   (@Some MoreStlc.STLCExtended.ty T))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions TypecheckerExtensions.type_checking_complete.
@@ -106,6 +110,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2024-01-03 15:05 *)
+(* 2025-01-06 19:49 *)
 
-(* 2024-01-03 15:05 *)
+(* 2025-01-06 19:49 *)

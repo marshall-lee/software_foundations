@@ -28,7 +28,7 @@ Import STLC.
     context. *)
 
 Lemma canonical_forms_bool : forall t,
-  empty |-- t \in Bool ->
+  <{ empty |-- t \in Bool }> ->
   value t ->
   (t = <{true}>) \/ (t = <{false}>).
 Proof.
@@ -38,7 +38,7 @@ Proof.
 Qed.
 
 Lemma canonical_forms_fun : forall t T1 T2,
-  empty |-- t \in (T1 -> T2) ->
+  <{ empty |-- t \in T1 -> T2 }> ->
   value t ->
   exists x u, t = <{\x:T1, u}>.
 Proof.
@@ -58,7 +58,7 @@ Qed.
     the formal version. *)
 
 Theorem progress : forall t T,
-  empty |-- t \in T ->
+  <{ empty |-- t \in T }> ->
   value t \/ exists t', t --> t'.
 
 (** _Proof_: By induction on the derivation of [|-- t \in T].
@@ -141,7 +141,7 @@ Qed.
     instead of induction on typing derivations. *)
 
 Theorem progress' : forall t T,
-     empty |-- t \in T ->
+     <{ empty |-- t \in T }> ->
      value t \/ exists t', t --> t'.
 Proof.
   intros t.
@@ -191,8 +191,8 @@ Proof.
 
 Lemma weakening : forall Gamma Gamma' t T,
      includedin Gamma Gamma' ->
-     Gamma  |-- t \in T  ->
-     Gamma' |-- t \in T.
+     <{ Gamma  |-- t \in T }>  ->
+     <{ Gamma' |-- t \in T }>.
 Proof.
   intros Gamma Gamma' t T H Ht.
   generalize dependent Gamma'.
@@ -202,8 +202,8 @@ Qed.
 (** The following simple corollary is what we actually need below. *)
 
 Lemma weakening_empty : forall Gamma t T,
-     empty |-- t \in T  ->
-     Gamma |-- t \in T.
+     <{ empty |-- t \in T }> ->
+     <{ Gamma |-- t \in T }>.
 Proof.
   intros Gamma t T.
   eapply weakening.
@@ -230,9 +230,9 @@ Qed.
     then [Gamma |-- [x:=v]t \in T]. *)
 
 Lemma substitution_preserves_typing : forall Gamma x U t v T,
-  x |-> U ; Gamma |-- t \in T ->
-  empty |-- v \in U   ->
-  Gamma |-- [x:=v]t \in T.
+  <{ x |-> U ; Gamma |-- t \in T }> ->
+  <{ empty |-- v \in U }>  ->
+  <{ Gamma |-- [x:=v]t \in T }>.
 
 (** The substitution lemma can be viewed as a kind of "commutation
     property."  Intuitively, it says that substitution and typing can
@@ -326,9 +326,9 @@ Qed.
     proved by induction on typing derivations instead
     of induction on terms. *)
 Lemma substitution_preserves_typing_from_typing_ind : forall Gamma x U t v T,
-  x |-> U ; Gamma |-- t \in T ->
-  empty |-- v \in U   ->
-  Gamma |-- [x:=v]t \in T.
+  <{ x |-> U ; Gamma |-- t \in T }> ->
+  <{ empty |-- v \in U }>   ->
+  <{ Gamma |-- [x:=v]t \in T }>.
 Proof.
   intros Gamma x U t v T Ht Hv.
   remember (x |-> U; Gamma) as Gamma'.
@@ -346,9 +346,9 @@ Proof.
     the small-step reduction relation preserves types. *)
 
 Theorem preservation : forall t t' T,
-  empty |-- t \in T  ->
+  <{ empty |-- t \in T }> ->
   t --> t'  ->
-  empty |-- t' \in T.
+  <{ empty |-- t' \in T }>.
 
 (** _Proof_: By induction on the derivation of [|-- t \in T].
 
@@ -420,9 +420,11 @@ Qed.
 (* FILL IN HERE *)
 
 Theorem not_subject_expansion:
-  exists t t' T, t --> t' /\ (empty |-- t' \in T) /\ ~ (empty |-- t \in T).
+  exists t t' T, t --> t' /\ <{ empty |-- t' \in T }> /\ ~ <{ empty |-- t \in T }>.
 Proof.
-  (* Write "exists <{ ... }>" to use STLC notation. *)
+  (* Note: Write "exists <{ ... }>" to use STLC term notation and
+     exists <{{ ... }}> to use STCL type notation.
+   *)
   (* FILL IN HERE *) Admitted.
 
 (* Do not modify the following line: *)
@@ -441,7 +443,7 @@ Definition stuck (t:tm) : Prop :=
   (normal_form step) t /\ ~ value t.
 
 Corollary type_soundness : forall t t' T,
-  empty |-- t \in T ->
+  <{ empty |-- t \in T }> ->
   t -->* t' ->
   ~(stuck t').
 Proof.
@@ -460,8 +462,8 @@ Proof.
     given term (in a given context) has at most one type. *)
 
 Theorem unique_types : forall Gamma e T T',
-  Gamma |-- e \in T ->
-  Gamma |-- e \in T' ->
+  <{ Gamma |-- e \in T }> ->
+  <{ Gamma |-- e \in T' }> ->
   T = T'.
 Proof.
   (* FILL IN HERE *) Admitted.
@@ -552,7 +554,7 @@ Definition manual_grade_for_afi : option (nat*string) := None.
 
 Lemma free_in_context : forall x t T Gamma,
    appears_free_in x t ->
-   Gamma |-- t \in T ->
+   <{ Gamma |-- t \in T }> ->
    exists T', Gamma x = Some T'.
 
 (** _Proof_: We show, by induction on the proof that [x] appears free
@@ -602,7 +604,7 @@ Proof.
 
 (** **** Exercise: 2 stars, standard, optional (typable_empty__closed) *)
 Corollary typable_empty__closed : forall t T,
-    empty |-- t \in T  ->
+    <{ empty |-- t \in T }> ->
     closed t.
 Proof.
   (* FILL IN HERE *) Admitted.
@@ -617,9 +619,9 @@ Proof.
     condition that is needed. *)
 
 Lemma context_invariance : forall Gamma Gamma' t T,
-     Gamma |-- t \in T  ->
+     <{ Gamma |-- t \in T }> ->
      (forall x, appears_free_in x t -> Gamma x = Gamma' x) ->
-     Gamma' |-- t \in T.
+     <{ Gamma' |-- t \in T }>.
 
 (** _Proof_: By induction on the derivation of [Gamma |-- t \in T].
 
@@ -892,33 +894,40 @@ Inductive tm : Type :=
   | tm_mult : tm -> tm -> tm
   | tm_if0 : tm -> tm -> tm -> tm.
 
-Notation "{ x }" := x (in custom stlc at level 1, x constr).
+Notation "<{{ x }}>" := x (x custom stlc_ty).
 
-Notation "<{ e }>" := e (e custom stlc at level 99).
-Notation "( x )" := x (in custom stlc, x at level 99).
-Notation "x" := x (in custom stlc at level 0, x constr at level 0).
-Notation "S -> T" := (Ty_Arrow S T) (in custom stlc at level 50, right associativity).
-Notation "x y" := (tm_app x y) (in custom stlc at level 1, left associativity).
+Notation "( t )" := t (in custom stlc_ty at level 0, t custom stlc_ty) : stlc_scope.
+Notation "S -> T" := (Ty_Arrow S T) (in custom stlc_ty at level 99, right associativity) : stlc_scope.
+
+Notation "$( t )" := t (in custom stlc_ty at level 0, t constr) : stlc_scope.
+
+Notation "$( x )" := x (in custom stlc_tm at level 0, x constr, only parsing) : stlc_scope.
+Notation "x" := x (in custom stlc_tm at level 0, x constr at level 0) : stlc_scope.
+Notation "<{ e }>" := e (e custom stlc_tm at level 200) : stlc_scope.
+Notation "( x )" := x (in custom stlc_tm at level 0, x custom stlc_tm) : stlc_scope.
+
+Notation "x y" := (tm_app x y) (in custom stlc_tm at level 10, left associativity) : stlc_scope.
 Notation "\ x : t , y" :=
-  (tm_abs x t y) (in custom stlc at level 90, x at level 99,
-                     t custom stlc at level 99,
-                     y custom stlc at level 99,
+  (tm_abs x t y) (in custom stlc_tm at level 200, x global,
+                     t custom stlc_ty,
+                     y custom stlc_tm at level 200,
                      left associativity).
 Coercion tm_var : string >-> tm.
+Arguments tm_var _%_string.
 
-Notation "'Nat'" := Ty_Nat (in custom stlc at level 0).
-Notation "'succ' x" := (tm_succ x) (in custom stlc at level 0,
-                                     x custom stlc at level 0).
-Notation "'pred' x" := (tm_pred x) (in custom stlc at level 0,
-                                     x custom stlc at level 0).
-Notation "x * y" := (tm_mult x y) (in custom stlc at level 1,
-                                      left associativity).
+Notation "'Nat'" := Ty_Nat (in custom stlc_ty at level 0).
+Notation "'succ' x" := (tm_succ x) (in custom stlc_tm at level 10,
+                                     x custom stlc_tm at level 0) : stlc_scope.
+Notation "'pred' x" := (tm_pred x) (in custom stlc_tm at level 10,
+                                     x custom stlc_tm at level 0) : stlc_scope.
+Notation "x * y" := (tm_mult x y) (in custom stlc_tm at level 95,
+                                      right associativity) : stlc_scope.
 Notation "'if0' x 'then' y 'else' z" :=
-  (tm_if0 x y z) (in custom stlc at level 89,
-                    x custom stlc at level 99,
-                    y custom stlc at level 99,
-                    z custom stlc at level 99,
-                    left associativity).
+  (tm_if0 x y z) (in custom stlc_tm at level 0,
+                    x custom stlc_tm at level 0,
+                    y custom stlc_tm at level 0,
+                    z custom stlc_tm at level 0) : stlc_scope.
+
 Coercion tm_const : nat >-> tm.
 
 (** In this extended exercise, your job is to finish formalizing the
@@ -940,16 +949,14 @@ Coercion tm_const : nat >-> tm.
 
     Make sure Coq accepts the whole file before submitting. *)
 
-Reserved Notation "'[' x ':=' s ']' t" (in custom stlc at level 20, x constr).
-
 (** **** Exercise: 5 stars, standard (STLCArith.subst) *)
 Fixpoint subst (x : string) (s : tm) (t : tm) : tm
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 
-(** (You'll need to add remove the period at the end of this
+(** (You'll need to remove the period at the end of this
     definition and add
 
-    where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
+    where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc_tm).
 
     when you fill it in.) *)
 
@@ -973,25 +980,23 @@ Hint Constructors step : core.
 (* An example *)
 
 Example Nat_step_example : exists t,
-<{(\x: Nat, \y: Nat, x * y ) 3 2 }> -->* t.
+<{(\x: Nat, \y: Nat, x * y ) $(3) $(2) }> -->* t.
 Proof. (* FILL IN HERE *) Admitted.
 
 (* Typing *)
 
 Definition context := partial_map ty.
 
-Reserved Notation "Gamma '|--' t '\in' T" (at level 101, t custom stlc, T custom stlc at level 0).
-
 Inductive has_type : context -> tm -> ty -> Prop :=
   (* FILL IN HERE *)
-where "Gamma '|--' t '\in' T" := (has_type Gamma t T).
+where "<{ Gamma '|--' t '\in' T }>" := (has_type Gamma t T).
 
 Hint Constructors has_type : core.
 
 (* An example *)
 
 Example Nat_typing_example :
-   empty |-- ( \x: Nat, \y: Nat, x * y ) 3 2 \in Nat.
+   <{ empty |-- ( \x: Nat, \y: Nat, x * y ) $(3) $(2) \in Nat }>.
 Proof.
   (* FILL IN HERE *) Admitted.
 
@@ -1005,8 +1010,8 @@ Proof.
 (** **** Exercise: 4 stars, standard (STLCArith.weakening) *)
 Lemma weakening : forall Gamma Gamma' t T,
      includedin Gamma Gamma' ->
-     Gamma  |-- t \in T  ->
-     Gamma' |-- t \in T.
+     <{ Gamma  |-- t \in T }> ->
+     <{ Gamma' |-- t \in T }>.
 Proof. (* FILL IN HERE *) Admitted.
 
 (* FILL IN HERE *)
@@ -1018,9 +1023,9 @@ Proof. (* FILL IN HERE *) Admitted.
 
 (** **** Exercise: 4 stars, standard (STLCArith.preservation) *)
 Theorem preservation : forall t t' T,
-  empty |-- t \in T  ->
+  <{ empty |-- t \in T }> ->
   t --> t'  ->
-  empty |-- t' \in T.
+  <{ empty |-- t' \in T }>.
 Proof with eauto. (* FILL IN HERE *) Admitted.
 
 (** [] *)
@@ -1029,11 +1034,11 @@ Proof with eauto. (* FILL IN HERE *) Admitted.
 
 (** **** Exercise: 4 stars, standard (STLCArith.progress) *)
 Theorem progress : forall t T,
-  empty |-- t \in T ->
+  <{ empty |-- t \in T }> ->
   value t \/ exists t', t --> t'.
 Proof with eauto. (* FILL IN HERE *) Admitted.
 (** [] *)
 
 End STLCArith.
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

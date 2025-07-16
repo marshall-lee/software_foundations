@@ -1,7 +1,7 @@
 (** * Norm: Normalization of STLC *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Lists.List.
+From Coq Require Import List.
 From Coq Require Import Strings.String.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
@@ -1144,4 +1144,4 @@ Proof.
   eapply V_nil.
 Qed.
 
-(* 2024-01-02 21:54 *)
+(* 2025-01-06 19:48 *)

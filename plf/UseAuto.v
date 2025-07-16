@@ -26,7 +26,7 @@
     from the library [LibTactics.v], which is presented in the chapter
     [UseTactics]. *)
 
-From Coq Require Import Arith.Arith.
+From Coq Require Import Arith.
 
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
@@ -34,7 +34,7 @@ From PLF Require Import LibTactics.
 From PLF Require Stlc.
 From PLF Require Imp.
 
-From Coq Require Import Lists.List.
+From Coq Require Import List.
 
 
 (* ################################################################# *)
@@ -855,9 +855,9 @@ Import STLCProp.
     mechanism. *)
 
 Theorem preservation : forall t t' T,
-  empty |-- t \in T  ->
+  <{ empty |-- t \in T }> ->
   t --> t'  ->
-  empty |-- t' \in T.
+  <{ empty |-- t' \in T }>.
 Proof with eauto.
   intros t t' T HT. generalize dependent t'.
   remember empty as Gamma.
@@ -880,9 +880,9 @@ Qed.
     [inverts] or to [applys]. *)
 
 Theorem preservation' : forall t t' T,
-  empty |-- t \in T  ->
+  <{ empty |-- t \in T }>  ->
   t --> t'  ->
-  empty |-- t' \in T.
+  <{ empty |-- t' \in T }>.
 Proof.
   (* FILL IN HERE *) admit.
 Admitted.
@@ -893,7 +893,7 @@ Admitted.
 (** Consider the proof of the progress theorem. *)
 
 Theorem progress : forall t T,
-  empty |-- t \in T ->
+  <{ empty |-- t \in T }> ->
   value t \/ exists t', t --> t'.
 Proof with eauto.
   intros t T Ht.
@@ -936,7 +936,7 @@ Qed.
     The solution fits on 10 short lines. *)
 
 Theorem progress' : forall t T,
-  empty |-- t \in T ->
+  <{ empty |-- t \in T }> ->
   value t \/ exists t', t --> t'.
 Proof.
   (* FILL IN HERE *) admit.
@@ -1036,12 +1036,12 @@ Hint Resolve store_weakening extends_refl : core.
     the preservation theorem appears afterwards. *)
 
 Theorem preservation : forall ST t t' T st st',
-  empty ; ST |-- t \in T ->
+  <{ empty / ST |-- t \in T }> ->
   store_well_typed ST st ->
   t / st --> t' / st' ->
   exists ST',
      extends ST' ST /\
-     empty ; ST' |-- t' \in T /\
+     <{ empty / ST' |-- t' \in T }> /\
      store_well_typed ST' st'.
 Proof.
   (* old: [Proof with eauto using store_weakening, extends_refl.]
@@ -1203,7 +1203,7 @@ Proof. intros. subst. apply nth_eq_last. Qed.
 
 Lemma preservation_ref : forall (st:store) (ST : store_ty) T1,
   length ST = length st ->
-  <{ Ref T1 }> = <{ Ref {store_Tlookup (length st) (ST ++ T1::nil)} }>.
+  <{{ Ref T1 }}> = <{{ Ref $(store_Tlookup (length st) (ST ++ T1::nil)) }}>.
 Proof.
   intros. dup.
 
@@ -1217,12 +1217,12 @@ Qed.
 (** The optimized proof of preservation is summarized next. *)
 
 Theorem preservation' : forall ST t t' T st st',
-  empty ; ST |-- t \in T ->
+  <{ empty / ST |-- t \in T }> ->
   store_well_typed ST st ->
   t / st --> t' / st' ->
   exists ST',
      extends ST' ST /\
-     empty ; ST' |-- t' \in T /\
+     <{ empty / ST' |-- t' \in T }> /\
      store_well_typed ST' st'.
 Proof.
   remember empty as Gamma.
@@ -1259,7 +1259,7 @@ Qed.
     half the length. *)
 
 Theorem progress : forall ST t T st,
-  empty ; ST |-- t \in T ->
+  <{ empty / ST |-- t \in T }> ->
   store_well_typed ST st ->
   (value t \/ exists t' st', t / st --> t' / st').
 Proof.
@@ -1300,9 +1300,9 @@ Import Sub.STLCSub.
 (** Consider the inversion lemma for typing judgment
     of abstractions in a type system with subtyping. *)
 Lemma abs_arrow : forall x S1 s2 T1 T2,
-  empty |-- \x:S1,s2 \in (T1->T2) ->
+  <{ empty |-- \x:S1,s2 \in T1->T2 }> ->
      T1 <: S1
-  /\ (x |-> S1 ; empty) |-- s2 \in T2.
+  /\ <{ x |-> S1 |-- s2 \in T2 }>.
 Proof with eauto.
   intros x S1 s2 T1 T2 Hty.
   apply typing_inversion_abs in Hty.
@@ -1319,9 +1319,9 @@ Qed.
     The solution fits on 3 lines. *)
 
 Lemma abs_arrow' : forall x S1 s2 T1 T2,
-  empty |-- \x:S1,s2 \in (T1->T2) ->
+  <{ empty |-- \x:S1,s2 \in T1->T2 }> ->
      T1 <: S1
-  /\ (x |-> S1 ; empty) |-- s2 \in T2.
+  /\ <{ x |-> S1 |-- s2 \in T2 }>.
 Proof.
   (* FILL IN HERE *) admit.
 Admitted.
@@ -1938,4 +1938,4 @@ Proof. congruence. Qed.
     some investment, however this investment will pay off very quickly.
 *)
 
-(* 2024-01-02 21:54 *)
+(* 2025-01-06 19:48 *)

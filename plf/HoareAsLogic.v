@@ -176,7 +176,7 @@ Inductive derivable : Assertion -> com -> Assertion -> Type :=
   | H_Skip : forall P,
       derivable P <{skip}> P
   | H_Asgn : forall Q V a,
-      derivable (Q [V |-> a]) <{V := a}> Q
+      derivable ({{Q [V |-> a]}}) <{V := a}> Q
   | H_Seq : forall P c Q d R,
       derivable Q d R -> derivable P c Q -> derivable P <{c;d}> R
   | H_If : forall P Q b c1 c2,
@@ -218,7 +218,7 @@ Proof. eauto using H_Consequence. Qed.
 
 Example sample_proof :
   derivable
-    ((fun st:state => st X = 3) [X |-> X + 2] [X |-> X + 1])
+    ({{ $(fun st:state => st X = 3)  [X |-> X + 2] [X |-> X + 1] }})
     <{ X := X + 1; X := X + 2}>
     (fun st:state => st X = 3).
 Proof.
@@ -313,7 +313,7 @@ Hint Unfold wp : core.
     about [wp] are the same. *)
 
 Theorem wp_is_precondition : forall c Q,
-  {{wp c Q}} c {{Q}}.
+  {{$(wp c Q)}} c {{Q}}.
 Proof. auto. Qed.
 
 Theorem wp_is_weakest : forall c Q P',
@@ -345,7 +345,7 @@ Proof.
     Q] is a loop invariant of [while b do c end]. *)
 
 Lemma wp_invariant : forall b c Q,
-    valid (wp <{while b do c end}> Q /\ b) c (wp <{while b do c end}> Q).
+    valid ({{$(wp <{while b do c end}> Q) /\ b}}) c (wp <{while b do c end}> Q).
 Proof.
   (* FILL IN HERE *) Admitted.
 
@@ -392,4 +392,4 @@ Proof.
     of Coq's logic. But this logic is far too powerful to be
     decidable. *)
 
-(* 2024-01-02 21:54 *)
+(* 2025-01-06 19:48 *)

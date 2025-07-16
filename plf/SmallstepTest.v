@@ -76,7 +76,8 @@ idtac " ".
 idtac "#> test_multistep_4".
 idtac "Possible points: 2".
 check_type @test_multistep_4 (
-(P (C 0) (P (C 2) (P (C 0) (C 3))) -->* P (C 0) (C (2 + (0 + 3))))).
+(@multi tm step (P (C 0) (P (C 2) (P (C 0) (C 3))))
+   (P (C 0) (C (Nat.add 2 (Nat.add 0 3)))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions test_multistep_4.
@@ -89,7 +90,8 @@ idtac " ".
 idtac "#> multistep_congr_2".
 idtac "Possible points: 2".
 check_type @multistep_congr_2 (
-(forall v1 t2 t2' : tm, value v1 -> t2 -->* t2' -> P v1 t2 -->* P v1 t2')).
+(forall (v1 t2 t2' : tm) (_ : value v1) (_ : @multi tm step t2 t2'),
+ @multi tm step (P v1 t2) (P v1 t2'))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions multistep_congr_2.
@@ -101,7 +103,8 @@ idtac " ".
 
 idtac "#> eval__multistep".
 idtac "Possible points: 3".
-check_type @eval__multistep ((forall (t : tm) (n : nat), t ==> n -> t -->* C n)).
+check_type @eval__multistep (
+(forall (t : tm) (n : nat) (_ : eval t n), @multi tm step t (C n))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions eval__multistep.
@@ -122,7 +125,8 @@ idtac " ".
 
 idtac "#> step__eval".
 idtac "Possible points: 3".
-check_type @step__eval ((forall (t t' : tm) (n : nat), t --> t' -> t' ==> n -> t ==> n)).
+check_type @step__eval (
+(forall (t t' : tm) (n : nat) (_ : step t t') (_ : eval t' n), eval t n)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions step__eval.
@@ -135,7 +139,8 @@ idtac " ".
 idtac "#> multistep__eval".
 idtac "Possible points: 3".
 check_type @multistep__eval (
-(forall t t' : tm, normal_form_of t t' -> exists n : nat, t' = C n /\ t ==> n)).
+(forall (t t' : tm) (_ : normal_form_of t t'),
+ @ex nat (fun n : nat => and (@eq tm t' (C n)) (eval t n)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions multistep__eval.
@@ -148,8 +153,8 @@ idtac " ".
 idtac "#> Combined.combined_step_deterministic".
 idtac "Possible points: 3".
 check_type @Combined.combined_step_deterministic (
-(@deterministic Combined.tm Combined.step \/
- ~ @deterministic Combined.tm Combined.step)).
+(or (@deterministic Combined.tm Combined.step)
+   (not (@deterministic Combined.tm Combined.step)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions Combined.combined_step_deterministic.
@@ -162,11 +167,14 @@ idtac " ".
 idtac "#> Combined.combined_strong_progress".
 idtac "Possible points: 3".
 check_type @Combined.combined_strong_progress (
-((forall t : Combined.tm,
-  Combined.value t \/ (exists t' : Combined.tm, Combined.step t t')) \/
- ~
- (forall t : Combined.tm,
-  Combined.value t \/ (exists t' : Combined.tm, Combined.step t t')))).
+(or
+   (forall t : Combined.tm,
+    or (Combined.value t)
+      (@ex Combined.tm (fun t' : Combined.tm => Combined.step t t')))
+   (not
+      (forall t : Combined.tm,
+       or (Combined.value t)
+         (@ex Combined.tm (fun t' : Combined.tm => Combined.step t t')))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions Combined.combined_strong_progress.
@@ -191,7 +199,10 @@ idtac " ".
 
 idtac "#> normalize_ex".
 idtac "Possible points: 1".
-check_type @normalize_ex ((exists e' : tm, P (C 3) (P (C 2) (C 1)) -->* e' /\ value e')).
+check_type @normalize_ex (
+(@ex tm
+   (fun e' : tm =>
+    and (@multi tm step (P (C 3) (P (C 2) (C 1))) e') (value e')))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions normalize_ex.
@@ -252,6 +263,6 @@ idtac "---------- compiler_is_correct ---------".
 Print Assumptions compiler_is_correct.
 Abort.
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

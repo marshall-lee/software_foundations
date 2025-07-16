@@ -2,10 +2,10 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From PLF Require Import Maps.
-From Coq Require Import Bool.Bool.
-From Coq Require Import Arith.Arith.
-From Coq Require Import Arith.EqNat.
-From Coq Require Import Arith.PeanoNat. Import Nat.
+From Coq Require Import Bool.
+From Coq Require Import Arith.
+From Coq Require Import EqNat.
+From Coq Require Import PeanoNat. Import Nat.
 From Coq Require Import Lia.
 From PLF Require Export Imp.
 Set Default Goal Selector "!".
@@ -118,11 +118,14 @@ Definition assertion4 : Assertion :=
 End ExAssertions.
 (** [] *)
 
+(* ================================================================= *)
+(** ** Notations for Assertions *)
+
 (** This way of writing assertions can be a little bit heavy,
     for two reasons: (1) every single assertion that we ever write is
     going to begin with [fun st => ]; and (2) this state [st] is the
     only one that we ever use to look up variables in assertions (we
-    will never need to talk about two different memory states at the
+    will almost never need to talk about two different memory states at the
     same time).  For discussing examples informally, we'll adopt some
     simplifying conventions: we'll drop the initial [fun st =>], and
     we'll write just [X] to mean [st X].  Thus, instead of writing
@@ -131,8 +134,11 @@ End ExAssertions.
 
     we'll write just
 
-      X = m.
+      {{ X = m }}.
 *)
+
+(** Here the "doubly curly" braces [{{] and [}}] delimit
+    the scope of an assertion.  We'll see more examples below. *)
 
 (** This example also illustrates a convention that we'll use
     throughout the Hoare Logic chapters: in informal assertions,
@@ -142,41 +148,19 @@ End ExAssertions.
     informal to formal, we replace [X] with [st X] but leave [m]
     alone. *)
 
-(** Given two assertions [P] and [Q], we say that [P] _implies_ [Q],
-    written [P ->> Q], if, whenever [P] holds in some state [st], [Q]
-    also holds. *)
-
-Definition assert_implies (P Q : Assertion) : Prop :=
-  forall st, P st -> Q st.
-
-Declare Scope hoare_spec_scope.
-Notation "P ->> Q" := (assert_implies P Q)
-                      (at level 80) : hoare_spec_scope.
-Open Scope hoare_spec_scope.
-
-(** (The [hoare_spec_scope] annotation here tells Coq that this
-    notation is not global but is intended to be used in particular
-    contexts.  The [Open Scope] tells Coq that this file is one such
-    context.) *)
-
-(** We'll also want the "iff" variant of implication between
-    assertions: *)
-
-Notation "P <<->> Q" := (P ->> Q /\ Q ->> P)
-                          (at level 80) : hoare_spec_scope.
-
-(* ================================================================= *)
-(** ** Notations for Assertions *)
-
 (** The convention described above can be implemented in Coq with a
     little syntax magic, using coercions and annotation scopes, much
-    as we did with [%imp] in [Imp], to automatically lift
-    [aexp]s, numbers, and [Prop]s into [Assertion]s when they appear
-    in the [%assertion] scope or when Coq knows that the type of an
-    expression is [Assertion].
+    as we did with the [<{ com }>] notation in [Imp]. This new
+    notation automatically lifts [aexp]s, numbers, and [Prop]s into
+    [Assertion]s when they appear in the [{{ _ }}] scope, or when Coq
+    knows that the type of an expression is [Assertion].
 
     There is no need to understand the details of how these notation
-    hacks work. (We barely understand some of it ourselves!) *)
+    hacks work, so we hide them in the HTML version of the notes.  (We
+    barely understand some of it ourselves!)  For the gory details,
+    see the Coq development.  *)
+
+(** Define syntax notations for working with [Assertion]s *)
 
 Definition Aexp : Type := state -> nat.
 
@@ -188,58 +172,116 @@ Definition Aexp_of_aexp (a : aexp) : Aexp := fun st => aeval st a.
 Coercion assert_of_Prop : Sortclass >-> Assertion.
 Coercion Aexp_of_nat : nat >-> Aexp.
 Coercion Aexp_of_aexp : aexp >-> Aexp.
-Add Printing Coercion Aexp_of_nat Aexp_of_aexp assert_of_Prop.
 
 Arguments assert_of_Prop /.
 Arguments Aexp_of_nat /.
 Arguments Aexp_of_aexp /.
-Add Printing Coercion Aexp_of_nat Aexp_of_aexp assert_of_Prop.
 
+Declare Custom Entry assn. (* The grammar for Hoare logic Assertions *)
 Declare Scope assertion_scope.
 Bind Scope assertion_scope with Assertion.
 Bind Scope assertion_scope with Aexp.
 Delimit Scope assertion_scope with assertion.
 
-Notation assert P := (P%assertion : Assertion).
-Notation mkAexp a := (a%assertion : Aexp).
-
-Notation "~ P" := (fun st => ~ assert P st) : assertion_scope.
-Notation "P /\ Q" := (fun st => assert P st /\ assert Q st) : assertion_scope.
-Notation "P \/ Q" := (fun st => assert P st \/ assert Q st) : assertion_scope.
-Notation "P -> Q" := (fun st => assert P st ->  assert Q st) : assertion_scope.
-Notation "P <-> Q" := (fun st => assert P st <->  assert Q st) : assertion_scope.
-Notation "a = b" := (fun st => mkAexp a st = mkAexp b st) : assertion_scope.
-Notation "a <> b" := (fun st => mkAexp a st <> mkAexp b st) : assertion_scope.
-Notation "a <= b" := (fun st => mkAexp a st <= mkAexp b st) : assertion_scope.
-Notation "a < b" := (fun st => mkAexp a st < mkAexp b st) : assertion_scope.
-Notation "a >= b" := (fun st => mkAexp a st >= mkAexp b st) : assertion_scope.
-Notation "a > b" := (fun st => mkAexp a st > mkAexp b st) : assertion_scope.
-Notation "a + b" := (fun st => mkAexp a st + mkAexp b st) : assertion_scope.
-Notation "a - b" := (fun st => mkAexp a st - mkAexp b st) : assertion_scope.
-Notation "a * b" := (fun st => mkAexp a st * mkAexp b st) : assertion_scope.
-
 (** One small limitation of this approach is that we don't have
-    an automatic way to coerce function applications that appear
-    within an assertion to make appropriate use of the state.
-    Instead, we use an explicit [ap] operator to lift the function. *)
+    an automatic way to coerce a function application that appears
+    within an assertion to make appropriate use of the state when its
+    arguments should be interpets as Imp arithmetic expressions.
+    Instead, we introduce a notation [#f e1 .. en] that stands for [(fun
+    st => f (e1 st) .. (en st)], letting us manually mark such function
+    calls when they're needed as part of an assertion.  *)
 
-Definition ap {X} (f : nat -> X) (x : Aexp) :=
-  fun st => f (x st).
+Notation "# f x .. y" := (fun st => (.. (f ((x:Aexp) st)) .. ((y:Aexp) st)))
+                  (in custom assn at level 2,
+                  f constr at level 0, x custom assn at level 1,
+                  y custom assn at level 1) : assertion_scope.
 
-Definition ap2 {X} (f : nat -> nat -> X) (x : Aexp) (y : Aexp) (st : state) :=
-  f (x st) (y st).
+Notation "P -> Q" := (fun st => (P:Assertion) st -> (Q:Assertion) st) (in custom assn at level 99, right associativity) : assertion_scope.
+Notation "P <-> Q" := (fun st => (P:Assertion) st <-> (Q:Assertion) st) (in custom assn at level 95) : assertion_scope.
 
-Module ExamplePrettyAssertions.
-Definition ex1 : Assertion := X = 3.
-Definition ex2 : Assertion := True.
-Definition ex3 : Assertion := False.
+Notation "P \/ Q" := (fun st => (P:Assertion) st \/ (Q:Assertion) st) (in custom assn at level 85, right associativity) : assertion_scope.
+Notation "P /\ Q" := (fun st => (P:Assertion) st /\ (Q:Assertion) st) (in custom assn at level 80, right associativity) : assertion_scope.
+Notation "~ P" := (fun st => ~ ((P:Assertion) st)) (in custom assn at level 75, right associativity) : assertion_scope.
+Notation "a = b" := (fun st => (a:Aexp) st = (b:Aexp) st) (in custom assn at level 70) : assertion_scope.
+Notation "a <> b" := (fun st => (a:Aexp) st <> (b:Aexp) st) (in custom assn at level 70) : assertion_scope.
+Notation "a <= b" := (fun st => (a:Aexp) st <= (b:Aexp) st) (in custom assn at level 70) : assertion_scope.
+Notation "a < b" := (fun st => (a:Aexp) st < (b:Aexp) st) (in custom assn at level 70) : assertion_scope.
+Notation "a >= b" := (fun st => (a:Aexp) st >= (b:Aexp) st) (in custom assn at level 70) : assertion_scope.
+Notation "a > b" := (fun st => (a:Aexp) st > (b:Aexp) st) (in custom assn at level 70) : assertion_scope.
+Notation "'True'" := True.
+Notation "'True'" := (fun st => True) (in custom assn at level 0) : assertion_scope.
+Notation "'False'" := False.
+Notation "'False'" := (fun st => False) (in custom assn at level 0) : assertion_scope.
 
-Definition assertion1 : Assertion := X <= Y.
-Definition assertion2 : Assertion := X = 3 \/ X <= Y.
-Definition assertion3 : Assertion := Z = ap2 max X Y.
-Definition assertion4 : Assertion := Z * Z <= X
-                            /\  ~ (((ap S Z) * (ap S Z)) <= X).
+Notation "a + b" := (fun st => (a:Aexp) st + (b:Aexp) st) (in custom assn at level 50, left associativity) : assertion_scope.
+Notation "a - b" := (fun st => (a:Aexp) st - (b:Aexp) st) (in custom assn at level 50, left associativity) : assertion_scope.
+Notation "a * b" := (fun st => (a:Aexp) st * (b:Aexp) st) (in custom assn at level 40, left associativity) : assertion_scope.
+
+Notation "( x )" := x (in custom assn at level 0, x at level 99) : assertion_scope.
+
+(** Occasionally we need to "escape" a raw "Coq-defined" function to express
+    a particularly complicated assertion.  We can do that using a [$] prefix,
+    as in [{{ $(raw_coq) }}].
+
+    For example, [{{ $(fun st => forall X, st X = 0) }}] indicates an assertion that
+    every variable of [X] maps to [0] in the given state.
+ *)
+
+
+Notation "$ f" := f (in custom assn at level 0, f constr at level 0) : assertion_scope.
+Notation "x" := (x%assertion) (in custom assn at level 0, x constr at level 0) : assertion_scope.
+
+Declare Scope hoare_spec_scope.
+Open Scope hoare_spec_scope.
+
+Notation "{{ e }}" := e (at level 2, e custom assn at level 99) : assertion_scope.
+Open Scope assertion_scope.
+
+(* ================================================================= *)
+(** ** Example Assertions *)
+
+(** Here are some example assertions that take advantage of this
+    new notation.
+ *)
+
+Module  ExamplePrettyAssertions.
+Definition assertion1 : Assertion := {{ X = 3 }}.
+Definition assertion2 : Assertion := {{ True }}.
+Definition assertion3 : Assertion := {{ False }}.
+Definition assertion4 : Assertion := {{ True \/ False }}.
+Definition assertion5 : Assertion := {{ X <= Y }}.
+Definition assertion6 : Assertion := {{ X = 3 \/ X <= Y }}.
+Definition assertion7 : Assertion := {{ Z = (#max X Y) }}.
+Definition assertion8 : Assertion := {{ Z * Z <= X
+                                        /\  ~ (((# S Z) * (# S Z)) <= X) }}.
+Definition assertion9 : Assertion := {{ #add X Y > #max Y X }}.
 End ExamplePrettyAssertions.
+
+(* ================================================================= *)
+(** ** Assertion Implication *)
+
+(** Given two assertions [P] and [Q], we say that [P] _implies_ [Q],
+    written [P ->> Q], if, whenever [P] holds in some state [st], [Q]
+    also holds. *)
+
+Definition assert_implies (P Q : Assertion) : Prop :=
+  forall st, P st -> Q st.
+
+(** Note that the notation for _assertion implication_ is analogous
+to the "usual" Coq implication [->]. *)
+
+Notation "P ->> Q" := (assert_implies P Q)
+                        (at level 80) : hoare_spec_scope.
+
+(** We'll also want the "iff" variant of implication between
+    assertions: *)
+
+Notation "P <<->> Q" := (P ->> Q /\ Q ->> P)
+                          (at level 80) : hoare_spec_scope.
+
+(** (The [hoare_spec_scope] annotation here tells Coq that this
+    notation is not global but is intended to be used in particular
+    contexts.) *)
 
 (* ################################################################# *)
 (** * Hoare Triples, Informally *)
@@ -276,28 +318,7 @@ End ExamplePrettyAssertions.
       reference to the _Coq_ variable [m], which is bound outside the
       Hoare triple. *)
 
-(** **** Exercise: 1 star, standard, optional (triples)
-
-    Paraphrase the following in English.
-
-     1) {{True}} c {{X = 5}}
-
-     2) forall m, {{X = m}} c {{X = m + 5)}}
-
-     3) {{X <= Y}} c {{Y <= X}}
-
-     4) {{True}} c {{False}}
-
-     5) forall m,
-          {{X = m}}
-          c
-          {{Y = real_fact m}}
-
-     6) forall m,
-          {{X = m}}
-          c
-          {{(Z * Z) <= m /\ ~ (((S Z) * (S Z)) <= m)}}
-*)
+(** **** Exercise: 1 star, standard, optional (triples) *)
 (* FILL IN HERE
 
     [] *)
@@ -342,14 +363,15 @@ Definition valid_hoare_triple
            (P : Assertion) (c : com) (Q : Assertion) : Prop :=
   forall st st',
      st =[ c ]=> st' ->
-     P st  ->
-     Q st'.
+     (P st)  ->
+     (Q st').
+
+(** Notation for Hoare triples *)
 
 Notation "{{ P }} c {{ Q }}" :=
   (valid_hoare_triple P c Q)
-    (at level 90, c custom com at level 99)
+    (at level 2, P custom assn at level 99, c custom com at level 99, Q custom assn at level 99)
     : hoare_spec_scope.
-Check ({{True}} X := 0 {{True}}).
 
 (** **** Exercise: 1 star, standard (hoare_post_true) *)
 
@@ -424,7 +446,6 @@ Theorem hoare_seq : forall P Q R c1 c2,
      {{P}} c1 {{Q}} ->
      {{P}} c1; c2 {{R}}.
 Proof.
-  unfold valid_hoare_triple.
   intros P Q R c1 c2 H1 H2 st st' H12 Pre.
   inversion H12; subst.
   eauto.
@@ -545,21 +566,26 @@ Qed.
     "edit" its text. *)
 
 (** However, we can achieve the same effect by evaluating [P] in an
-    updated state: *)
+    updated state, defined as follows: *)
 
-Definition assertion_sub X a (P:Assertion) : Assertion :=
+Definition assertion_sub X (a:aexp) (P:Assertion) : Assertion :=
   fun (st : state) =>
-    P (X !-> aeval st a ; st).
+    (P%_assertion) (X !-> ((a:Aexp) st); st).
 
 Notation "P [ X |-> a ]" := (assertion_sub X a P)
-  (at level 10, X at next level, a custom com) : hoare_spec_scope.
+                              (in custom assn at level 10, left associativity, P custom assn, X global, a custom com) : assertion_scope.
+
+(**  This notation allows us to write this operation as:
+
+     [P[ X |-> a]]
+*)
 
 (** That is, [P [X |-> a]] stands for an assertion -- let's call it
     [P'] -- that is just like [P] except that, wherever [P] looks up
     the variable [X] in the current state, [P'] instead uses the value
     of the expression [a]. *)
 
-(** To see how this works, let's calculate what happens with a couple
+(** To see how this works in more detail, let's calculate what happens with a couple
     of examples.  First, suppose [P'] is [(X <= 5) [X |-> 3]] -- that
     is, more formally, [P'] is the Coq expression
 
@@ -606,6 +632,23 @@ Notation "P [ X |-> a ]" := (assertion_sub X a P)
     That is, [P'] is the assertion that [X + 1] is at most [5].
 *)
 
+(** We can demonstrate formally that we have captured intuitive meaning of
+    "assertion subsitution" by proving some example logical equivalences: *)
+
+Module ExampleAssertionSub.
+Example equivalent_assertion1 :
+  {{ (X <= 5) [X |-> 3] }} <<->> {{ 3 <= 5 }}.
+Proof.
+  split; unfold assert_implies, assertion_sub; intros st H; simpl in *; apply H.
+Qed.
+
+Example equivalent_assertion2 :
+  {{ (X <= 5) [X |-> X + 1] }} <<->> {{ (X + 1) <= 5 }}.
+Proof.
+  split; unfold assert_implies, assertion_sub; intros st H; simpl in *; apply H.
+Qed.
+End ExampleAssertionSub.
+
 (** Now, using the substitution operation we've just defined, we can
     give the precise proof rule for assignment:
 
@@ -615,13 +658,12 @@ Notation "P [ X |-> a ]" := (assertion_sub X a P)
 
 (** We can prove formally that this rule is indeed valid. *)
 
-Theorem hoare_asgn : forall Q X a,
+Theorem hoare_asgn : forall Q X (a:aexp),
   {{Q [X |-> a]}} X := a {{Q}}.
 Proof.
-  unfold valid_hoare_triple.
   intros Q X a st st' HE HQ.
   inversion HE. subst.
-  unfold assertion_sub in HQ. assumption.  Qed.
+  unfold assertion_sub in HQ. simpl in HQ. assumption.  Qed.
 
 (** Here's a first formal proof using this rule. *)
 
@@ -643,6 +685,7 @@ Proof.
     precondition using [exists], then prove then with [apply
     hoare_asgn]. If you find that tactic doesn't suffice, double check
     that you have completed the triple properly. *)
+
 (** **** Exercise: 2 stars, standard, optional (hoare_asgn_examples1) *)
 Example hoare_asgn_examples1 :
   exists P,
@@ -662,9 +705,9 @@ Example hoare_asgn_examples2 :
 Proof. (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, standard, especially useful (hoare_asgn_wrong)
+(** **** Exercise: 2 stars, standard, especially useful (hoare_asgn_wrong) *)
 
-    The assignment rule looks backward to almost everyone the first
+(** The assignment rule looks backward to almost everyone the first
     time they see it.  If it still seems puzzling to you, it may help
     to think a little about alternative "forward" rules.  Here is a
     seemingly natural one:
@@ -673,7 +716,7 @@ Proof. (* FILL IN HERE *) Admitted.
       {{ True }} X := a {{ X = a }}
 
     Give a counterexample showing that this rule is incorrect and use
-    it to complete the proof belkow, showing that it is really a
+    it to complete the proof below, showing that it is really a
     counterexample.  (Hint: The rule universally quantifies over the
     arithmetic expression [a], and your counterexample needs to
     exhibit an [a] for which the rule doesn't work.) *)
@@ -706,11 +749,11 @@ Proof.
     Prove that this rule is correct. *)
 
 Theorem hoare_asgn_fwd :
-  forall m a P,
-  {{fun st => P st /\ st X = m}}
+  forall (m:nat) (a:aexp) (P : Assertion),
+  {{P /\ X = m}}
     X := a
-  {{fun st => P (X !-> m ; st)
-           /\ st X = aeval (X !-> m ; st) a }}.
+  {{ $(fun st => (P (X !-> m ; st)
+             /\ st X = aeval (X !-> m ; st) a))  }}.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -729,11 +772,11 @@ Proof.
 *)
 
 Theorem hoare_asgn_fwd_exists :
-  forall a P,
-  {{fun st => P st}}
+  forall a (P : Assertion),
+  {{ P }}
     X := a
-  {{fun st => exists m, P (X !-> m ; st) /\
-                st X = aeval (X !-> m ; st) a }}.
+  {{ $(fun st => exists m, P (X !-> m ; st) /\
+                st X = aeval (X !-> m ; st) a) }}.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -828,8 +871,8 @@ Proof.
   (* WORKED IN CLASS *)
   eapply hoare_consequence_pre.
   - apply hoare_asgn.
-  - unfold "->>", assertion_sub, t_update.
-    intros st _. simpl. reflexivity.
+  - unfold "->>", assertion_sub, t_update; simpl.
+    intros st _. reflexivity.
 Qed.
 
 (** We can also use it to prove the example mentioned earlier.
@@ -847,7 +890,7 @@ Example assertion_sub_example2 :
   {{X < 5}}.
 Proof.
   (* WORKED IN CLASS *)
-  apply hoare_consequence_pre with (P' := (X < 5) [X |-> X + 1]).
+  eapply hoare_consequence_pre.
   - apply hoare_asgn.
   - unfold "->>", assertion_sub, t_update.
     intros st H. simpl in *. lia.
@@ -871,9 +914,7 @@ Theorem hoare_consequence : forall (P P' Q Q' : Assertion) c,
 Proof.
   intros P P' Q Q' c Htriple Hpre Hpost.
   apply hoare_consequence_pre with (P' := P').
-  - apply hoare_consequence_post with (Q' := Q').
-    + assumption.
-    + assumption.
+  - apply hoare_consequence_post with (Q' := Q'); assumption.
   - assumption.
 Qed.
 
@@ -1138,8 +1179,7 @@ Example hoare_asgn_example4 :
     Y := 2
   {{ X = 1 /\ Y = 2 }}.
 Proof.
-  eapply hoare_seq with (Q := (X = 1)%assertion).
-  (* The annotation [%assertion] is needed to help Coq parse correctly. *)
+  eapply hoare_seq with (Q := {{ X = 1 }}).
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -1520,9 +1560,10 @@ Definition valid_hoare_triple
 
 Hint Unfold valid_hoare_triple : core.
 
-Notation "{{ P }}  c  {{ Q }}" := (valid_hoare_triple P c Q)
-                                  (at level 90, c custom com at level 99)
-                                  : hoare_spec_scope.
+Notation "{{ P }} c {{ Q }}" :=
+  (valid_hoare_triple P c Q)
+    (at level 2, P custom assn at level 99, c custom com at level 99, Q custom assn at level 99)
+    : hoare_spec_scope.
 
 (** **** Exercise: 2 stars, standard (hoare_if1) *)
 
@@ -1649,8 +1690,7 @@ End If1.
       postcondition.
 
     - Like a conditional, we can assume guard [b] holds on entry to
-      the subcommand.
-*)
+      the subcommand. *)
 
 Theorem hoare_while : forall P (b:bexp) c,
   {{P /\ b}} c {{P}} ->
@@ -1709,7 +1749,7 @@ Example while_example :
       X := X + 1
     end
   {{X = 3}}.
-Proof.
+ Proof.
   eapply hoare_consequence_post.
   - apply hoare_while.
     eapply hoare_consequence_pre.
@@ -1832,8 +1872,10 @@ Definition valid_hoare_triple (P : Assertion) (c : com) (Q : Assertion)
                         : Prop :=
   forall st st', st =[ c ]=> st' -> P st -> Q st'.
 
-Notation "{{ P }}  c  {{ Q }}" :=
-  (valid_hoare_triple P c Q) (at level 90, c custom com at level 99).
+Notation "{{ P }} c {{ Q }}" :=
+  (valid_hoare_triple P c Q)
+    (at level 2, P custom assn at level 99, c custom com at level 99, Q custom assn at level 99)
+    : hoare_spec_scope.
 
 (** To make sure you've got the evaluation rules for [repeat] right,
     prove that [ex1_repeat] evaluates correctly. *)
@@ -2001,9 +2043,10 @@ Definition valid_hoare_triple (P:Assertion) (c:com) (Q:Assertion) : Prop :=
 
 Hint Unfold valid_hoare_triple : core.
 
-Notation "{{ P }}  c  {{ Q }}" := (valid_hoare_triple P c Q)
-                                  (at level 90, c custom com at level 99)
-                                  : hoare_spec_scope.
+Notation "{{ P }} c {{ Q }}" :=
+  (valid_hoare_triple P c Q)
+    (at level 2, P custom assn at level 99, c custom com at level 99, Q custom assn at level 99)
+    : hoare_spec_scope.
 
 (** And the precondition consequence rule is exactly as before. *)
 
@@ -2022,7 +2065,7 @@ Definition havoc_pre (X : string) (Q : Assertion) (st : total_map nat) : Prop
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 
 Theorem hoare_havoc : forall (Q : Assertion) (X : string),
-  {{ havoc_pre X Q }} havoc X {{ Q }}.
+  {{ $(havoc_pre X Q) }} havoc X {{ Q }}.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -2038,7 +2081,7 @@ Proof.
     You need to proceed manually. *)
 
 Theorem havoc_post : forall (P : Assertion) (X : string),
-  {{ P }} havoc X {{ fun st => exists (n:nat), P [X |-> n] st }}.
+  {{ P }} havoc X {{ $(fun st => exists (n:nat), ({{P [X |-> n] }}) st) }}.
 Proof.
   intros P X. eapply hoare_consequence_pre.
   - apply hoare_havoc.
@@ -2170,9 +2213,10 @@ Definition valid_hoare_triple
      st =[ c ]=> r  -> P st  ->
      (exists st', r = RNormal st' /\ Q st').
 
-Notation "{{ P }}  c  {{ Q }}" :=
-  (valid_hoare_triple P c Q) (at level 90, c custom com at level 99)
-  : hoare_spec_scope.
+Notation "{{ P }} c {{ Q }}" :=
+  (valid_hoare_triple P c Q)
+    (at level 2, P custom assn at level 99, c custom com at level 99, Q custom assn at level 99)
+    : hoare_spec_scope.
 
 (** To test your understanding of this modification, give an example
     precondition and postcondition that are satisfied by the [assume]
@@ -2330,4 +2374,4 @@ End HoareAssertAssume.
 
 
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

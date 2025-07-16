@@ -54,15 +54,20 @@ idtac " ".
 idtac "#> STLCRef.cyclic_store".
 idtac "Possible points: 3".
 check_type @STLCRef.cyclic_store (
-(exists t : STLCRef.tm,
-   STLCRef.multistep (t, @nil STLCRef.tm)
-     (STLCRef.tm_unit,
-      (STLCRef.tm_abs STLCRef.x STLCRef.Ty_Nat
-         (STLCRef.tm_app (STLCRef.tm_deref (STLCRef.tm_loc 1))
-            (STLCRef.tm_var STLCRef.x))
-       :: STLCRef.tm_abs STLCRef.x STLCRef.Ty_Nat
-            (STLCRef.tm_app (STLCRef.tm_deref (STLCRef.tm_loc 0))
-               (STLCRef.tm_var STLCRef.x)) :: @nil STLCRef.tm)%list))).
+(@ex STLCRef.tm
+   (fun t : STLCRef.tm =>
+    STLCRef.multistep
+      (@pair STLCRef.tm (list STLCRef.tm) t (@nil STLCRef.tm))
+      (@pair STLCRef.tm (list STLCRef.tm) STLCRef.tm_unit
+         (@cons STLCRef.tm
+            (STLCRef.tm_abs STLCRef.x STLCRef.Ty_Nat
+               (STLCRef.tm_app (STLCRef.tm_deref (STLCRef.tm_loc 1))
+                  (STLCRef.tm_var STLCRef.x)))
+            (@cons STLCRef.tm
+               (STLCRef.tm_abs STLCRef.x STLCRef.Ty_Nat
+                  (STLCRef.tm_app (STLCRef.tm_deref (STLCRef.tm_loc 0))
+                     (STLCRef.tm_var STLCRef.x)))
+               (@nil STLCRef.tm))))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCRef.cyclic_store.
@@ -75,9 +80,15 @@ idtac " ".
 idtac "#> STLCRef.store_not_unique".
 idtac "Possible points: 3".
 check_type @STLCRef.store_not_unique (
-(exists (st : STLCRef.store) (ST1 ST2 : STLCRef.store_ty),
-   STLCRef.store_well_typed ST1 st /\
-   STLCRef.store_well_typed ST2 st /\ ST1 <> ST2)).
+(@ex STLCRef.store
+   (fun st : STLCRef.store =>
+    @ex STLCRef.store_ty
+      (fun ST1 : STLCRef.store_ty =>
+       @ex STLCRef.store_ty
+         (fun ST2 : STLCRef.store_ty =>
+          and (STLCRef.store_well_typed ST1 st)
+            (and (STLCRef.store_well_typed ST2 st)
+               (not (@eq STLCRef.store_ty ST1 ST2)))))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCRef.store_not_unique.
@@ -158,6 +169,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2024-01-03 15:05 *)
+(* 2025-01-06 19:49 *)
 
-(* 2024-01-03 15:05 *)
+(* 2025-01-06 19:49 *)

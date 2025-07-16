@@ -39,9 +39,10 @@ idtac "#> STLCProp.progress'".
 idtac "Advanced".
 idtac "Possible points: 3".
 check_type @STLCProp.progress' (
-(forall (t : Stlc.STLC.tm) (T : Stlc.STLC.ty),
- Stlc.STLC.has_type (@Maps.empty Stlc.STLC.ty) t T ->
- Stlc.STLC.value t \/ (exists t' : Stlc.STLC.tm, Stlc.STLC.step t t'))).
+(forall (t : Stlc.STLC.tm) (T : Stlc.STLC.ty)
+   (_ : Stlc.STLC.has_type (@Maps.empty Stlc.STLC.ty) t T),
+ or (Stlc.STLC.value t)
+   (@ex Stlc.STLC.tm (fun t' : Stlc.STLC.tm => Stlc.STLC.step t t')))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCProp.progress'.
@@ -56,9 +57,9 @@ idtac "Advanced".
 idtac "Possible points: 3".
 check_type @STLCProp.substitution_preserves_typing_from_typing_ind (
 (forall (Gamma : Maps.partial_map Stlc.STLC.ty) (x : String.string)
-   (U : Stlc.STLC.ty) (t v : Stlc.STLC.tm) (T : Stlc.STLC.ty),
- Stlc.STLC.has_type (@Maps.update Stlc.STLC.ty Gamma x U) t T ->
- Stlc.STLC.has_type (@Maps.empty Stlc.STLC.ty) v U ->
+   (U : Stlc.STLC.ty) (t v : Stlc.STLC.tm) (T : Stlc.STLC.ty)
+   (_ : Stlc.STLC.has_type (@Maps.update Stlc.STLC.ty Gamma x U) t T)
+   (_ : Stlc.STLC.has_type (@Maps.empty Stlc.STLC.ty) v U),
  Stlc.STLC.has_type Gamma (Stlc.STLC.subst x v t) T)).
 idtac "Assumptions:".
 Abort.
@@ -80,8 +81,9 @@ idtac " ".
 idtac "#> STLCProp.unique_types".
 idtac "Possible points: 3".
 check_type @STLCProp.unique_types (
-(forall (Gamma : Stlc.STLC.context) (e : Stlc.STLC.tm) (T T' : Stlc.STLC.ty),
- Stlc.STLC.has_type Gamma e T -> Stlc.STLC.has_type Gamma e T' -> T = T')).
+(forall (Gamma : Stlc.STLC.context) (e : Stlc.STLC.tm)
+   (T T' : Stlc.STLC.ty) (_ : Stlc.STLC.has_type Gamma e T)
+   (_ : Stlc.STLC.has_type Gamma e T'), @eq Stlc.STLC.ty T T')).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCProp.unique_types.
@@ -95,10 +97,11 @@ idtac "#> STLCProp.free_in_context".
 idtac "Possible points: 2".
 check_type @STLCProp.free_in_context (
 (forall (x : String.string) (t : Stlc.STLC.tm) (T : Stlc.STLC.ty)
-   (Gamma : Stlc.STLC.context),
- STLCProp.appears_free_in x t ->
- Stlc.STLC.has_type Gamma t T ->
- exists T' : Stlc.STLC.ty, Gamma x = @Some Stlc.STLC.ty T')).
+   (Gamma : Stlc.STLC.context) (_ : STLCProp.appears_free_in x t)
+   (_ : Stlc.STLC.has_type Gamma t T),
+ @ex Stlc.STLC.ty
+   (fun T' : Stlc.STLC.ty =>
+    @eq (option Stlc.STLC.ty) (Gamma x) (@Some Stlc.STLC.ty T')))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCProp.free_in_context.
@@ -135,7 +138,8 @@ idtac " ".
 idtac "#> STLCArith.subst".
 idtac "Possible points: 10".
 check_type @STLCArith.subst (
-(String.string -> STLCArith.tm -> STLCArith.tm -> STLCArith.tm)).
+(forall (_ : String.string) (_ : STLCArith.tm) (_ : STLCArith.tm),
+ STLCArith.tm)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCArith.subst.
@@ -148,10 +152,10 @@ idtac " ".
 idtac "#> STLCArith.weakening".
 idtac "Possible points: 6".
 check_type @STLCArith.weakening (
-(forall (Gamma Gamma' : Maps.partial_map STLCArith.ty) 
-   (t : STLCArith.tm) (T : STLCArith.ty),
- @Maps.includedin STLCArith.ty Gamma Gamma' ->
- STLCArith.has_type Gamma t T -> STLCArith.has_type Gamma' t T)).
+(forall (Gamma Gamma' : Maps.partial_map STLCArith.ty)
+   (t : STLCArith.tm) (T : STLCArith.ty)
+   (_ : @Maps.includedin STLCArith.ty Gamma Gamma')
+   (_ : STLCArith.has_type Gamma t T), STLCArith.has_type Gamma' t T)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCArith.weakening.
@@ -164,9 +168,10 @@ idtac " ".
 idtac "#> STLCArith.preservation".
 idtac "Possible points: 6".
 check_type @STLCArith.preservation (
-(forall (t t' : STLCArith.tm) (T : STLCArith.ty),
- STLCArith.has_type (@Maps.empty STLCArith.ty) t T ->
- STLCArith.step t t' -> STLCArith.has_type (@Maps.empty STLCArith.ty) t' T)).
+(forall (t t' : STLCArith.tm) (T : STLCArith.ty)
+   (_ : STLCArith.has_type (@Maps.empty STLCArith.ty) t T)
+   (_ : STLCArith.step t t'),
+ STLCArith.has_type (@Maps.empty STLCArith.ty) t' T)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCArith.preservation.
@@ -179,9 +184,10 @@ idtac " ".
 idtac "#> STLCArith.progress".
 idtac "Possible points: 6".
 check_type @STLCArith.progress (
-(forall (t : STLCArith.tm) (T : STLCArith.ty),
- STLCArith.has_type (@Maps.empty STLCArith.ty) t T ->
- STLCArith.value t \/ (exists t' : STLCArith.tm, STLCArith.step t t'))).
+(forall (t : STLCArith.tm) (T : STLCArith.ty)
+   (_ : STLCArith.has_type (@Maps.empty STLCArith.ty) t T),
+ or (STLCArith.value t)
+   (@ex STLCArith.tm (fun t' : STLCArith.tm => STLCArith.step t t')))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCArith.progress.
@@ -240,6 +246,6 @@ idtac "---------- STLCProp.substitution_preserves_typing_from_typing_ind -------
 Print Assumptions STLCProp.substitution_preserves_typing_from_typing_ind.
 Abort.
 
-(* 2024-01-03 15:05 *)
+(* 2025-01-06 19:48 *)
 
-(* 2024-01-03 15:05 *)
+(* 2025-01-06 19:48 *)

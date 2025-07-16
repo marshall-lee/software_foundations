@@ -467,7 +467,7 @@ Write these types in order from the most specific to the most general.
 
 Where does the type [Top->Top->Student] fit into this order?
 That is, state how [Top -> (Top -> Student)] compares with each
-of the five types above. It may be unrelated to some of them.  
+of the five types above. It may be unrelated to some of them.
 *)
 
 (* Do not modify the following line: *)
@@ -491,18 +491,18 @@ Definition manual_grade_for_subtype_order : option (nat*string) := None.
       forall S T1 T2,
            (S <: T1 -> T2) ->
            exists S1 S2,
-              S = S1 -> S2  /\  T1 <: S1  /\  S2 <: T2 
+              S = S1 -> S2  /\  T1 <: S1  /\  S2 <: T2
 
       exists S,
-           S <: S->S 
+           S <: S->S
 
       exists S,
-           S->S <: S  
+           S->S <: S
 
       forall S T1 T2,
            S <: T1*T2 ->
            exists S1 S2,
-              S = S1*S2  /\  S1 <: T1  /\  S2 <: T2  
+              S = S1*S2  /\  S1 <: T1  /\  S2 <: T2
 *)
 
 (* Do not modify the following line: *)
@@ -730,48 +730,62 @@ Inductive tm : Type :=
   | tm_snd : tm -> tm
 .
 
-Declare Custom Entry stlc.
-Notation "<{ e }>" := e (e custom stlc at level 99).
-Notation "( x )" := x (in custom stlc, x at level 99).
-Notation "x" := x (in custom stlc at level 0, x constr at level 0).
-Notation "S -> T" := (Ty_Arrow S T) (in custom stlc at level 50, right associativity).
-Notation "x y" := (tm_app x y) (in custom stlc at level 1, left associativity).
+Declare Custom Entry stlc_ty.
+Declare Custom Entry stlc_tm.
+Declare Scope stlc_scope.
+Open Scope stlc_scope.
+
+Notation "x" := x (in custom stlc_ty at level 0, x global) : stlc_scope.
+
+Notation "<{{ x }}>" := x (x custom stlc_ty).
+
+Notation "( t )" := t (in custom stlc_ty at level 0, t custom stlc_ty) : stlc_scope.
+Notation "S -> T" := (Ty_Arrow S T) (in custom stlc_ty at level 99, right associativity) : stlc_scope.
+
+Notation "$( t )" := t (in custom stlc_ty at level 0, t constr) : stlc_scope.
+
+Notation "$( x )" := x (in custom stlc_tm at level 0, x constr, only parsing) : stlc_scope.
+Notation "x" := x (in custom stlc_tm at level 0, x constr at level 0) : stlc_scope.
+Notation "<{ e }>" := e (e custom stlc_tm at level 200) : stlc_scope.
+Notation "( x )" := x (in custom stlc_tm at level 0, x custom stlc_tm) : stlc_scope.
+
+Notation "x y" := (tm_app x y) (in custom stlc_tm at level 10, left associativity) : stlc_scope.
 Notation "\ x : t , y" :=
-  (tm_abs x t y) (in custom stlc at level 90, x at level 99,
-                     t custom stlc at level 99,
-                     y custom stlc at level 99,
+  (tm_abs x t y) (in custom stlc_tm at level 200, x global,
+                     t custom stlc_ty,
+                     y custom stlc_tm at level 200,
                      left associativity).
 Coercion tm_var : string >-> tm.
+Arguments tm_var _%_string.
 
-Notation "'Bool'" := Ty_Bool (in custom stlc at level 0).
+Notation "'Bool'" := Ty_Bool (in custom stlc_ty at level 0) : stlc_scope.
 Notation "'if' x 'then' y 'else' z" :=
-  (tm_if x y z) (in custom stlc at level 89,
-                    x custom stlc at level 99,
-                    y custom stlc at level 99,
-                    z custom stlc at level 99,
+  (tm_if x y z) (in custom stlc_tm at level 200,
+                    x custom stlc_tm,
+                    y custom stlc_tm,
+                    z custom stlc_tm at level 200,
                     left associativity).
 Notation "'true'"  := true (at level 1).
-Notation "'true'"  := tm_true (in custom stlc at level 0).
+Notation "'true'"  := tm_true (in custom stlc_tm at level 0).
 Notation "'false'"  := false (at level 1).
-Notation "'false'"  := tm_false (in custom stlc at level 0).
+Notation "'false'"  := tm_false (in custom stlc_tm at level 0).
+
+Notation "'Base' x" := (Ty_Base x) (in custom stlc_ty at level 0, x constr at level 0) : stlc_scope.
 
 Notation "'Unit'" :=
-  (Ty_Unit) (in custom stlc at level 0).
-Notation "'unit'" := tm_unit (in custom stlc at level 0).
-
-Notation "'Base' x" := (Ty_Base x) (in custom stlc at level 0).
-
-Notation "'Top'" := (Ty_Top) (in custom stlc at level 0).
+  (Ty_Unit) (in custom stlc_ty at level 0) : stlc_scope.
+Notation "'unit'" := tm_unit (in custom stlc_tm at level 0) : stlc_scope.
 
 Notation "X * Y" :=
-  (Ty_Prod X Y) (in custom stlc at level 2, X custom stlc, Y custom stlc at level 0).
-Notation "( x ',' y )" := (tm_pair x y) (in custom stlc at level 0,
-                                                x custom stlc at level 99,
-                                                y custom stlc at level 99).
-Notation "t '.fst'" := (tm_fst t) (in custom stlc at level 1).
-Notation "t '.snd'" := (tm_snd t) (in custom stlc at level 1).
+  (Ty_Prod X Y) (in custom stlc_ty at level 2, X custom stlc_ty, Y custom stlc_ty at level 0).
 
-Notation "{ x }" := x (in custom stlc at level 1, x constr).
+Notation "( x ',' y )" := (tm_pair x y) (in custom stlc_tm at level 0,
+                                                x custom stlc_tm,
+                                                y custom stlc_tm) : stlc_scope.
+Notation "t '.fst'" := (tm_fst t) (in custom stlc_tm at level 1) : stlc_scope.
+Notation "t '.snd'" := (tm_snd t) (in custom stlc_tm at level 1) : stlc_scope.
+
+Notation "'Top'" := (Ty_Top) (in custom stlc_ty at level 0) : stlc_scope.
 
 (* ----------------------------------------------------------------- *)
 (** *** Substitution *)
@@ -779,7 +793,8 @@ Notation "{ x }" := x (in custom stlc at level 1, x constr).
 (** The definition of substitution remains exactly the same as for the
     pure STLC. *)
 
-Reserved Notation "'[' x ':=' s ']' t" (in custom stlc at level 20, x constr).
+Reserved Notation "'[' x ':=' s ']' t" (in custom stlc_tm at level 5, x global, s custom stlc_tm,
+      t custom stlc_tm at next level, right associativity).
 
 Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
   match t with
@@ -804,7 +819,7 @@ Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
   | <{t0.snd}> =>
       <{ ([x:=s] t0).snd}>
   end
-where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
+where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc_tm) : stlc_scope.
 
 (* ----------------------------------------------------------------- *)
 (** *** Reduction *)
@@ -868,11 +883,11 @@ Inductive subtype : ty -> ty -> Prop :=
       U <: T ->
       S <: T
   | S_Top : forall S,
-      S <: <{Top}>
+      S <: <{{ Top }}>
   | S_Arrow : forall S1 S2 T1 T2,
       T1 <: S1 ->
       S2 <: T2 ->
-      <{S1->S2}> <: <{T1->T2}>
+      <{{ S1->S2 }}> <: <{{ T1->T2 }}>
 where "T '<:' U" := (subtype T U).
 
 (** Note that we don't need any special rules for base types ([Bool]
@@ -888,16 +903,16 @@ Notation x := "x".
 Notation y := "y".
 Notation z := "z".
 
-Notation A := <{Base "A"}>.
-Notation B := <{Base "B"}>.
-Notation C := <{Base "C"}>.
+Notation A := <{{ Base "A" }}>.
+Notation B := <{{ Base "B" }}>.
+Notation C := <{{ Base "C" }}>.
 
-Notation String := <{Base "String"}>.
-Notation Float := <{Base "Float"}>.
-Notation Integer := <{Base "Integer"}>.
+Notation String := <{{ Base "String" }}>.
+Notation Float := <{{ Base "Float" }}>.
+Notation Integer := <{{ Base "Integer" }}>.
 
 Example subtyping_example_0 :
-  <{C->Bool}> <: <{C->Top}>.
+  <{{ C->Bool }}> <: <{{ C->Top }}>.
 Proof. auto. Qed.
 
 (** **** Exercise: 2 stars, standard, optional (subtyping_judgements)
@@ -941,14 +956,14 @@ Proof.
 
 (** **** Exercise: 1 star, standard, optional (subtyping_example_1) *)
 Example subtyping_example_1 :
-  <{Top->Student}> <:  <{(C->C)->Person}>.
+  <{{ Top->Student }}> <:  <{{ (C->C)->Person }}>.
 Proof with eauto.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (subtyping_example_2) *)
 Example subtyping_example_2 :
-  <{Top->Person}> <: <{Person->Top}>.
+  <{{ Top->Person }}> <: <{{ Person->Top }}>.
 Proof with eauto.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -963,39 +978,47 @@ End Examples.
 
 Definition context := partial_map ty.
 
-Reserved Notation "Gamma '|--' t '\in' T" (at level 40,
-                                          t custom stlc, T custom stlc at level 0).
+Notation "x '|->' v ';' m " := (update m x v)
+  (in custom stlc_tm at level 0, x constr at level 0, v  custom stlc_ty, right associativity) : stlc_scope.
+
+Notation "x '|->' v " := (update empty x v)
+  (in custom stlc_tm at level 0, x constr at level 0, v custom stlc_ty) : stlc_scope.
+
+Notation "'empty'" := empty (in custom stlc_tm) : stlc_scope.
+
+Reserved Notation "<{ Gamma '|--' t '\in' T }>"
+            (at level 0, Gamma custom stlc_tm at level 200, t custom stlc_tm, T custom stlc_ty).
 
 Inductive has_type : context -> tm -> ty -> Prop :=
   (* Pure STLC, same as before: *)
   | T_Var : forall Gamma x T1,
       Gamma x = Some T1 ->
-      Gamma |-- x \in T1
+      <{ Gamma |-- x \in T1 }>
   | T_Abs : forall Gamma x T1 T2 t1,
-      (x |-> T2 ; Gamma) |-- t1 \in T1 ->
-      Gamma |-- \x:T2, t1 \in (T2 -> T1)
+      <{ x |-> T2 ; Gamma |-- t1 \in T1 }> ->
+      <{ Gamma |-- \x:T2, t1 \in T2 -> T1 }>
   | T_App : forall T1 T2 Gamma t1 t2,
-      Gamma |-- t1 \in (T2 -> T1) ->
-      Gamma |-- t2 \in T2 ->
-      Gamma |-- t1 t2 \in T1
+      <{ Gamma |-- t1 \in T2 -> T1 }> ->
+      <{ Gamma |-- t2 \in T2 }> ->
+      <{ Gamma |-- t1 t2 \in T1 }>
   | T_True : forall Gamma,
-       Gamma |-- true \in Bool
+       <{ Gamma |-- true \in Bool }>
   | T_False : forall Gamma,
-       Gamma |-- false \in Bool
+       <{ Gamma |-- false \in Bool }>
   | T_If : forall t1 t2 t3 T1 Gamma,
-       Gamma |-- t1 \in Bool ->
-       Gamma |-- t2 \in T1 ->
-       Gamma |-- t3 \in T1 ->
-       Gamma |-- if t1 then t2 else t3 \in T1
+       <{ Gamma |-- t1 \in Bool }> ->
+       <{ Gamma |-- t2 \in T1 }> ->
+       <{ Gamma |-- t3 \in T1 }> ->
+       <{ Gamma |-- if t1 then t2 else t3 \in T1 }>
   | T_Unit : forall Gamma,
-      Gamma |-- unit \in Unit
+      <{ Gamma |-- unit \in Unit }>
   (* New rule of subsumption: *)
   | T_Sub : forall Gamma t1 T1 T2,
-      Gamma |-- t1 \in T1 ->
+      <{ Gamma |-- t1 \in T1 }> ->
       T1 <: T2 ->
-      Gamma |-- t1 \in T2
+      <{ Gamma |-- t1 \in T2 }>
 
-where "Gamma '|--' t '\in' T" := (has_type Gamma t T).
+where "<{ Gamma '|--' t '\in' T }>" := (has_type Gamma t T) : stlc_scope.
 
 Hint Constructors has_type : core.
 
@@ -1058,22 +1081,22 @@ End Examples2.
 
 (** **** Exercise: 2 stars, standard, optional (sub_inversion_Bool) *)
 Lemma sub_inversion_Bool : forall U,
-     U <: <{Bool}> ->
-     U = <{Bool}>.
+     U <: <{{ Bool }}> ->
+     U = <{{ Bool }}>.
 Proof with auto.
   intros U Hs.
-  remember <{Bool}> as V.
+  remember <{{ Bool }}> as V.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (sub_inversion_arrow) *)
 Lemma sub_inversion_arrow : forall U V1 V2,
-     U <: <{V1->V2}> ->
+     U <: <{{ V1->V2 }}> ->
      exists U1 U2,
-     U = <{U1->U2}> /\ V1 <: U1 /\ U2 <: V2.
+     U = <{{ U1->U2 }}> /\ V1 <: U1 /\ U2 <: V2.
 Proof with eauto.
   intros U V1 V2 Hs.
-  remember <{V1->V2}> as V.
+  remember <{{ V1->V2 }}> as V.
   generalize dependent V2. generalize dependent V1.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1085,31 +1108,31 @@ Proof with eauto.
 
 (** **** Exercise: 2 stars, standard, optional (sub_inversion_Unit) *)
 Lemma sub_inversion_Unit : forall U,
-     U <: <{Unit}> ->
-     U = <{Unit}>.
+     U <: <{{ Unit }}> ->
+     U = <{{ Unit }}>.
 Proof with auto.
   intros U Hs.
-  remember <{Unit}> as V.
+  remember <{{ Unit }}> as V.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (sub_inversion_Base) *)
 Lemma sub_inversion_Base : forall U s,
-     U <: <{Base s}> ->
-     U = <{Base s}>.
+     U <: <{{ Base s }}> ->
+     U = <{{ Base s }}>.
 Proof with auto.
   intros U s Hs.
-  remember <{Base s}> as V.
+  remember <{{ Base s }}> as V.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (sub_inversion_Top) *)
 Lemma sub_inversion_Top : forall U,
-     <{ Top }> <: U ->
-     U = <{ Top }>.
+     <{{ Top }}> <: U ->
+     U = <{{ Top }}>.
 Proof with auto.
   intros U Hs.
-  remember <{Top}> as V.
+  remember <{{ Top }}> as V.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -1142,7 +1165,7 @@ Proof with auto.
 
 (** **** Exercise: 3 stars, standard, optional (canonical_forms_of_arrow_types) *)
 Lemma canonical_forms_of_arrow_types : forall Gamma s T1 T2,
-  Gamma |-- s \in (T1->T2) ->
+  <{ Gamma |-- s \in T1->T2 }> ->
   value s ->
   exists x S1 s2,
      s = <{\x:S1,s2}>.
@@ -1154,12 +1177,12 @@ Proof with eauto.
     [tm_true] and [tm_false]. *)
 
 Lemma canonical_forms_of_Bool : forall Gamma s,
-  Gamma |-- s \in Bool ->
+  <{ Gamma |-- s \in Bool }> ->
   value s ->
   s = tm_true \/ s = tm_false.
 Proof with eauto.
   intros Gamma s Hty Hv.
-  remember <{Bool}> as T.
+  remember <{{ Bool }}> as T.
   induction Hty; try solve_by_invert...
   - (* T_Sub *)
     subst. apply sub_inversion_Bool in H. subst...
@@ -1225,7 +1248,7 @@ Qed.
 (** Formally: *)
 
 Theorem progress : forall t T,
-     empty |-- t \in T ->
+     <{ empty |-- t \in T }> ->
      value t \/ exists t', t --> t'.
 Proof with eauto.
   intros t T Ht.
@@ -1252,7 +1275,7 @@ Proof with eauto.
     + (* t1 is a value *) eauto.
     + apply canonical_forms_of_Bool in Ht1; [|assumption].
       destruct Ht1; subst...
-    + destruct H. rename x into t1'. eauto. 
+    + destruct H. rename x into t1'. eauto.
 Qed.
 
 (* ================================================================= *)
@@ -1299,10 +1322,10 @@ Qed.
 (** Formally: *)
 
 Lemma typing_inversion_abs : forall Gamma x S1 t2 T,
-     Gamma |-- \x:S1,t2 \in T ->
+     <{ Gamma |-- \x:S1,t2 \in T }> ->
      exists S2,
-       <{S1->S2}> <: T
-       /\ (x |-> S1 ; Gamma) |-- t2 \in S2.
+       <{{ S1->S2 }}> <: T
+       /\ <{ x |-> S1 ; Gamma |-- t2 \in S2 }>.
 Proof with eauto.
   intros Gamma x S1 t2 T H.
   remember <{\x:S1,t2}> as t.
@@ -1316,7 +1339,7 @@ Proof with eauto.
 
 (** **** Exercise: 3 stars, standard, optional (typing_inversion_var) *)
 Lemma typing_inversion_var : forall Gamma (x:string) T,
-  Gamma |-- x \in T ->
+  <{ Gamma |-- x \in T }> ->
   exists S,
     Gamma x = Some S /\ S <: T.
 Proof with eauto.
@@ -1325,17 +1348,17 @@ Proof with eauto.
 
 (** **** Exercise: 3 stars, standard, optional (typing_inversion_app) *)
 Lemma typing_inversion_app : forall Gamma t1 t2 T2,
-  Gamma |-- t1 t2 \in T2 ->
+  <{ Gamma |-- t1 t2 \in T2 }> ->
   exists T1,
-    Gamma |-- t1 \in (T1->T2) /\
-    Gamma |-- t2 \in T1.
+    <{ Gamma |-- t1 \in T1->T2 }> /\
+    <{ Gamma |-- t2 \in T1 }>.
 Proof with eauto.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 Lemma typing_inversion_unit : forall Gamma T,
-  Gamma |-- unit \in T ->
-    <{Unit}> <: T.
+  <{ Gamma |-- unit \in T }> ->
+  <{{ Unit }}> <: T.
 Proof with eauto.
   intros Gamma T Htyp. remember <{ unit }> as tu.
   induction Htyp;
@@ -1347,9 +1370,9 @@ Qed.
     us exactly what we'll actually require below. *)
 
 Lemma abs_arrow : forall x S1 s2 T1 T2,
-  empty |-- \x:S1,s2 \in (T1->T2) ->
-     T1 <: S1
-  /\ (x |-> S1 ; empty) |-- s2 \in T2.
+  <{ empty |-- \x:S1,s2 \in T1->T2 }> ->
+  T1 <: S1
+  /\ <{ x |-> S1 |-- s2 \in T2 }>.
 Proof with eauto.
   intros x S1 s2 T1 T2 Hty.
   apply typing_inversion_abs in Hty.
@@ -1365,8 +1388,8 @@ Proof with eauto.
 
 Lemma weakening : forall Gamma Gamma' t T,
      includedin Gamma Gamma' ->
-     Gamma  |-- t \in T  ->
-     Gamma' |-- t \in T.
+     <{ Gamma  |-- t \in T }> ->
+     <{ Gamma' |-- t \in T }>.
 Proof.
   intros Gamma Gamma' t T H Ht.
   generalize dependent Gamma'.
@@ -1374,8 +1397,8 @@ Proof.
 Qed.
 
 Corollary weakening_empty : forall Gamma t T,
-     empty |-- t \in T  ->
-     Gamma |-- t \in T.
+     <{ empty |-- t \in T }> ->
+     <{ Gamma |-- t \in T }>.
 Proof.
   intros Gamma t T.
   eapply weakening.
@@ -1392,9 +1415,9 @@ Qed.
     substitution_preserves_typing_from_typing_ind in StlcProp.v). *)
 
 Lemma substitution_preserves_typing : forall Gamma x U t v T,
-   (x |-> U ; Gamma) |-- t \in T ->
-   empty |-- v \in U   ->
-   Gamma |-- [x:=v]t \in T.
+   <{ x |-> U ; Gamma |-- t \in T }> ->
+   <{ empty |-- v \in U }>  ->
+   <{ Gamma |-- [x:=v]t \in T }>.
 Proof.
   intros Gamma x U t v T Ht Hv.
   remember (x |-> U; Gamma) as Gamma'.
@@ -1462,9 +1485,9 @@ Proof.
        subderivation and an application of [T_Sub].  [] *)
 
 Theorem preservation : forall t t' T,
-     empty |-- t \in T  ->
+     <{ empty |-- t \in T }> ->
      t --> t'  ->
-     empty |-- t' \in T.
+     <{ empty |-- t' \in T }>.
 Proof with eauto.
   intros t t' T HT. generalize dependent t'.
   remember empty as Gamma.
@@ -1477,7 +1500,7 @@ Proof with eauto.
        and [eauto] takes care of them *)
     + (* ST_AppAbs *)
       destruct (abs_arrow _ _ _ _ _ HT1) as [HA1 HA2].
-      apply substitution_preserves_typing with T0... 
+      apply substitution_preserves_typing with T0...
 Qed.
 
 (* ================================================================= *)
@@ -1521,10 +1544,10 @@ Qed.
 
     - Suppose we add the following typing rule:
 
-                           Gamma |-- t \in S1->S2
+                           <{ Gamma |-- t \in S1->S2
                     S1 <: T1     T1 <: S1      S2 <: T2
                     -----------------------------------    (T_Funny1)
-                           Gamma |-- t \in T1->T2
+                           <{ Gamma |-- t \in T1->T2
 
     - Suppose we add the following reduction rule:
 
@@ -1625,7 +1648,7 @@ Definition TF P := P \/ ~P.
 (** **** Exercise: 1 star, standard, optional (formal_subtype_instances_tf_1a) *)
 Theorem formal_subtype_instances_tf_1a:
   TF (forall S T U V, S <: T -> U <: V ->
-         <{T->S}> <: <{T->S}>).
+         <{{ T->S }}> <: <{{ T->S }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1633,7 +1656,7 @@ Proof.
 (** **** Exercise: 1 star, standard, optional (formal_subtype_instances_tf_1b) *)
 Theorem formal_subtype_instances_tf_1b:
   TF (forall S T U V, S <: T -> U <: V ->
-         <{Top->U}> <: <{S->Top}>).
+         <{{ Top->U }}> <: <{{ S->Top }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1641,7 +1664,7 @@ Proof.
 (** **** Exercise: 1 star, standard, optional (formal_subtype_instances_tf_1c) *)
 Theorem formal_subtype_instances_tf_1c:
   TF (forall S T U V, S <: T -> U <: V ->
-         <{(C->C)->(A*B)}> <: <{(C->C)->(Top*B)}>).
+         <{{ (C->C)->(A*B) }}> <: <{{ (C->C)->(Top*B) }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1649,7 +1672,7 @@ Proof.
 (** **** Exercise: 1 star, standard, optional (formal_subtype_instances_tf_1d) *)
 Theorem formal_subtype_instances_tf_1d:
   TF (forall S T U V, S <: T -> U <: V ->
-         <{T->(T->U)}> <: <{S->(S->V)}>).
+         <{{ T->(T->U) }}> <: <{{ S->(S->V) }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1657,7 +1680,7 @@ Proof.
 (** **** Exercise: 1 star, standard, optional (formal_subtype_instances_tf_1e) *)
 Theorem formal_subtype_instances_tf_1e:
   TF (forall S T U V, S <: T -> U <: V ->
-         <{(T->T)->U}> <: <{(S->S)->V}>).
+         <{{ (T->T)->U }}> <: <{{ (S->S)->V }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1665,7 +1688,7 @@ Proof.
 (** **** Exercise: 1 star, standard, optional (formal_subtype_instances_tf_1f) *)
 Theorem formal_subtype_instances_tf_1f:
   TF (forall S T U V, S <: T -> U <: V ->
-         <{((T->S)->T)->U}> <: <{((S->T)->S)->V}>).
+         <{{ ((T->S)->T)->U }}> <: <{{ ((S->T)->S)->V }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1673,7 +1696,7 @@ Proof.
 (** **** Exercise: 1 star, standard, optional (formal_subtype_instances_tf_1g) *)
 Theorem formal_subtype_instances_tf_1g:
   TF (forall S T U V, S <: T -> U <: V ->
-         <{S*V}> <: <{T*U}>).
+         <{{ S*V }}> <: <{{ T*U }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1682,7 +1705,7 @@ Proof.
 Theorem formal_subtype_instances_tf_2a:
   TF (forall S T,
          S <: T ->
-         <{S->S}> <: <{T->T}>).
+         <{{ S->S }}> <: <{{ T->T }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1690,9 +1713,9 @@ Proof.
 (** **** Exercise: 2 stars, standard, optional (formal_subtype_instances_tf_2b) *)
 Theorem formal_subtype_instances_tf_2b:
   TF (forall S,
-         S <: <{A->A}> ->
+         S <: <{{ A->A }}> ->
          exists T,
-           S = <{T->T}> /\ T <: A).
+           S = <{{ T->T }}> /\ T <: A).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1704,7 +1727,7 @@ Proof.
     derviation). *)
 Theorem formal_subtype_instances_tf_2d:
   TF (exists S,
-         S <: <{S->S}>).
+         S <: <{{ S->S }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1712,7 +1735,7 @@ Proof.
 (** **** Exercise: 2 stars, standard, optional (formal_subtype_instances_tf_2e) *)
 Theorem formal_subtype_instances_tf_2e:
   TF (exists S,
-         <{S->S}> <: S).
+         <{{ S->S }}> <: S).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1733,28 +1756,28 @@ Proof.
 
 (** **** Exercise: 2 stars, standard, optional (formal_subtype_concepts_tfc) *)
 Theorem formal_subtype_concepts_tfc:
-  TF (exists T1 T2, forall S1 S2, <{S1*S2}> <: <{T1*T2}>).
+  TF (exists T1 T2, forall S1 S2, <{{ S1*S2 }}> <: <{{ T1*T2 }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (formal_subtype_concepts_tfd) *)
 Theorem formal_subtype_concepts_tfd:
-  TF (exists T1 T2, forall S1 S2, <{T1*T2}> <: <{S1*S2}>).
+  TF (exists T1 T2, forall S1 S2, <{{ T1*T2 }}> <: <{{ S1*S2 }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (formal_subtype_concepts_tfe) *)
 Theorem formal_subtype_concepts_tfe:
-  TF (exists T1 T2, forall S1 S2, <{S1->S2}> <: <{T1->T2}>).
+  TF (exists T1 T2, forall S1 S2, <{{ S1->S2 }}> <: <{{ T1->T2 }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (formal_subtype_concepts_tff) *)
 Theorem formal_subtype_concepts_tff:
-  TF (exists T1 T2, forall S1 S2, <{T1->T2}> <: <{S1->S2}>).
+  TF (exists T1 T2, forall S1 S2, <{{ T1->T2 }}> <: <{{ S1->S2 }}>).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -1781,90 +1804,16 @@ Proof.
 (** **** Exercise: 3 stars, standard, optional (formal_proper_subtypes) *)
 Theorem formal_proper_subtypes:
   TF (forall T,
-         ~(T = <{Bool}> \/ (exists n, T = <{Base n}>) \/ T = <{Unit}>) ->
+         ~(T = <{{ Bool }}> \/ (exists n, T = <{{ Base n }}>) \/ T = <{{ Unit }}>) ->
          exists S,
            S <: T /\ S <> T).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-Definition smallest_largest HT :=
-  (* There exists a smallest and a largest. *)
-  (exists TS TL, forall T, TS <: T /\ T <: TL <-> HT T)
-  \/
-  (* There exists a smallest, but no largest. *)
-  ((exists TS, forall T, TS <: T <-> HT T) /\
-   ~(exists TL, forall T, T <: TL <-> HT T))
-  \/
-  (* There exists a largest, but not smallest. *)
-  (~(exists TS, forall T, TS <: T <-> HT T) /\
-   (exists TL, forall T, T <: TL <-> HT T))
-  \/
-  (* There exists neither a smallest nor a largest. *)
-  (~(exists TS, forall T, TS <: T <-> HT T) /\
-   ~(exists TL, forall T, T <: TL <-> HT T)).
-
-(** **** Exercise: 3 stars, advanced, optional (formal_small_large_1) *)
-Theorem formal_small_large_1:
-  smallest_largest
-  (fun T =>
-   empty |-- <{(\p:T*Top, p.fst) ((\z:A, z), unit)}> \in <{A->A}>).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
-
-(** **** Exercise: 3 stars, advanced, optional (formal_small_large_2) *)
-Theorem formal_small_large_2:
-  smallest_largest
-  (fun T =>
-   empty |-- <{(\p:(A->A)*(B->B), p) ((\z:A, z), (\z:B, z))}> \in T).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
-
-(** **** Exercise: 4 stars, advanced, optional (formal_small_large_3) *)
-Theorem formal_small_large_3:
-  smallest_largest
-  (fun T =>
-   (a |-> A) |-- <{(\p:A*T, (p.snd) (p.fst)) (a, \z:A, z)}> \in A).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
-
-(** **** Exercise: 4 stars, advanced, optional (formal_small_large_4) *)
-Theorem formal_small_large_4:
-  smallest_largest
-  (fun T =>
-   exists S,
-     empty |-- <{\p:A*T, (p.snd) (p.fst)}> \in S).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
-
-Definition smallest P :=
-  TF (exists TS, forall T, TS <: T <-> P T).
-
-(** **** Exercise: 3 stars, standard, optional (formal_smallest_1) *)
-Theorem formal_smallest_1:
-  smallest
-  (fun T =>
-   exists S t,
-     empty |-- <{ (\x:T, x x) t }> \in S).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
-
-(** **** Exercise: 3 stars, standard, optional (formal_smallest_2) *)
-Theorem formal_smallest_2:
-  smallest
-  (fun T =>
-   empty |-- <{(\x:Top, x) ((\z:A, z), (\z:B, z))}> \in T).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
 
 End FormalThoughtExercises.
 
 End STLCSub.
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

@@ -129,35 +129,40 @@ Inductive tm : Type :=
   | tm_rnil :  tm
   | tm_rcons : string -> tm -> tm -> tm.
 
-Declare Custom Entry stlc_ty.
+Notation "x" := x (in custom stlc_ty at level 0, x global) : stlc_scope.
 
-Notation "<{ e }>" := e (e custom stlc at level 99).
-Notation "<{{ e }}>" := e (e custom stlc_ty at level 99).
-Notation "( x )" := x (in custom stlc, x at level 99).
-Notation "( x )" := x (in custom stlc_ty, x at level 99).
-Notation "x" := x (in custom stlc at level 0, x constr at level 0).
-Notation "x" := x (in custom stlc_ty at level 0, x constr at level 0).
-Notation "S -> T" := (Ty_Arrow S T) (in custom stlc_ty at level 50, right associativity).
-Notation "x y" := (tm_app x y) (in custom stlc at level 1, left associativity).
+Notation "<{{ x }}>" := x (x custom stlc_ty).
+
+Notation "( t )" := t (in custom stlc_ty at level 0, t custom stlc_ty) : stlc_scope.
+Notation "S -> T" := (Ty_Arrow S T) (in custom stlc_ty at level 99, right associativity) : stlc_scope.
+
+Notation "$( t )" := t (in custom stlc_ty at level 0, t constr) : stlc_scope.
+
+Notation "$( x )" := x (in custom stlc_tm at level 0, x constr, only parsing) : stlc_scope.
+Notation "x" := x (in custom stlc_tm at level 0, x constr at level 0) : stlc_scope.
+Notation "<{ e }>" := e (e custom stlc_tm at level 200) : stlc_scope.
+Notation "( x )" := x (in custom stlc_tm at level 0, x custom stlc_tm) : stlc_scope.
+
+Notation "x y" := (tm_app x y) (in custom stlc_tm at level 10, left associativity) : stlc_scope.
 Notation "\ x : t , y" :=
-  (tm_abs x t y) (in custom stlc at level 90, x at level 99,
-                     t custom stlc_ty at level 99,
-                     y custom stlc at level 99,
+  (tm_abs x t y) (in custom stlc_tm at level 200, x global,
+                     t custom stlc_ty,
+                     y custom stlc_tm at level 200,
                      left associativity).
 Coercion tm_var : string >-> tm.
+Arguments tm_var _%_string.
 
-Notation "{ x }" := x (in custom stlc at level 1, x constr).
+Notation "'Base' x" := (Ty_Base x) (in custom stlc_ty at level 0, x constr at level 0) : stlc_scope.
 
-Notation "'Base' x" := (Ty_Base x) (in custom stlc_ty at level 0).
-
-Notation "  l ':' t1  '::' t2" := (Ty_RCons l t1 t2) (in custom stlc_ty at level 3, right associativity).
-Notation " l := e1 '::' e2" := (tm_rcons l e1 e2) (in custom stlc at level 3, right associativity).
+Notation "  l ':' t1  '::' t2" := (Ty_RCons l t1 t2) (in custom stlc_ty at level 0, l global, t1 custom stlc_ty at level 0, right associativity).
+Notation " l := e1 '::' e2" := (tm_rcons l e1 e2) (in custom stlc_tm at level 3, right associativity).
 Notation "'nil'" := (Ty_RNil) (in custom stlc_ty).
-Notation "'nil'" := (tm_rnil) (in custom stlc).
-Notation "o --> l" := (tm_rproj o l) (in custom stlc at level 0).
+Notation "'nil'" := (tm_rnil) (in custom stlc_tm).
+Notation "o --> l" := (tm_rproj o l) (in custom stlc_tm at level 0).
 
 (** Some examples... *)
 Open Scope string_scope.
+Open Scope stlc_scope.
 
 Notation a := "a".
 Notation f := "f".
@@ -180,6 +185,7 @@ Notation i2 := "i2".
 
 (* ----------------------------------------------------------------- *)
 (** *** Well-Formedness *)
+Check <{{ nil -> nil }}>.
 
 (** One issue with generalizing the abstract syntax for records from
     lists to the nil/cons presentation is that it introduces the
@@ -235,6 +241,10 @@ Hint Constructors record_ty well_formed_ty : core.
     examines the structure of terms.  All we need is an analog of
     [record_ty] saying that a term is a record term if it is built
     with [trnil] and [rcons]. *)
+Lemma wf_ty_example: well_formed_ty <{{  i1 : (A -> A) ::  i2 : (B -> B) :: nil }}>.
+Proof.
+  auto.
+Qed.
 
 Inductive record_tm : tm -> Prop :=
   | rtnil :
@@ -249,7 +259,8 @@ Hint Constructors record_tm : core.
 
 (** Substitution extends easily. *)
 
-Reserved Notation "'[' x ':=' s ']' t" (in custom stlc at level 20, x constr).
+Reserved Notation "'[' x ':=' s ']' t" (in custom stlc_tm at level 5, x global, s custom stlc_tm,
+      t custom stlc_tm at next level, right associativity).
 
 Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
   match t with
@@ -267,7 +278,7 @@ Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
      <{ i :=  [x := s] t1 :: ( [x := s] tr) }>
   end
 
-where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
+where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc_tm).
 
 (* ----------------------------------------------------------------- *)
 (** *** Reduction *)
@@ -365,37 +376,45 @@ Fixpoint Tlookup (i:string) (Tr:ty) : option ty :=
 
 Definition context := partial_map ty.
 
-Reserved Notation "Gamma '|--' t '\in' T" (at level 40,
-                                          t custom stlc, T custom stlc_ty at level 0).
+Notation "x '|->' v ';' m " := (update m x v)
+  (in custom stlc_tm at level 0, x constr at level 0, v  custom stlc_ty, right associativity) : stlc_scope.
+
+Notation "x '|->' v " := (update empty x v)
+  (in custom stlc_tm at level 0, x constr at level 0, v custom stlc_ty) : stlc_scope.
+
+Notation "'empty'" := empty (in custom stlc_tm) : stlc_scope.
+
+Reserved Notation "<{ Gamma '|--' t '\in' T }>"
+            (at level 0, Gamma custom stlc_tm at level 200, t custom stlc_tm, T custom stlc_ty).
 
 Inductive has_type (Gamma : context) :tm -> ty -> Prop :=
   | T_Var : forall x T,
       Gamma x = Some T ->
       well_formed_ty T ->
-      Gamma |-- x \in T
+      <{ Gamma |-- x \in T }>
   | T_Abs : forall x T11 T12 t12,
       well_formed_ty T11 ->
-      (x |-> T11; Gamma) |-- t12 \in T12 ->
-      Gamma |-- \x : T11, t12 \in (T11 -> T12)
+      <{ x |-> T11; Gamma |-- t12 \in T12 }> ->
+      <{ Gamma |-- \x : T11, t12 \in T11 -> T12 }>
   | T_App : forall T1 T2 t1 t2,
-      Gamma |-- t1 \in (T1 -> T2) ->
-      Gamma |-- t2 \in T1 ->
-      Gamma |-- ( t1 t2) \in T2
+      <{ Gamma |-- t1 \in T1 -> T2 }> ->
+      <{ Gamma |-- t2 \in T1 }> ->
+      <{ Gamma |-- ( t1 t2) \in T2 }>
   (* records: *)
   | T_Proj : forall i t Ti Tr,
-      Gamma |-- t \in Tr ->
+      <{ Gamma |-- t \in Tr }> ->
       Tlookup i Tr = Some Ti ->
-      Gamma |-- (t --> i) \in Ti
- | T_RNil :
-      Gamma |-- nil \in nil
+      <{ Gamma |-- (t --> i) \in Ti }>
+  | T_RNil :
+      <{ Gamma |-- nil \in nil }>
   | T_RCons : forall i t T tr Tr,
-      Gamma |-- t \in T ->
-      Gamma |-- tr \in Tr ->
+      <{ Gamma |-- t \in T }> ->
+      <{ Gamma |-- tr \in Tr }> ->
       record_ty Tr ->
       record_tm tr ->
-      Gamma |-- ( i := t :: tr) \in ( i : T :: Tr)
+      <{ Gamma |-- ( i := t :: tr) \in i : T :: Tr }>
 
-where "Gamma '|--' t '\in' T" := (has_type Gamma t T).
+where "<{ Gamma '|--' t '\in' T }>" := (has_type Gamma t T).
 
 Hint Constructors has_type : core.
 
@@ -414,24 +433,24 @@ Hint Constructors has_type : core.
     it is saying. :-) *)
 
 Lemma typing_example_2 :
-  empty |-- (\a : ( i1 : (A -> A) :: i2 : (B -> B) :: nil), a --> i2)
-            ( i1 := (\a : A, a) :: i2 := (\a : B,a ) :: nil )  \in (B -> B).
+  <{ empty |-- (\a : ( i1 : (A -> A) :: i2 : (B -> B) :: nil), a --> i2)
+            ( i1 := (\a : A, a) :: i2 := (\a : B,a ) :: nil )  \in B -> B }>.
 Proof.
   (* FILL IN HERE *) Admitted.
 
 Example typing_nonexample :
   ~ exists T,
-     (a |-> <{{  i2 : (A -> A) :: nil   }}>) |--
+     <{ (a |-> <{{  i2 : (A -> A) :: nil   }}>) |--
        ( i1 := (\a : B, a) :: a ) \in
-               T.
+               T }>.
 Proof.
   (* FILL IN HERE *) Admitted.
 
 Example typing_nonexample_2 : forall y,
   ~ exists T,
-    (y |-> A) |--
+   <{ (y |-> A) |--
      (\a : ( i1 : A  :: nil ), a --> i1 )
-      ( i1 := y :: i2 := y :: nil )  \in T.
+      ( i1 := y :: i2 := y :: nil )  \in T }>.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -468,7 +487,7 @@ Proof.
 Qed.
 
 Lemma has_type__wf : forall Gamma t T,
-  Gamma |-- t \in T -> well_formed_ty T.
+  <{ Gamma |-- t \in T }> -> well_formed_ty T.
 Proof with eauto.
   intros Gamma t T Htyp.
   induction Htyp...
@@ -516,9 +535,9 @@ Qed.
 
 Lemma lookup_field_in_value : forall v T i Ti,
   value v ->
-  empty |-- v \in T ->
+  <{ empty |-- v \in T }> ->
   Tlookup i T = Some Ti ->
-  exists ti, tlookup i v = Some ti /\ empty |-- ti \in Ti.
+  exists ti, tlookup i v = Some ti /\ <{ empty |-- ti \in Ti }>.
 Proof with eauto.
   intros v T i Ti Hval Htyp Hget.
   remember empty as Gamma.
@@ -536,7 +555,7 @@ Proof with eauto.
 (** *** Progress *)
 
 Theorem progress : forall t T,
-     empty |-- t \in T ->
+     <{ empty |-- t \in T }> ->
      value t \/ exists t', t --> t'.
 Proof with eauto.
   (* Theorem: Suppose empty |-- t : T.  Then either
@@ -637,8 +656,8 @@ Proof with eauto.
 
 Lemma weakening : forall Gamma Gamma' t T,
      includedin Gamma Gamma' ->
-     Gamma  |-- t \in T  ->
-     Gamma' |-- t \in T.
+     <{ Gamma  |-- t \in T }> ->
+     <{ Gamma' |-- t \in T }>.
 Proof.
   intros Gamma Gamma' t T H Ht.
   generalize dependent Gamma'.
@@ -646,8 +665,8 @@ Proof.
 Qed.
 
 Lemma weakening_empty : forall Gamma t T,
-     empty |-- t \in T  ->
-     Gamma |-- t \in T.
+     <{ empty |-- t \in T }> ->
+     <{ Gamma |-- t \in T }>.
 Proof.
   intros Gamma t T.
   eapply weakening.
@@ -664,9 +683,9 @@ Qed.
     whetherit is a record term. *)
 
 Lemma substitution_preserves_typing : forall Gamma x U t v T,
-  (x |-> U ; Gamma) |-- t \in T ->
-  empty |-- v \in U   ->
-  Gamma |-- [x:=v]t \in T.
+  <{ x |-> U ; Gamma |-- t \in T }> ->
+  <{ empty |-- v \in U }>  ->
+  <{ Gamma |-- [x:=v]t \in T }>.
 Proof.
   intros Gamma x U t v T Ht Hv.
   generalize dependent Gamma. generalize dependent T.
@@ -695,9 +714,9 @@ Proof.
 Qed.
 
 Theorem preservation : forall t t' T,
-  empty |-- t \in T  ->
+  <{ empty |-- t \in T }>  ->
   t --> t'  ->
-  empty |-- t' \in T.
+  <{ empty |-- t' \in T }>.
 Proof with eauto.
   intros t t' T HT. generalize dependent t'.
   remember empty as Gamma.
@@ -737,4 +756,4 @@ Qed.
 
 End STLCExtendedRecords.
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

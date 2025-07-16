@@ -18,7 +18,7 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 Set Warnings "-non-recursive".
-From Coq Require Import Bool.Bool.
+From Coq Require Import Bool.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
 From PLF Require Import Stlc.
@@ -34,9 +34,9 @@ Export STLC.
 
 Fixpoint eqb_ty (T1 T2:ty) : bool :=
   match T1,T2 with
-  | <{ Bool }> , <{ Bool }> =>
+  | <{{ Bool }}> , <{{ Bool }}> =>
       true
-  | <{ T11->T12 }>, <{ T21->T22 }> =>
+  | <{{ T11->T12 }}>, <{{ T21->T22 }}> =>
       andb (eqb_ty T11 T21) (eqb_ty T12 T22)
   | _,_ =>
       false
@@ -85,22 +85,22 @@ Fixpoint type_check (Gamma : context) (t : tm) : option ty :=
       Gamma x
   | <{\x:T2, t1}> =>
       match type_check (x |-> T2 ; Gamma) t1 with
-      | Some T1 => Some <{T2->T1}>
+      | Some T1 => Some <{{ T2->T1 }}>
       | _ => None
       end
   | <{t1 t2}> =>
       match type_check Gamma t1, type_check Gamma t2 with
-      | Some <{T11->T12}>, Some T2 =>
+      | Some <{{ T11->T12 }}>, Some T2 =>
           if eqb_ty T11 T2 then Some T12 else None
       | _,_ => None
       end
   | <{true}> =>
-      Some <{Bool}>
+      Some <{{ Bool }}>
   | <{false}> =>
-      Some <{Bool}>
+      Some <{{ Bool }}>
   | <{if guard then t else f}> =>
       match type_check Gamma guard with
-      | Some <{Bool}> =>
+      | Some <{{ Bool }}> =>
           match type_check Gamma t, type_check Gamma f with
           | Some T1, Some T2 =>
               if eqb_ty T1 T2 then Some T1 else None
@@ -151,25 +151,25 @@ Fixpoint type_check (Gamma : context) (t : tm) : option ty :=
       end
   | <{\x:T2, t1}> =>
       T1 <- type_check (x |-> T2 ; Gamma) t1 ;;
-      return <{T2->T1}>
+      return <{{ T2->T1 }}>
   | <{t1 t2}> =>
       T1 <- type_check Gamma t1 ;;
       T2 <- type_check Gamma t2 ;;
       match T1 with
-      | <{T11->T12}> =>
+      | <{{ T11->T12 }}> =>
           if eqb_ty T11 T2 then return T12 else fail
       | _ => fail
       end
-  | <{true}> =>
-      return <{ Bool }>
-  | <{false}> =>
-      return <{ Bool }>
-  | <{if guard then t1 else t2}> =>
+  | <{ true }> =>
+      return <{{ Bool }}>
+  | <{ false }> =>
+      return <{{ Bool }}>
+  | <{ if guard then t1 else t2 }> =>
       Tguard <- type_check Gamma guard ;;
       T1 <- type_check Gamma t1 ;;
       T2 <- type_check Gamma t2 ;;
       match Tguard with
-      | <{ Bool }> =>
+      | <{{ Bool }}> =>
           if eqb_ty T1 T2 then return T1 else fail
       | _ => fail
       end
@@ -337,7 +337,7 @@ Fixpoint type_check (Gamma : context) (t : tm) : option ty :=
       end
 
   (* Complete the following cases. *)
-  
+
   (* sums *)
   (* FILL IN HERE *)
   (* lists (the [tm_lcase] is given for free) *)
@@ -484,7 +484,7 @@ Import STLCExtended.
 Fixpoint valuef (t : tm) : bool :=
   match t with
   | tm_var _ => false
-  | <{ \_:_, _ }> => true
+  | <{ \ x : T, _ }> => true
   | <{ _ _ }> => false
   | tm_const _ => true
   | <{ succ _ }> | <{ pred _ }> | <{ _ * _ }> | <{ if0 _ then _ else _ }> => false
@@ -561,7 +561,7 @@ Fixpoint stepf (t : tm) : option tm :=
     match stepf t0, t0 with
     | Some t0', _ => Some <{ case t0' of | nil => t1 | x21 :: x22 => t2 }>
     (* otherwise [t0] is a normal form *)
-    | None, <{ nil _ }> => Some t1
+    | None, <{ nil T }> => Some t1
     | None, <{ vh :: vt }> =>
       assert (valuef vh) (assert (valuef vt)
         (Some <{ [x22:=vt]([x21:=vh]t2) }> ))
@@ -685,4 +685,4 @@ Import StepFunction.
 End StlcImpl.
 (** [] *)
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

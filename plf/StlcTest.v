@@ -39,7 +39,7 @@ idtac "#> STLC.substi_correct".
 idtac "Possible points: 3".
 check_type @STLC.substi_correct (
 (forall (s : STLC.tm) (x : String.string) (t t' : STLC.tm),
- STLC.subst x s t = t' <-> STLC.substi s x t t')).
+ iff (@eq STLC.tm (STLC.subst x s t) t') (STLC.substi s x t t'))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLC.substi_correct.
@@ -52,7 +52,7 @@ idtac " ".
 idtac "#> STLC.step_example5".
 idtac "Possible points: 2".
 check_type @STLC.step_example5 (
-(STLC.multistep
+(@Smallstep.multi STLC.tm STLC.step
    (STLC.tm_app
       (STLC.tm_app
          (STLC.tm_abs STLC.x
@@ -75,14 +75,15 @@ idtac " ".
 idtac "#> STLC.typing_example_3".
 idtac "Possible points: 2".
 check_type @STLC.typing_example_3 (
-(exists T : STLC.ty,
-   STLC.has_type (@Maps.empty STLC.ty)
-     (STLC.tm_abs STLC.x (STLC.Ty_Arrow STLC.Ty_Bool STLC.Ty_Bool)
-        (STLC.tm_abs STLC.y (STLC.Ty_Arrow STLC.Ty_Bool STLC.Ty_Bool)
-           (STLC.tm_abs STLC.z STLC.Ty_Bool
-              (STLC.tm_app (STLC.tm_var STLC.y)
-                 (STLC.tm_app (STLC.tm_var STLC.x) (STLC.tm_var STLC.z))))))
-     T)).
+(@ex STLC.ty
+   (fun T : STLC.ty =>
+    STLC.has_type (@Maps.empty STLC.ty)
+      (STLC.tm_abs STLC.x (STLC.Ty_Arrow STLC.Ty_Bool STLC.Ty_Bool)
+         (STLC.tm_abs STLC.y (STLC.Ty_Arrow STLC.Ty_Bool STLC.Ty_Bool)
+            (STLC.tm_abs STLC.z STLC.Ty_Bool
+               (STLC.tm_app (STLC.tm_var STLC.y)
+                  (STLC.tm_app (STLC.tm_var STLC.x) (STLC.tm_var STLC.z))))))
+      T))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLC.typing_example_3.
@@ -123,6 +124,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

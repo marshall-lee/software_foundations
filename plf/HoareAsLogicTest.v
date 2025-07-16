@@ -66,8 +66,8 @@ idtac " ".
 idtac "#> hoare_sound".
 idtac "Possible points: 3".
 check_type @hoare_sound (
-(forall (P : Hoare.Assertion) (c : Imp.com) (Q : Hoare.Assertion),
- derivable P c Q -> valid P c Q)).
+(forall (P : Hoare.Assertion) (c : Imp.com) (Q : Hoare.Assertion)
+   (_ : derivable P c Q), valid P c Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_sound.
@@ -80,9 +80,9 @@ idtac " ".
 idtac "#> wp_seq".
 idtac "Possible points: 1".
 check_type @wp_seq (
-(forall (P Q : Hoare.Assertion) (c1 c2 : Imp.com),
- derivable P c1 (wp c2 Q) ->
- derivable (wp c2 Q) c2 Q -> derivable P (Imp.CSeq c1 c2) Q)).
+(forall (P Q : Hoare.Assertion) (c1 c2 : Imp.com)
+   (_ : derivable P c1 (wp c2 Q)) (_ : derivable (wp c2 Q) c2 Q),
+ derivable P (Imp.CSeq c1 c2) Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions wp_seq.
@@ -98,8 +98,9 @@ check_type @wp_invariant (
 (forall (b : Imp.bexp) (c : Imp.com) (Q : Hoare.Assertion),
  valid
    (fun st : Imp.state =>
-    (wp (Imp.CWhile b c) Q : Hoare.Assertion) st /\
-    (Hoare.bassertion b : Hoare.Assertion) st) c (wp (Imp.CWhile b c) Q))).
+    and ((wp (Imp.CWhile b c) Q : Hoare.Assertion) st)
+      ((Hoare.bassertion b : Hoare.Assertion) st)) c
+   (wp (Imp.CWhile b c) Q))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions wp_invariant.
@@ -112,8 +113,8 @@ idtac " ".
 idtac "#> hoare_complete".
 idtac "Possible points: 6".
 check_type @hoare_complete (
-(forall (P : Hoare.Assertion) (c : Imp.com) (Q : Hoare.Assertion),
- valid P c Q -> derivable P c Q)).
+(forall (P : Hoare.Assertion) (c : Imp.com) (Q : Hoare.Assertion)
+   (_ : valid P c Q), derivable P c Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_complete.
@@ -160,6 +161,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

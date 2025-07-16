@@ -38,7 +38,8 @@ idtac " ".
 idtac "#> STLCExtended.subst".
 idtac "Possible points: 3".
 check_type @STLCExtended.subst (
-(String.string -> STLCExtended.tm -> STLCExtended.tm -> STLCExtended.tm)).
+(forall (_ : String.string) (_ : STLCExtended.tm) (_ : STLCExtended.tm),
+ STLCExtended.tm)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCExtended.subst.
@@ -50,7 +51,8 @@ idtac " ".
 
 idtac "#> STLCExtended.step".
 idtac "Possible points: 3".
-check_type @STLCExtended.step ((STLCExtended.tm -> STLCExtended.tm -> Prop)).
+check_type @STLCExtended.step (
+(forall (_ : STLCExtended.tm) (_ : STLCExtended.tm), Prop)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCExtended.step.
@@ -63,7 +65,8 @@ idtac " ".
 idtac "#> STLCExtended.has_type".
 idtac "Possible points: 3".
 check_type @STLCExtended.has_type (
-(STLCExtended.context -> STLCExtended.tm -> STLCExtended.ty -> Prop)).
+(forall (_ : STLCExtended.context) (_ : STLCExtended.tm)
+   (_ : STLCExtended.ty), Prop)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCExtended.has_type.
@@ -76,10 +79,10 @@ idtac " ".
 idtac "#> STLCExtended.progress".
 idtac "Possible points: 3".
 check_type @STLCExtended.progress (
-(forall (t : STLCExtended.tm) (T : STLCExtended.ty),
- STLCExtended.has_type (@Maps.empty STLCExtended.ty) t T ->
- STLCExtended.value t \/
- (exists t' : STLCExtended.tm, STLCExtended.step t t'))).
+(forall (t : STLCExtended.tm) (T : STLCExtended.ty)
+   (_ : STLCExtended.has_type (@Maps.empty STLCExtended.ty) t T),
+ or (STLCExtended.value t)
+   (@ex STLCExtended.tm (fun t' : STLCExtended.tm => STLCExtended.step t t')))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCExtended.progress.
@@ -92,11 +95,11 @@ idtac " ".
 idtac "#> STLCExtended.substitution_preserves_typing".
 idtac "Possible points: 2".
 check_type @STLCExtended.substitution_preserves_typing (
-(forall (Gamma : Maps.partial_map STLCExtended.ty) 
+(forall (Gamma : Maps.partial_map STLCExtended.ty)
    (x : String.string) (U : STLCExtended.ty) (t v : STLCExtended.tm)
-   (T : STLCExtended.ty),
- STLCExtended.has_type (@Maps.update STLCExtended.ty Gamma x U) t T ->
- STLCExtended.has_type (@Maps.empty STLCExtended.ty) v U ->
+   (T : STLCExtended.ty)
+   (_ : STLCExtended.has_type (@Maps.update STLCExtended.ty Gamma x U) t T)
+   (_ : STLCExtended.has_type (@Maps.empty STLCExtended.ty) v U),
  STLCExtended.has_type Gamma (STLCExtended.subst x v t) T)).
 idtac "Assumptions:".
 Abort.
@@ -110,9 +113,9 @@ idtac " ".
 idtac "#> STLCExtended.preservation".
 idtac "Possible points: 3".
 check_type @STLCExtended.preservation (
-(forall (t t' : STLCExtended.tm) (T : STLCExtended.ty),
- STLCExtended.has_type (@Maps.empty STLCExtended.ty) t T ->
- STLCExtended.step t t' ->
+(forall (t t' : STLCExtended.tm) (T : STLCExtended.ty)
+   (_ : STLCExtended.has_type (@Maps.empty STLCExtended.ty) t T)
+   (_ : STLCExtended.step t t'),
  STLCExtended.has_type (@Maps.empty STLCExtended.ty) t' T)).
 idtac "Assumptions:".
 Abort.
@@ -160,6 +163,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2024-01-03 15:05 *)
+(* 2025-01-06 19:49 *)
 
-(* 2024-01-03 15:05 *)
+(* 2025-01-06 19:49 *)

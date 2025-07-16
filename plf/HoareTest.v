@@ -38,8 +38,8 @@ idtac " ".
 idtac "#> hoare_post_true".
 idtac "Possible points: 1".
 check_type @hoare_post_true (
-(forall (P Q : Assertion) (c : com),
- (forall st : state, Q st) -> {{P}} c {{Q}})).
+(forall (P Q : Assertion) (c : com) (_ : forall st : state, Q st),
+ valid_hoare_triple P c Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_post_true.
@@ -52,8 +52,8 @@ idtac " ".
 idtac "#> hoare_pre_false".
 idtac "Possible points: 1".
 check_type @hoare_pre_false (
-(forall (P Q : Assertion) (c : com),
- (forall st : state, ~ P st) -> {{P}} c {{Q}})).
+(forall (P Q : Assertion) (c : com) (_ : forall st : state, not (P st)),
+ valid_hoare_triple P c Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_pre_false.
@@ -66,9 +66,14 @@ idtac " ".
 idtac "#> hoare_asgn_wrong".
 idtac "Possible points: 2".
 check_type @hoare_asgn_wrong (
-(exists a : aexp,
-   ~
-   ({{assert_of_Prop True}} X := a {{Aexp_of_aexp (AId X) = Aexp_of_aexp a}}))).
+(@ex aexp
+   (fun a : aexp =>
+    not
+      (valid_hoare_triple (fun _ : state => True)
+         (CAsgn X a)
+         (fun st : state =>
+          @eq nat ((Aexp_of_aexp (AId X) : Aexp) st)
+            ((Aexp_of_aexp a : Aexp) st)))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_asgn_wrong.
@@ -82,11 +87,18 @@ idtac "#> hoare_asgn_fwd".
 idtac "Advanced".
 idtac "Possible points: 3".
 check_type @hoare_asgn_fwd (
-(forall (m : nat) (a : aexp) (P : state -> Prop),
- {{fun st : state => P st /\ st X = m}} X := a
- {{fun st : state =>
-   P (@Maps.t_update nat st X m) /\
-   st X = aeval (@Maps.t_update nat st X m) a}})).
+(forall (m : nat) (a : aexp) (P : Assertion),
+ valid_hoare_triple
+   (fun st : state =>
+    and ((P : Assertion) st)
+      (((fun st0 : state =>
+         @eq nat ((Aexp_of_aexp (AId X) : Aexp) st0)
+           ((Aexp_of_nat m : Aexp) st0))
+        :
+        Assertion) st)) (CAsgn X a)
+   (fun st : state =>
+    and (P (@Maps.t_update nat st X m))
+      (@eq nat (st X) (aeval (@Maps.t_update nat st X m) a))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_asgn_fwd.
@@ -99,8 +111,12 @@ idtac " ".
 idtac "#> assertion_sub_ex1'".
 idtac "Possible points: 1".
 check_type @assertion_sub_ex1' (
-({{Aexp_of_aexp (AId X) <= Aexp_of_nat 5}} X := (ANum 2) * (AId X)
- {{Aexp_of_aexp (AId X) <= Aexp_of_nat 10}})).
+(valid_hoare_triple
+   (fun st : state =>
+    le ((Aexp_of_aexp (AId X) : Aexp) st) ((Aexp_of_nat 5 : Aexp) st))
+   (CAsgn X (AMult (ANum 2) (AId X)))
+   (fun st : state =>
+    le ((Aexp_of_aexp (AId X) : Aexp) st) ((Aexp_of_nat 10 : Aexp) st)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions assertion_sub_ex1'.
@@ -110,10 +126,27 @@ idtac " ".
 idtac "#> assertion_sub_ex2'".
 idtac "Possible points: 1".
 check_type @assertion_sub_ex2' (
-({{Aexp_of_nat 0 <= Aexp_of_nat 3 /\ Aexp_of_nat 3 <= Aexp_of_nat 5}} 
- X := (ANum 3)
- {{Aexp_of_nat 0 <= Aexp_of_aexp (AId X) /\
-   Aexp_of_aexp (AId X) <= Aexp_of_nat 5}})).
+(valid_hoare_triple
+   (fun st : state =>
+    and
+      (((fun st0 : state =>
+         le ((Aexp_of_nat 0 : Aexp) st0) ((Aexp_of_nat 3 : Aexp) st0))
+        :
+        Assertion) st)
+      (((fun st0 : state =>
+         le ((Aexp_of_nat 3 : Aexp) st0) ((Aexp_of_nat 5 : Aexp) st0))
+        :
+        Assertion) st)) (CAsgn X (ANum 3))
+   (fun st : state =>
+    and
+      (((fun st0 : state =>
+         le ((Aexp_of_nat 0 : Aexp) st0) ((Aexp_of_aexp (AId X) : Aexp) st0))
+        :
+        Assertion) st)
+      (((fun st0 : state =>
+         le ((Aexp_of_aexp (AId X) : Aexp) st0) ((Aexp_of_nat 5 : Aexp) st0))
+        :
+        Assertion) st)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions assertion_sub_ex2'.
@@ -126,9 +159,20 @@ idtac " ".
 idtac "#> hoare_asgn_example4".
 idtac "Possible points: 2".
 check_type @hoare_asgn_example4 (
-({{assert_of_Prop True}} X := (ANum 1); Y := (ANum 2)
- {{Aexp_of_aexp (AId X) = Aexp_of_nat 1 /\
-   Aexp_of_aexp (AId Y) = Aexp_of_nat 2}})).
+(valid_hoare_triple (fun _ : state => True)
+   (CSeq (CAsgn X (ANum 1)) (CAsgn Y (ANum 2)))
+   (fun st : state =>
+    and
+      (((fun st0 : state =>
+         @eq nat ((Aexp_of_aexp (AId X) : Aexp) st0)
+           ((Aexp_of_nat 1 : Aexp) st0))
+        :
+        Assertion) st)
+      (((fun st0 : state =>
+         @eq nat ((Aexp_of_aexp (AId Y) : Aexp) st0)
+           ((Aexp_of_nat 2 : Aexp) st0))
+        :
+        Assertion) st)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_asgn_example4.
@@ -141,8 +185,12 @@ idtac " ".
 idtac "#> swap_exercise".
 idtac "Possible points: 3".
 check_type @swap_exercise (
-({{Aexp_of_aexp (AId X) <= Aexp_of_aexp (AId Y)}} swap_program
- {{Aexp_of_aexp (AId Y) <= Aexp_of_aexp (AId X)}})).
+(valid_hoare_triple
+   (fun st : state =>
+    le ((Aexp_of_aexp (AId X) : Aexp) st) ((Aexp_of_aexp (AId Y) : Aexp) st))
+   swap_program
+   (fun st : state =>
+    le ((Aexp_of_aexp (AId Y) : Aexp) st) ((Aexp_of_aexp (AId X) : Aexp) st)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions swap_exercise.
@@ -156,10 +204,14 @@ idtac "#> invalid_triple".
 idtac "Advanced".
 idtac "Possible points: 6".
 check_type @invalid_triple (
-(~
- (forall (a : aexp) (n : nat),
-  {{Aexp_of_aexp a = Aexp_of_nat n}} X := (ANum 3); Y := a
-  {{Aexp_of_aexp (AId Y) = Aexp_of_nat n}}))).
+(not
+   (forall (a : aexp) (n : nat),
+    valid_hoare_triple
+      (fun st : state =>
+       @eq nat ((Aexp_of_aexp a : Aexp) st) ((Aexp_of_nat n : Aexp) st))
+      (CSeq (CAsgn X (ANum 3)) (CAsgn Y a))
+      (fun st : state =>
+       @eq nat ((Aexp_of_aexp (AId Y) : Aexp) st) ((Aexp_of_nat n : Aexp) st))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions invalid_triple.
@@ -172,10 +224,16 @@ idtac " ".
 idtac "#> if_minus_plus".
 idtac "Possible points: 2".
 check_type @if_minus_plus (
-({{assert_of_Prop True}} if (AId X) <= (AId Y) then 
-                         Z := (AId Y) - (AId X) else 
-                         Y := (AId X) + (AId Z) end
- {{Aexp_of_aexp (AId Y) = Aexp_of_aexp (AId X) + Aexp_of_aexp (AId Z)}})).
+(valid_hoare_triple (fun _ : state => True)
+   (CIf (BLe (AId X) (AId Y)) (CAsgn Z (AMinus (AId Y) (AId X)))
+      (CAsgn Y (APlus (AId X) (AId Z))))
+   (fun st : state =>
+    @eq nat ((Aexp_of_aexp (AId Y) : Aexp) st)
+      (((fun st0 : state =>
+         PeanoNat.Nat.add ((Aexp_of_aexp (AId X) : Aexp) st0)
+           ((Aexp_of_aexp (AId Z) : Aexp) st0))
+        :
+        Aexp) st)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions if_minus_plus.
@@ -188,8 +246,8 @@ idtac " ".
 idtac "#> If1.if1true_test".
 idtac "Possible points: 1".
 check_type @If1.if1true_test (
-(If1.ceval (If1.CIf1 <{ (AId X) = (ANum 0) }> (If1.CAsgn X (ANum 1)))
-   empty_st (X !-> 1))).
+(If1.ceval (If1.CIf1 (BEq (AId X) (ANum 0)) (If1.CAsgn X (ANum 1))) empty_st
+   (@Maps.t_update nat empty_st X 1))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions If1.if1true_test.
@@ -199,8 +257,8 @@ idtac " ".
 idtac "#> If1.if1false_test".
 idtac "Possible points: 1".
 check_type @If1.if1false_test (
-(If1.ceval (If1.CIf1 <{ (AId X) = (ANum 0) }> (If1.CAsgn X (ANum 1)))
-   (X !-> 2) (X !-> 2))).
+(If1.ceval (If1.CIf1 (BEq (AId X) (ANum 0)) (If1.CAsgn X (ANum 1)))
+   (@Maps.t_update nat empty_st X 2) (@Maps.t_update nat empty_st X 2))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions If1.if1false_test.
@@ -222,9 +280,17 @@ idtac "#> If1.hoare_if1_good".
 idtac "Possible points: 2".
 check_type @If1.hoare_if1_good (
 (If1.valid_hoare_triple
-   (Aexp_of_aexp (AId X) + Aexp_of_aexp (AId Y) = Aexp_of_aexp (AId Z))
-   (If1.CIf1 <{ (AId Y) <> (ANum 0) }> (If1.CAsgn X <{ (AId X) + (AId Y) }>))
-   (Aexp_of_aexp (AId X) = Aexp_of_aexp (AId Z)))).
+   (fun st : state =>
+    @eq nat
+      (((fun st0 : state =>
+         PeanoNat.Nat.add ((Aexp_of_aexp (AId X) : Aexp) st0)
+           ((Aexp_of_aexp (AId Y) : Aexp) st0))
+        :
+        Aexp) st) ((Aexp_of_aexp (AId Z) : Aexp) st))
+   (If1.CIf1 (BNeq (AId Y) (ANum 0)) (If1.CAsgn X (APlus (AId X) (AId Y))))
+   (fun st : state =>
+    @eq nat ((Aexp_of_aexp (AId X) : Aexp) st)
+      ((Aexp_of_aexp (AId Z) : Aexp) st)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions If1.hoare_if1_good.
@@ -255,7 +321,7 @@ idtac "Possible points: 3".
 check_type @Himp.havoc_post (
 (forall (P : Assertion) (X : String.string),
  Himp.valid_hoare_triple P (Himp.CHavoc X)
-   (fun st : state => exists n : nat, (P [X |-> (ANum n)]) st))).
+   (fun st : state => @ex nat (fun n : nat => assertion_sub X (ANum n) P st)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions Himp.havoc_post.
@@ -268,9 +334,18 @@ idtac " ".
 idtac "#> HoareAssertAssume.assert_assume_differ".
 idtac "Possible points: 1".
 check_type @HoareAssertAssume.assert_assume_differ (
-(exists (P : Assertion) (b : bexp) (Q : Assertion),
-   HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssume b) Q /\
-   ~ HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssert b) Q)).
+(@ex Assertion
+   (fun P : Assertion =>
+    @ex bexp
+      (fun b : bexp =>
+       @ex Assertion
+         (fun Q : Assertion =>
+          and
+            (HoareAssertAssume.valid_hoare_triple P
+               (HoareAssertAssume.CAssume b) Q)
+            (not
+               (HoareAssertAssume.valid_hoare_triple P
+                  (HoareAssertAssume.CAssert b) Q))))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions HoareAssertAssume.assert_assume_differ.
@@ -280,8 +355,9 @@ idtac " ".
 idtac "#> HoareAssertAssume.assert_implies_assume".
 idtac "Possible points: 1".
 check_type @HoareAssertAssume.assert_implies_assume (
-(forall (P : Assertion) (b : bexp) (Q : Assertion),
- HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssert b) Q ->
+(forall (P : Assertion) (b : bexp) (Q : Assertion)
+   (_ : HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssert b)
+          Q),
  HoareAssertAssume.valid_hoare_triple P (HoareAssertAssume.CAssume b) Q)).
 idtac "Assumptions:".
 Abort.
@@ -292,13 +368,12 @@ idtac " ".
 idtac "#> HoareAssertAssume.assert_assume_example".
 idtac "Possible points: 4".
 check_type @HoareAssertAssume.assert_assume_example (
-(HoareAssertAssume.valid_hoare_triple (assert_of_Prop True)
-   (HoareAssertAssume.CSeq
-      (HoareAssertAssume.CAssume <{ (AId X) = (ANum 1) }>)
+(HoareAssertAssume.valid_hoare_triple (fun _ : state => True)
+   (HoareAssertAssume.CSeq (HoareAssertAssume.CAssume (BEq (AId X) (ANum 1)))
       (HoareAssertAssume.CSeq
-         (HoareAssertAssume.CAsgn X <{ (AId X) + (ANum 1) }>)
-         (HoareAssertAssume.CAssert <{ (AId X) = (ANum 2) }>)))
-   (assert_of_Prop True))).
+         (HoareAssertAssume.CAsgn X (APlus (AId X) (ANum 1)))
+         (HoareAssertAssume.CAssert (BEq (AId X) (ANum 2)))))
+   (fun _ : state => True))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions HoareAssertAssume.assert_assume_example.
@@ -371,6 +446,6 @@ idtac "---------- Himp.havoc_post ---------".
 Print Assumptions Himp.havoc_post.
 Abort.
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

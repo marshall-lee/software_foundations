@@ -33,12 +33,12 @@ Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 Set Warnings "-deprecated-syntactic-definition".
 From Coq Require Import Strings.String.
 From Coq Require Import Init.Nat.
-From Coq Require Import Arith.Arith.
-From Coq Require Import Arith.PeanoNat.
+From Coq Require Import Arith.
+From Coq Require Import PeanoNat.
 From Coq Require Import Lia.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
-From Coq Require Import Lists.List. Import Datatypes.
+From Coq Require Import List. Import Datatypes.
 Check length.
 
 Import Nat.
@@ -160,47 +160,59 @@ Inductive tm  : Type :=
   | tm_assign : tm -> tm -> tm
   | tm_loc    : nat -> tm.
 
-Declare Custom Entry stlc.
+Declare Custom Entry stlc_ty.
+Declare Custom Entry stlc_tm.
+Declare Scope stlc_scope.
+Notation "x" := x (in custom stlc_ty at level 0, x global) : stlc_scope.
 
-Notation "<{ e }>" := e (e custom stlc at level 99).
-Notation "( x )" := x (in custom stlc, x at level 99).
-Notation "x" := x (in custom stlc at level 0, x constr at level 0).
-Notation "S -> T" := (Ty_Arrow S T) (in custom stlc at level 50, right associativity).
-Notation "x y" := (tm_app x y) (in custom stlc at level 1, left associativity).
+Notation "<{{ x }}>" := x (x custom stlc_ty).
+
+Notation "( t )" := t (in custom stlc_ty at level 0, t custom stlc_ty) : stlc_scope.
+Notation "S -> T" := (Ty_Arrow S T) (in custom stlc_ty at level 99, right associativity) : stlc_scope.
+
+Notation "$( t )" := t (in custom stlc_ty at level 0, t constr) : stlc_scope.
+
+Notation "$( x )" := x (in custom stlc_tm at level 0, x constr, only parsing) : stlc_scope.
+Notation "x" := x (in custom stlc_tm at level 0, x constr at level 0) : stlc_scope.
+Notation "<{ e }>" := e (e custom stlc_tm at level 200) : stlc_scope.
+Notation "( x )" := x (in custom stlc_tm at level 0, x custom stlc_tm) : stlc_scope.
+
+Notation "x y" := (tm_app x y) (in custom stlc_tm at level 10, left associativity) : stlc_scope.
 Notation "\ x : t , y" :=
-  (tm_abs x t y) (in custom stlc at level 90, x at level 99,
-                     t custom stlc at level 99,
-                     y custom stlc at level 99,
+  (tm_abs x t y) (in custom stlc_tm at level 200, x global,
+                     t custom stlc_ty,
+                     y custom stlc_tm at level 200,
                      left associativity).
 Coercion tm_var : string >-> tm.
+Arguments tm_var _%_string.
 
-Notation "{ x }" := x (in custom stlc at level 0, x constr).
-
-Notation "'Unit'" :=
-  (Ty_Unit) (in custom stlc at level 0).
-Notation "'unit'" := tm_unit (in custom stlc at level 0).
-
-Notation "'Nat'" := Ty_Nat (in custom stlc at level 0).
-Notation "'succ' x" := (tm_succ x) (in custom stlc at level 0,
-                                     x custom stlc at level 0).
-Notation "'pred' x" := (tm_pred x) (in custom stlc at level 0,
-                                     x custom stlc at level 0).
-Notation "x * y" := (tm_mult x y) (in custom stlc at level 1,
-                                      left associativity).
+Notation "'Nat'" := Ty_Nat (in custom stlc_ty at level 0).
+Notation "'succ' x" := (tm_succ x) (in custom stlc_tm at level 10,
+                                     x custom stlc_tm at level 0) : stlc_scope.
+Notation "'pred' x" := (tm_pred x) (in custom stlc_tm at level 10,
+                                     x custom stlc_tm at level 0) : stlc_scope.
+Notation "x * y" := (tm_mult x y) (in custom stlc_tm at level 95,
+                                      right associativity) : stlc_scope.
 Notation "'if0' x 'then' y 'else' z" :=
-  (tm_if0 x y z) (in custom stlc at level 89,
-                    x custom stlc at level 99,
-                    y custom stlc at level 99,
-                    z custom stlc at level 99,
-                    left associativity).
+  (tm_if0 x y z) (in custom stlc_tm at level 0,
+                    x custom stlc_tm at level 0,
+                    y custom stlc_tm at level 0,
+                    z custom stlc_tm at level 0) : stlc_scope.
+
 Coercion tm_const : nat >-> tm.
 
+Notation "'Unit'" :=
+  (Ty_Unit) (in custom stlc_ty at level 0) : stlc_scope.
+Notation "'unit'" := tm_unit (in custom stlc_tm at level 0) : stlc_scope.
+
 Notation "'Ref' t" :=
-  (Ty_Ref t) (in custom stlc at level 4).
-Notation "'loc' x" := (tm_loc x) (in custom stlc at level 2).
-Notation "'ref' x" := (tm_ref x) (in custom stlc at level 2).
-Notation "'!' x " := (tm_deref x) (in custom stlc at level 2).
-Notation " e1 ':=' e2 " := (tm_assign e1 e2) (in custom stlc at level 21).
+  (Ty_Ref t) (in custom stlc_ty at level 4).
+Notation "'loc' x" := (tm_loc x) (in custom stlc_tm at level 2) : stlc_scope.
+Notation "'ref' x" := (tm_ref x) (in custom stlc_tm at level 2) : stlc_scope.
+Notation "'!' x " := (tm_deref x) (in custom stlc_tm at level 2) : stlc_scope.
+Notation " e1 ':=' e2 " := (tm_assign e1 e2) (in custom stlc_tm at level 21) : stlc_scope.
+
+Open Scope stlc_scope.
 
 (** Intuitively:
     - [ref t] (formally, [ref t]) allocates a new reference cell
@@ -266,8 +278,10 @@ Hint Constructors value : core.
 (** Extending substitution to handle the new syntax of terms is
     straightforward: substituting in a pointer leaves it
     unchanged.  *)
+Reserved Notation "'[' x ':=' s ']' t" (in custom stlc_tm at level 5, x global, s custom stlc_tm,
+      t custom stlc_tm at next level, right associativity).
 
-Reserved Notation "'[' x ':=' s ']' t" (in custom stlc at level 20, x constr).
+
 Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
   match t with
   (* pure STLC *)
@@ -302,7 +316,7 @@ Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
       t
   end
 
-where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc).
+where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc_tm) : stlc_scope.
 
 (* ################################################################# *)
 (** * Pragmatics *)
@@ -346,7 +360,7 @@ Hint Unfold z : core.
 Definition tseq t1 t2 :=
   <{ (\ x : Unit, t2)  t1 }>.
 
-Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc at level 3).
+Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc_tm at level 3) : stlc_scope.
 
 (* ================================================================= *)
 (** ** References and Aliasing *)
@@ -923,17 +937,17 @@ Inductive step : tm * store -> tm * store -> Prop :=
   | ST_If0_Zero : forall t2 t3 st,
          <{ if0 0 then t2 else t3 }> / st --> t2 / st
   | ST_If0_Nonzero : forall n t2 t3 st,
-         <{ if0 {S n} then t2 else t3 }> / st --> t3 / st
+         <{ if0 $(S n) then t2 else t3 }> / st --> t3 / st
   (* references *)
   | ST_RefValue : forall v st,
          value v ->
-         <{ ref v }> / st --> <{ loc { length st } }> / (st ++ v::nil)
+         <{ ref v }> / st --> <{ loc $(length st) }> / (st ++ v::nil)
   | ST_Ref : forall t1 t1' st st',
          t1 / st --> t1' / st' ->
          <{ ref t1 }> /  st --> <{ ref t1' }> /  st'
   | ST_DerefLoc : forall st l,
          l < length st ->
-         <{ !(loc l) }> / st --> <{ { store_lookup l st } }> / st
+         <{ !(loc l) }> / st --> <{ $(store_lookup l st) }> / st
   | ST_Deref : forall t1 t1' st st',
          t1 / st --> t1' / st' ->
          <{ ! t1 }> / st --> <{ ! t1' }> / st'
@@ -1090,7 +1104,7 @@ Definition store_ty := list ty.
     index. *)
 
 Definition store_Tlookup (n:nat) (ST:store_ty) :=
-  nth n ST <{ Unit }>.
+  nth n ST <{{ Unit }}>.
 
 (** Suppose we are given a store typing [ST] describing the store
     [st] in which some term [t] will be reduced.  Then we can use
@@ -1138,54 +1152,62 @@ Definition store_Tlookup (n:nat) (ST:store_ty) :=
                     Gamma; ST |-- t1 := t2 : Unit
 *)
 
-Reserved Notation "Gamma ';' ST '|--' t '\in' T"
-                  (at level 40, t custom stlc, T custom stlc at level 0).
+Notation "x '|->' v ';' m " := (update m x v)
+  (in custom stlc_tm at level 0, x constr at level 0, v  custom stlc_ty, right associativity) : stlc_scope.
+
+Notation "x '|->' v " := (update empty x v)
+  (in custom stlc_tm at level 0, x constr at level 0, v custom stlc_ty) : stlc_scope.
+
+Notation "'empty'" := empty (in custom stlc_tm) : stlc_scope.
+
+Reserved Notation "<{ Gamma '/' ST '|--' t '\in' T }>"
+            (at level 0, Gamma custom stlc_tm at level 200, t custom stlc_tm, T custom stlc_ty).
 
 Inductive has_type (ST : store_ty) : context -> tm -> ty -> Prop :=
   | T_Var : forall Gamma x T1,
       Gamma x = Some T1 ->
-      Gamma ; ST |-- x \in T1
+      <{ Gamma / ST |-- x \in T1 }>
   | T_Abs : forall Gamma x T1 T2 t1,
-      update Gamma x T2 ; ST |-- t1 \in T1 ->
-      Gamma ; ST |-- \x:T2, t1 \in (T2 -> T1)
+      <{ x |-> T2; Gamma  / ST |-- t1 \in T1 }> ->
+      <{ Gamma / ST |-- \x:T2, t1 \in T2 -> T1 }>
   | T_App : forall T1 T2 Gamma t1 t2,
-      Gamma ; ST |-- t1 \in (T2 -> T1) ->
-      Gamma ; ST |-- t2 \in T2 ->
-      Gamma ; ST |-- t1 t2 \in T1
+      <{ Gamma / ST |-- t1 \in T2 -> T1 }> ->
+      <{ Gamma / ST |-- t2 \in T2 }> ->
+      <{ Gamma / ST |-- t1 t2 \in T1 }>
   | T_Nat : forall Gamma (n : nat),
-      Gamma ; ST |-- n \in Nat
+      <{ Gamma / ST |-- n \in Nat }>
   | T_Succ : forall Gamma t1,
-      Gamma ; ST |-- t1 \in Nat ->
-      Gamma ; ST |-- succ t1 \in Nat
+      <{ Gamma / ST |-- t1 \in Nat }> ->
+      <{ Gamma / ST |-- succ t1 \in Nat }>
   | T_Pred : forall Gamma t1,
-      Gamma ; ST |-- t1 \in Nat ->
-      Gamma ; ST |-- pred t1 \in Nat
+      <{ Gamma / ST |-- t1 \in Nat }> ->
+      <{ Gamma / ST |-- pred t1 \in Nat }>
   | T_Mult : forall Gamma t1 t2,
-      Gamma ; ST |-- t1 \in Nat ->
-      Gamma ; ST |-- t2 \in Nat ->
-      Gamma ; ST |-- t1 * t2 \in Nat
+      <{ Gamma / ST |-- t1 \in Nat }> ->
+      <{ Gamma / ST |-- t2 \in Nat }> ->
+      <{ Gamma / ST |-- t1 * t2 \in Nat }>
   | T_If0 : forall Gamma t1 t2 t3 T0,
-      Gamma ; ST |-- t1 \in Nat ->
-      Gamma ; ST |-- t2 \in T0 ->
-      Gamma ; ST |-- t3 \in T0 ->
-      Gamma ; ST |-- if0 t1 then t2 else t3 \in T0
+      <{ Gamma / ST |-- t1 \in Nat }> ->
+      <{ Gamma / ST |-- t2 \in T0 }> ->
+      <{ Gamma / ST |-- t3 \in T0 }> ->
+      <{ Gamma / ST |-- if0 t1 then t2 else t3 \in T0 }>
   | T_Unit : forall Gamma,
-      Gamma ; ST |-- unit \in Unit
+      <{ Gamma / ST |-- unit \in Unit }>
   | T_Loc : forall Gamma l,
       l < length ST ->
-      Gamma ; ST |-- (loc l) \in (Ref {store_Tlookup l ST })
+      <{ Gamma / ST |-- (loc l) \in Ref $(store_Tlookup l ST) }>
   | T_Ref : forall Gamma t1 T1,
-      Gamma ; ST |-- t1 \in T1 ->
-      Gamma ; ST |-- (ref t1) \in (Ref T1)
+      <{ Gamma / ST |-- t1 \in T1 }> ->
+      <{ Gamma / ST |-- (ref t1) \in Ref T1 }>
   | T_Deref : forall Gamma t1 T1,
-      Gamma ; ST |-- t1 \in (Ref T1) ->
-      Gamma ; ST |-- (! t1) \in T1
+      <{ Gamma / ST |-- t1 \in Ref T1 }> ->
+      <{ Gamma / ST |-- (! t1) \in T1 }>
   | T_Assign : forall Gamma t1 t2 T2,
-      Gamma ; ST |-- t1 \in (Ref T2) ->
-      Gamma ; ST |-- t2 \in T2 ->
-      Gamma ; ST |-- (t1 := t2) \in Unit
+      <{ Gamma / ST |-- t1 \in Ref T2 }> ->
+      <{ Gamma / ST |-- t2 \in T2 }> ->
+      <{ Gamma / ST |-- (t1 := t2) \in Unit }>
 
-where "Gamma ';' ST '|--' t '\in' T" := (has_type ST Gamma t T).
+where "<{ Gamma '/' ST '|--' t '\in' T }>" := (has_type ST Gamma t T).
 
 Hint Constructors has_type : core.
 
@@ -1235,9 +1257,9 @@ Hint Constructors has_type : core.
     related -- i.e., this is wrong: *)
 
 Theorem preservation_wrong1 : forall ST T t st t' st',
-  empty ; ST |-- t \in T ->
+  <{ empty / ST |-- t \in T }> ->
   t / st --> t' / st' ->
-  empty ; ST |-- t' \in T.
+  <{ empty / ST |-- t' \in T }>.
 Abort.
 
 (** If we typecheck with respect to some set of assumptions about the
@@ -1254,7 +1276,7 @@ Abort.
 Definition store_well_typed (ST:store_ty) (st:store) :=
   length ST = length st /\
   (forall l, l < length st ->
-     empty; ST |-- { store_lookup l st } \in {store_Tlookup l ST }).
+     <{ empty / ST |-- $(store_lookup l st) \in $(store_Tlookup l ST) }>).
 
 (** Informally, we will write [ST |-- st] for [store_well_typed ST st]. *)
 
@@ -1286,10 +1308,10 @@ Proof.
     property: *)
 
 Theorem preservation_wrong2 : forall ST T t st t' st',
-  empty ; ST |-- t \in T ->
+  <{ empty / ST |-- t \in T }> ->
   t / st --> t' / st' ->
   store_well_typed ST st ->
-  empty ; ST |-- t' \in T.
+  <{ empty / ST |-- t' \in T }>.
 Abort.
 
 (** This statement is fine for all of the reduction rules except
@@ -1381,12 +1403,12 @@ Qed.
     preservation property: *)
 
 Definition preservation_theorem := forall ST t t' T st st',
-  empty ; ST |-- t \in T ->
+  <{ empty / ST |-- t \in T }> ->
   store_well_typed ST st ->
   t / st --> t' / st' ->
   exists ST',
      extends ST' ST /\
-     empty ; ST' |-- t' \in T /\
+     <{ empty / ST' |-- t' \in T }> /\
      store_well_typed ST' st'.
 
 (** Note that the preservation theorem merely asserts that there is
@@ -1416,8 +1438,8 @@ Definition preservation_theorem := forall ST t t' T st st',
 
 Lemma weakening : forall Gamma Gamma' ST t T,
      includedin Gamma Gamma' ->
-     Gamma  ; ST |-- t \in T  ->
-     Gamma' ; ST |-- t \in T.
+     <{ Gamma / ST |-- t \in T }> ->
+     <{ Gamma' / ST |-- t \in T }>.
 Proof.
   intros Gamma Gamma' ST t T H Ht.
   generalize dependent Gamma'.
@@ -1425,8 +1447,8 @@ Proof.
 Qed.
 
 Lemma weakening_empty : forall Gamma ST t T,
-     empty ; ST |-- t \in T  ->
-     Gamma ; ST |-- t \in T.
+     <{ empty / ST |-- t \in T }> ->
+     <{ Gamma / ST |-- t \in T }>.
 Proof.
   intros Gamma ST t T.
   eapply weakening.
@@ -1434,9 +1456,9 @@ Proof.
 Qed.
 
 Lemma substitution_preserves_typing : forall Gamma ST x U t v T,
-  (update Gamma x U); ST |-- t \in T ->
-  empty ; ST |-- v \in U   ->
-  Gamma ; ST |-- [x:=v]t \in T.
+  <{ x |-> U; Gamma / ST |-- t \in T }> ->
+  <{ empty / ST |-- v \in U }>  ->
+  <{ Gamma / ST |-- [x:=v]t \in T }>.
 Proof.
   intros Gamma ST x U t v T Ht Hv.
   generalize dependent Gamma. generalize dependent T.
@@ -1472,7 +1494,7 @@ Qed.
 Lemma assign_pres_store_typing : forall ST st l t,
   l < length st ->
   store_well_typed ST st ->
-  empty ; ST |-- t \in {store_Tlookup l ST} ->
+  <{ empty / ST |-- t \in $(store_Tlookup l ST) }> ->
   store_well_typed ST (replace l t st).
 Proof with auto.
   intros ST st l t Hlen HST Ht.
@@ -1505,8 +1527,8 @@ Qed.
 
 Lemma store_weakening : forall Gamma ST ST' t T,
   extends ST' ST ->
-  Gamma ; ST |-- t \in T ->
-  Gamma ; ST' |-- t \in T.
+  <{ Gamma / ST |-- t \in T }> ->
+  <{ Gamma / ST' |-- t \in T }>.
 Proof with eauto.
   intros. induction H0; eauto.
   - (* T_Loc *)
@@ -1522,7 +1544,7 @@ Qed.
 
 Lemma store_well_typed_app : forall ST st t1 T1,
   store_well_typed ST st ->
-  empty ; ST |-- t1 \in T1 ->
+  <{ empty / ST |-- t1 \in T1 }> ->
   store_well_typed (ST ++ T1::nil) (st ++ t1::nil).
 Proof with auto.
   intros.
@@ -1569,12 +1591,12 @@ Qed.
 (** And here, at last, is the preservation theorem: *)
 
 Theorem preservation : forall ST t t' T st st',
-  empty ; ST |-- t \in T ->
+  <{ empty / ST |-- t \in T }> ->
   store_well_typed ST st ->
   t / st --> t' / st' ->
   exists ST',
      extends ST' ST /\
-     empty ; ST' |-- t' \in T /\
+     <{ empty / ST' |-- t' \in T }> /\
      store_well_typed ST' st'.
 Proof with eauto using store_weakening, extends_refl.
   remember empty as Gamma.
@@ -1626,8 +1648,8 @@ Proof with eauto using store_weakening, extends_refl.
     split.
     { apply extends_app. }
     split.
-    { replace <{ Ref T1 }>
-        with <{ Ref {store_Tlookup (length st) (ST ++ T1::nil)} }>.
+    { replace <{{ Ref T1 }}>
+        with <{{ Ref $(store_Tlookup (length st) (ST ++ T1::nil)) }}>.
       { apply T_Loc.
         rewrite <- H. rewrite app_length, add_comm. simpl. lia. }
       unfold store_Tlookup. rewrite <- H. rewrite nth_eq_last.
@@ -1684,7 +1706,7 @@ Definition manual_grade_for_preservation_informal : option (nat*string) := None.
     with a few new cases for the new syntactic constructs. *)
 
 Theorem progress : forall ST t T st,
-  empty ; ST |-- t \in T ->
+  <{ empty / ST |-- t \in T }> ->
   store_well_typed ST st ->
   (value t \/ exists t' st', t / st --> t' / st').
 Proof with eauto.
@@ -1706,7 +1728,7 @@ Proof with eauto.
     + (* t1 is a value *)
       inversion Ht1p; subst; try solve [ inversion Ht ].
       * (* t1 is a const *)
-        exists <{ {S n} }>, st...
+        exists <{ $(S n) }>, st...
     + (* t1 steps *)
       destruct Ht1p as [t1' [st' Hstep]].
       exists <{ succ t1' }>, st'...
@@ -1715,7 +1737,7 @@ Proof with eauto.
     + (* t1 is a value *)
       inversion Ht1p; subst; try solve [inversion Ht ].
       * (* t1 is a const *)
-        exists <{ {n - 1} }>, st...
+        exists <{ $(n - 1) }>, st...
     + (* t1 steps *)
       destruct Ht1p as [t1' [st' Hstep]].
       exists <{ pred t1' }>, st'...
@@ -1726,7 +1748,7 @@ Proof with eauto.
       destruct IHHt2 as [Ht2p | Ht2p]...
       * (* t2 is a value *)
         inversion Ht2p; subst; try solve [inversion Ht2].
-        exists <{ {n * n0} }>, st...
+        exists <{ $(n * n0) }>, st...
       * (* t2 steps *)
         destruct Ht2p as [t2' [st' Hstep]].
         exists <{ n * t2' }>, st'...
@@ -1829,7 +1851,9 @@ Definition loop :=
   <{ (\r : Ref (Unit -> Unit), (( r := loop_fun ); ( (! r) unit ) )) (ref (\x : Unit, unit)) }> .
 (** This term is well typed: *)
 
-Lemma loop_typeable : exists T, empty; nil |-- loop \in T.
+Import ListNotations.
+
+Lemma loop_typeable : exists T, <{ empty / [] |-- loop \in T }>.
 Proof with eauto.
   eexists. unfold loop. unfold loop_fun.
   eapply T_App...
@@ -1916,7 +1940,7 @@ Qed.
 Definition factorial : tm
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 
-Lemma factorial_type : empty; nil |-- factorial \in (Nat -> Nat).
+Lemma factorial_type : <{ empty / nil |-- factorial \in (Nat -> Nat) }>.
 Proof with eauto.
   (* FILL IN HERE *) Admitted.
 
@@ -1924,7 +1948,7 @@ Proof with eauto.
     uncomment the example below; the proof should be fully
     automatic using the [reduce] tactic. *)
 
-(* 
+(*
 Lemma factorial_4 : exists st,
   <{ factorial 4 }> / nil -->* tm_const 24 / st.
 Proof.
@@ -1947,4 +1971,4 @@ Qed.
 End RefsAndNontermination.
 End STLCRef.
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

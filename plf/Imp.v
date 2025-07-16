@@ -22,12 +22,12 @@
     reasoning about imperative programs. *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Bool.Bool.
+From Coq Require Import Bool.
 From Coq Require Import Init.Nat.
-From Coq Require Import Arith.Arith.
-From Coq Require Import Arith.EqNat. Import Nat.
+From Coq Require Import Arith.
+From Coq Require Import EqNat. Import Nat.
 From Coq Require Import Lia.
-From Coq Require Import Lists.List. Import ListNotations.
+From Coq Require Import List. Import ListNotations.
 From Coq Require Import Strings.String.
 From PLF Require Import Maps.
 Set Default Goal Selector "!".
@@ -466,6 +466,16 @@ Admitted.
 Fixpoint optimize_0plus_b (b : bexp) : bexp
   (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 
+Example optimize_0plus_b_test1:
+  optimize_0plus_b (BNot (BGt (APlus (ANum 0) (ANum 4)) (ANum 8))) =
+                   (BNot (BGt (ANum 4) (ANum 8))).
+Proof. (* FILL IN HERE *) Admitted.
+
+Example optimize_0plus_b_test2:
+  optimize_0plus_b (BAnd (BLe (APlus (ANum 0) (ANum 4)) (ANum 5)) BTrue) =
+                   (BAnd (BLe (ANum 4) (ANum 5)) BTrue).
+Proof. (* FILL IN HERE *) Admitted.
+
 Theorem optimize_0plus_b_sound : forall b,
   beval (optimize_0plus_b b) = beval b.
 Proof.
@@ -790,7 +800,7 @@ Definition manual_grade_for_beval_rules : option (nat*string) := None.
 (** It is straightforward to prove that the relational and functional
     definitions of evaluation agree: *)
 
-Theorem aeval_iff_aevalR : forall a n,
+Theorem aevalR_iff_aeval : forall a n,
   (a ==> n) <-> aeval a = n.
 Proof.
   split.
@@ -828,7 +838,7 @@ Qed.
 (** Again, we can make the proof quite a bit shorter using some
     tacticals. *)
 
-Theorem aeval_iff_aevalR' : forall a n,
+Theorem aevalR_iff_aeval' : forall a n,
   (a ==> n) <-> aeval a = n.
 Proof.
   (* WORKED IN CLASS *)
@@ -852,7 +862,7 @@ Inductive bevalR: bexp -> bool -> Prop :=
 where "e '==>b' b" := (bevalR e b) : type_scope
 .
 
-Lemma beval_iff_bevalR : forall b bv,
+Lemma bevalR_iff_beval : forall b bv,
   b ==>b bv <-> beval b = bv.
 Proof.
   (* FILL IN HERE *) Admitted.
@@ -1088,10 +1098,11 @@ Notation "e" := e (in custom com_aux at level 0, e custom com) : com_scope.
 
 Notation "( x )" := x (in custom com, x at level 99) : com_scope.
 Notation "x" := x (in custom com at level 0, x constr at level 0) : com_scope.
+
 Notation "f x .. y" := (.. (f x) .. y)
                   (in custom com at level 0, only parsing,
-                  f constr at level 0, x constr at level 9,
-                  y constr at level 9) : com_scope.
+                  f constr at level 0, x constr at level 1,
+                      y constr at level 1) : com_scope.
 Notation "x + y"   := (APlus x y) (in custom com at level 50, left associativity).
 Notation "x - y"   := (AMinus x y) (in custom com at level 50, left associativity).
 Notation "x * y"   := (AMult x y) (in custom com at level 40, left associativity).
@@ -1151,13 +1162,12 @@ Definition empty_st := (_ !-> 0).
 
 (** Also, we can add a notation for a "singleton state" with just one
     variable bound to a value. *)
-Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100).
+Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100, v at level 200).
 
 Example aexp1 :
     aeval (X !-> 5) <{ 3 + (X * 2) }>
   = 13.
 Proof. reflexivity. Qed.
-
 Example aexp2 :
     aeval (X !-> 5 ; Y !-> 4) <{ Z + (X * Y) }>
   = 20.
@@ -1385,7 +1395,7 @@ Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
     | <{ skip }> =>
         st
     | <{ x := a }> =>
-        (x !-> (aeval st a) ; st)
+        (x !-> aeval st a ; st)
     | <{ c1 ; c2 }> =>
         let st' := ceval_fun_no_while st c1 in
         ceval_fun_no_while st' c2
@@ -2077,4 +2087,4 @@ End BreakImp.
 
     [] *)
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

@@ -131,12 +131,12 @@
     programming infrastructure for constructing large-scale certified
     system software. By combining recent advances in programming
     languages, operating systems, and formal methods, we hope to
-    attack the following research questions: (1) what OS kernel
+    attack the following research questions: (A) what OS kernel
     structure can offer the best support for extensibility, security,
-    and resilience? (2) which semantic models and program logics can
-    best capture these abstractions? (3) what are the right
+    and resilience? (B) which semantic models and program logics can
+    best capture these abstractions? (C) what are the right
     programming languages and environments for developing such
-    certified kernels? and (4) how to build automation facilities to
+    certified kernels? and (D) how to build automation facilities to
     make certified software development really scale?"
 
     {http://flint.cs.yale.edu/certikos/} *)
@@ -292,4 +292,4 @@
 
 (** $Date$ *)
 
-(* 2024-01-02 21:54 *)
+(* 2025-01-06 19:48 *)

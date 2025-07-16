@@ -1,11 +1,11 @@
 (** * Smallstep: Small-step Operational Semantics *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Arith.Arith.
-From Coq Require Import Arith.EqNat.
+From Coq Require Import Arith.
+From Coq Require Import EqNat.
 From Coq Require Import Init.Nat.
 From Coq Require Import Lia.
-From Coq Require Import Lists.List. Import ListNotations.
+From Coq Require Import List. Import ListNotations.
 From PLF Require Import Maps.
 From PLF Require Import Imp.
 Set Default Goal Selector "!".
@@ -129,7 +129,6 @@ Module SimpleArith1.
 
 (** Now, here is the corresponding _small-step_ evaluation relation.
 
-    
                      -------------------------------        (ST_PlusConstConst)
                      P (C n1) (C n2) --> C (n1 + n2)
 
@@ -390,7 +389,7 @@ Inductive value : tm -> Prop :=
     definition of the [-->] relation to write [ST_Plus2] rule in a
     slightly more elegant way: *)
 
-(** 
+(**
                      -------------------------------        (ST_PlusConstConst)
                      P (C n1) (C n2) --> C (n1 + n2)
 
@@ -504,8 +503,8 @@ Theorem strong_progress : forall t,
   value t \/ (exists t', t --> t').
 Proof.
   induction t.
-  - (* C *) left. apply v_const.
-  - (* P *) right. destruct IHt1 as [IHt1 | [t1' Ht1] ].
+  - (* C case *) left. apply v_const.
+  - (* P case *) right. destruct IHt1 as [IHt1 | [t1' Ht1] ].
     + (* l *) destruct IHt2 as [IHt2 | [t2' Ht2] ].
       * (* l *) inversion IHt1. inversion IHt2.
         exists (C (n + n0)).
@@ -965,9 +964,9 @@ Qed.
     [t1 -->* t2] and [t2 -->* t3], then [t1 -->* t3]. *)
 
 (* ================================================================= *)
-(** ** Examples *)
+(** ** Examples
 
-(** Here's a specific instance of the [multi step] relation: *)
+    Here's a specific instance of the [multi step] relation: *)
 
 Lemma test_multistep_1:
       P
@@ -1081,7 +1080,6 @@ Definition normalizing {X : Type} (R : relation X) :=
     (multi R) t t' /\ normal_form R t'.
 
 (** To prove that [step] is normalizing, we need a couple of lemmas.
-
     First, we observe that, if [t] reduces to [t'] in many steps, then
     the same sequence of reduction steps within [t] is also possible
     when [t] appears as the first argument to [P], and
@@ -1139,7 +1137,7 @@ Theorem step_normalizing :
 Proof.
   unfold normalizing.
   induction t.
-  - (* C *)
+  - (* C case *)
     exists (C n).
     split.
     + (* l *) apply multi_refl.
@@ -1147,7 +1145,8 @@ Proof.
       (* We can use [rewrite] with "iff" statements, not
            just equalities: *)
       apply nf_same_as_value. apply v_const.
-  - (* P *)
+
+  - (* P case *)
     destruct IHt1 as [t1' [Hsteps1 Hnormal1] ].
     destruct IHt2 as [t2' [Hsteps2 Hnormal2] ].
     apply nf_same_as_value in Hnormal1.
@@ -1910,4 +1909,4 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(* 2024-01-02 21:54 *)
+(* 2025-01-06 19:48 *)

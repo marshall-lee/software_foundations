@@ -12,7 +12,7 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 
-From Coq Require Import Arith.Arith.
+From Coq Require Import Arith.
 
 From PLF Require Maps.
 From PLF Require Stlc.
@@ -243,11 +243,11 @@ Import Maps.
 
 Example typing_nonexample_1 :
   ~ exists T,
-      empty |--
+     <{ empty |--
         \x:Bool,
             \y:Bool,
                (x y) \in
-        T.
+        T }>.
 Proof.
   dup 3.
 
@@ -572,9 +572,9 @@ Module GenExample.
   Import Maps.
 
 Lemma substitution_preserves_typing : forall Gamma x U t v T,
-  x |-> U ; Gamma |-- t \in T ->
-  empty |-- v \in U   ->
-  Gamma |-- [x:=v]t \in T.
+  <{ x |-> U ; Gamma |-- t \in T }> ->
+  <{ empty |-- v \in U }>  ->
+  <{ Gamma |-- [x:=v]t \in T }>.
 Proof.
   dup.
 
@@ -756,7 +756,7 @@ Import Sub.STLCSub.
 Import String.
 
 Axiom typing_inversion_var : forall Gamma (x:string) T,
-  Gamma |-- x \in T ->
+  <{ Gamma |-- x \in T }> ->
   exists S,
     Gamma x = Some S /\ S <: T.
 
@@ -766,7 +766,7 @@ Axiom typing_inversion_var : forall Gamma (x:string) T,
     [lets K: typing_inversion_var H], as shown next. *)
 
 Lemma demo_lets_1 : forall (G:context) (x:string) (T:ty),
-  G |-- x \in T ->
+  <{ G |-- x \in T }> ->
   True.
 Proof.
   intros G x T H. dup.
@@ -920,4 +920,4 @@ End ExamplesLets.
 
 *)
 
-(* 2024-01-03 15:04 *)
+(* 2025-01-06 19:48 *)

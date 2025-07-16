@@ -35,13 +35,13 @@
     without knowing the initial value of [Y]. *)
 
 From PLF Require Import Maps.
-From Coq Require Import Bool.Bool.
-From Coq Require Import Arith.Arith.
-From Coq Require Import Arith.EqNat.
-From Coq Require Import Arith.PeanoNat. Import Nat.
+From Coq Require Import Bool.
+From Coq Require Import Arith.
+From Coq Require Import EqNat.
+From Coq Require Import PeanoNat. Import Nat.
 From Coq Require Import Lia.
-From Coq Require Import Logic.FunctionalExtensionality.
-From Coq Require Import Lists.List.
+From Coq Require Import FunctionalExtensionality.
+From Coq Require Import List.
 Import ListNotations.
 
 From PLF Require Import Smallstep.
@@ -1673,4 +1673,4 @@ Proof. intros.
       eapply E_Some; eauto. apply pe_block_correct. apply Hkeval.
 Qed.
 
-(* 2024-01-02 21:54 *)
+(* 2025-01-06 19:48 *)

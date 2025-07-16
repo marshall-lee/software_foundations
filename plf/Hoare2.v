@@ -4,10 +4,10 @@ Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 Set Warnings "-intuition-auto-with-star".
 From Coq Require Import Strings.String.
 From PLF Require Import Maps.
-From Coq Require Import Bool.Bool.
-From Coq Require Import Arith.Arith.
-From Coq Require Import Arith.EqNat.
-From Coq Require Import Arith.PeanoNat. Import Nat.
+From Coq Require Import Bool.
+From Coq Require Import Arith.
+From Coq Require Import EqNat.
+From Coq Require Import PeanoNat. Import Nat.
 From Coq Require Import Lia.
 From PLF Require Export Imp.
 From PLF Require Import Hoare.
@@ -373,7 +373,6 @@ Ltac verify_assertion :=
   repeat split;
   simpl;
   unfold assert_implies;
-  unfold ap in *; unfold ap2 in *;
   unfold bassertion in *; unfold beval in *; unfold aeval in *;
   unfold assertion_sub; intros;
   repeat (simpl in *;
@@ -580,29 +579,29 @@ Inductive decorated : Type :=
 Declare Scope dcom_scope.
 Notation "'skip' {{ P }}"
       := (DCSkip P)
-           (in custom com at level 0, P constr) : dcom_scope.
+           (in custom com at level 0, P custom assn at level 99) : dcom_scope.
 Notation "l ':=' a {{ P }}"
       := (DCAsgn l a P)
            (in custom com at level 0, l constr at level 0,
-            a custom com at level 85, P constr, no associativity)
+            a custom com at level 85, P custom assn at level 99, no associativity)
            : dcom_scope.
 Notation "'while' b 'do' {{ Pbody }} d 'end' {{ Ppost }}"
       := (DCWhile b Pbody d Ppost)
            (in custom com at level 89, b custom com at level 99,
-               Pbody constr, Ppost constr)
+               Pbody custom assn at level 99, Ppost custom assn at level 99)
            : dcom_scope.
 Notation "'if' b 'then' {{ P }} d 'else' {{ P' }} d' 'end' {{ Q }}"
       := (DCIf b P d P' d' Q)
            (in custom com at level 89, b custom com at level 99,
-               P constr, P' constr, Q constr)
+               P custom assn at level 99, P' custom assn at level 99, Q custom assn at level 99)
            : dcom_scope.
 Notation "'->>' {{ P }} d"
       := (DCPre P d)
-          (in custom com at level 12, right associativity, P constr)
+          (in custom com at level 12, right associativity, P custom assn at level 99)
           : dcom_scope.
 Notation "d '->>' {{ P }}"
       := (DCPost d P)
-           (in custom com at level 10, right associativity, P constr)
+           (in custom com at level 10, right associativity, P custom assn at level 99)
            : dcom_scope.
 Notation " d ; d' "
       := (DCSeq d d')
@@ -610,7 +609,7 @@ Notation " d ; d' "
            : dcom_scope.
 Notation "{{ P }} d"
       := (Decorated P d)
-           (in custom com at level 91, P constr)
+           (in custom com at level 91, P custom assn at level 99)
            : dcom_scope.
 
 Local Open Scope dcom_scope.
@@ -694,14 +693,14 @@ Definition postcondition_from (dec : decorated) : Assertion :=
 Example precondition_from_while : precondition_from dec_while = True.
 Proof. reflexivity. Qed.
 
-Example postcondition_from_while : postcondition_from dec_while = (X = 0)%assertion.
+Example postcondition_from_while : postcondition_from dec_while = {{ X = 0 }}.
 Proof. reflexivity. Qed.
 
 (** We can then express what it means for a decorated program to be
     correct as follows: *)
 
 Definition outer_triple_valid (dec : decorated) :=
-  {{precondition_from dec}} erase_d dec {{postcondition_from dec}}.
+  {{$(precondition_from dec)}} erase_d dec {{$(postcondition_from dec)}}.
 
 (** For example: *)
 
@@ -811,7 +810,7 @@ Proof. reflexivity. Qed.
 
         (1) [P ->> Q]
 
-        (1) [d] is locally consistent with respect to [Q]
+        (2) [d] is locally consistent with respect to [Q]
 *)
 
 (** - A command with an extra assertion at the end
@@ -843,10 +842,10 @@ Fixpoint verification_conditions (P : Assertion) (d : dcom) : Prop :=
       verification_conditions P d1
       /\ verification_conditions (post d1) d2
   | DCAsgn X a Q =>
-      (P ->> Q [X |-> a])
+       P ->> {{ Q [X |-> a] }}
   | DCIf b P1 d1 P2 d2 Q =>
-      ((P /\ b) ->> P1)%assertion
-      /\ ((P /\ ~ b) ->> P2)%assertion
+      {{ P /\ b }} ->> P1
+      /\ {{ P /\ ~ b }}  ->> P2
       /\ (post d1 ->> Q) /\ (post d2 ->> Q)
       /\ verification_conditions P1 d1
       /\ verification_conditions P2 d2
@@ -854,8 +853,8 @@ Fixpoint verification_conditions (P : Assertion) (d : dcom) : Prop :=
       (* post d is both the loop invariant and the initial
          precondition *)
       (P ->> post d)
-      /\ ((post d  /\ b) ->> Q)%assertion
-      /\ ((post d  /\ ~ b) ->> R)%assertion
+      /\ {{ $(post d)  /\ b }} ->> Q
+      /\ {{ $(post d)  /\ ~ b }} ->> R
       /\ verification_conditions Q d
   | DCPre P' d =>
       (P ->> P')
@@ -870,7 +869,7 @@ Fixpoint verification_conditions (P : Assertion) (d : dcom) : Prop :=
     rules gets used at some point in the proof. *)
 
 Theorem verification_correct : forall d P,
-  verification_conditions P d -> {{P}} erase d {{post d}}.
+  verification_conditions P d -> {{P}} erase d {{ $(post d) }}.
 Proof.
   induction d; intros; simpl in *.
   - (* Skip *)
@@ -1363,7 +1362,7 @@ Definition parity_dec (m:nat) : decorated :=
                   {{ FILL_IN_HERE }}
     end
   {{ FILL_IN_HERE }} ->>
-  {{ X = parity m }} }>.
+  {{ X = #parity m }} }>.
 
 (** If you use the suggested loop invariant, you may find the following
     lemmas helpful (as well as [leb_complete] and [leb_correct]). *)
@@ -1660,7 +1659,7 @@ Definition minimum_dec (a b : nat) : decorated :=
              {{ FILL_IN_HERE }}
       end
     {{ FILL_IN_HERE }} ->>
-    {{ Z = min a b }}
+    {{ Z = #min a b }}
   }>.
 
 Theorem minimum_correct : forall a b,
@@ -1775,7 +1774,7 @@ Definition dpow2_dec (n : nat) :=
                {{ FILL_IN_HERE }}
       end
     {{ FILL_IN_HERE }} ->>
-    {{ Y = pow2 (n+1) - 1 }}
+    {{ Y = #pow2 (n+1) - 1 }}
   }>.
 
 (** Some lemmas that you may find useful... *)
@@ -1883,7 +1882,7 @@ Definition dfib (n : nat) : decorated :=
                   {{ FILL_IN_HERE }}
     end
     {{ FILL_IN_HERE }} ->>
-    {{ Y = fib n }}
+    {{ Y = #fib n }}
    }>.
 
 Theorem dfib_correct : forall n,
@@ -1954,7 +1953,10 @@ Proof.
 
 (** Note that weakest preconditions need not be unique.  For
     example, [Y <= 4] was a weakest precondition above, but so are the
-    logically equivalent assertions [Y < 5], [Y <= 2 * 2], etc.  *)
+    logically equivalent assertions [Y < 5], [Y <= 2 * 2], etc.
+    It is easy to show that any two weakest preconditions [P] and [P']
+    of a command [c] with respect to postcondition [Q] are logically
+    equivalent; that is, [P <<->> P']. *)
 
 Definition is_wp P c Q :=
   {{P}} c {{Q}} /\
@@ -1991,10 +1993,14 @@ Definition is_wp P c Q :=
 
     Prove formally, using the definition of [valid_hoare_triple], that [Y <= 4]
     is indeed a weakest precondition of [X := Y + 1] with respect to
-    postcondition [X <= 5]. *)
+    postcondition [X <= 5].
+
+    Note: we have to put parentheses around the inputs to [is_wp] to
+    prevent Coq from parsing those three things as a Hoare triple.
+ *)
 
 Theorem is_wp_example :
-  is_wp (Y <= 4) <{X := Y + 1}> (X <= 5).
+  is_wp ({{ Y <= 4 }}) (<{X := Y + 1}>) ({{ X <= 5 }}).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -2005,7 +2011,7 @@ Proof.
     weakest precondition. *)
 
 Theorem hoare_asgn_weakest : forall Q X a,
-  is_wp (Q [X |-> a]) <{ X := a }> Q.
+  is_wp ({{ Q [X |-> a] }}) <{ X := a }> Q.
 Proof.
 (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -2025,4 +2031,4 @@ Proof.
 End Himp2.
 (** [] *)
 
-(* 2024-01-02 21:54 *)
+(* 2025-01-06 19:48 *)
