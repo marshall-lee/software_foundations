@@ -32,22 +32,11 @@ Import Check.
 
 Goal True.
 
-idtac "-------------------  pup_to_n  --------------------".
-idtac " ".
-
-idtac "#> pup_to_n".
-idtac "Possible points: 2".
-check_type @pup_to_n (Imp.com).
-idtac "Assumptions:".
-Abort.
-Print Assumptions pup_to_n.
-Goal True.
-idtac " ".
-
 idtac "-------------------  ceval_step__ceval_inf  --------------------".
 idtac " ".
 
 idtac "#> Manually graded: ceval_step__ceval_inf".
+idtac "Advanced".
 idtac "Possible points: 6".
 print_manual_grade manual_grade_for_ceval_step__ceval_inf.
 idtac " ".
@@ -69,8 +58,8 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 11".
-idtac "Max points - advanced: 11".
+idtac "Max points - standard: 3".
+idtac "Max points - advanced: 9".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -94,16 +83,14 @@ idtac "  - A list of pending axioms, containing unproven assumptions. In this ca
 idtac "    the exercise is considered complete, if the axioms are all allowed.".
 idtac "".
 idtac "********** Standard **********".
-idtac "---------- pup_to_n ---------".
-Print Assumptions pup_to_n.
-idtac "---------- ceval_step__ceval_inf ---------".
-idtac "MANUAL".
 idtac "---------- ceval__ceval_step ---------".
 Print Assumptions ceval__ceval_step.
 idtac "".
 idtac "********** Advanced **********".
+idtac "---------- ceval_step__ceval_inf ---------".
+idtac "MANUAL".
 Abort.
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:00 *)
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:00 *)

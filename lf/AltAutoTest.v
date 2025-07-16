@@ -185,13 +185,13 @@ Print Assumptions andb3_exchange'.
 Goal True.
 idtac " ".
 
-idtac "-------------------  nand_intuition  --------------------".
+idtac "-------------------  nor_intuition  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: nand_intuition".
+idtac "#> Manually graded: nor_intuition".
 idtac "Advanced".
 idtac "Possible points: 6".
-print_manual_grade manual_grade_for_nand_intuition.
+print_manual_grade manual_grade_for_nor_intuition.
 idtac " ".
 
 idtac " ".
@@ -251,10 +251,10 @@ idtac "---------- andb3_exchange' ---------".
 Print Assumptions andb3_exchange'.
 idtac "".
 idtac "********** Advanced **********".
-idtac "---------- nand_intuition ---------".
+idtac "---------- nor_intuition ---------".
 idtac "MANUAL".
 Abort.
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:19 *)
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:19 *)

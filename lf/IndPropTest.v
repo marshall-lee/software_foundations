@@ -44,6 +44,40 @@ Print Assumptions ev_double.
 Goal True.
 idtac " ".
 
+idtac "-------------------  Perm3  --------------------".
+idtac " ".
+
+idtac "#> Perm3_ex1".
+idtac "Possible points: 0.5".
+check_type @Perm3_ex1 ((@Perm3 nat [1; 2; 3] [2; 3; 1])).
+idtac "Assumptions:".
+Abort.
+Print Assumptions Perm3_ex1.
+Goal True.
+idtac " ".
+
+idtac "#> Perm3_refl".
+idtac "Possible points: 0.5".
+check_type @Perm3_refl ((forall (X : Type) (a b c : X), @Perm3 X [a; b; c] [a; b; c])).
+idtac "Assumptions:".
+Abort.
+Print Assumptions Perm3_refl.
+Goal True.
+idtac " ".
+
+idtac "-------------------  le_inversion  --------------------".
+idtac " ".
+
+idtac "#> le_inversion".
+idtac "Possible points: 1".
+check_type @le_inversion (
+(forall n m : nat, n <= m -> n = m \/ (exists m' : nat, m = S m' /\ n <= m'))).
+idtac "Assumptions:".
+Abort.
+Print Assumptions le_inversion.
+Goal True.
+idtac " ".
+
 idtac "-------------------  inversion_practice  --------------------".
 idtac " ".
 
@@ -93,6 +127,119 @@ Print Assumptions ev_ev__ev.
 Goal True.
 idtac " ".
 
+idtac "-------------------  Perm3_In  --------------------".
+idtac " ".
+
+idtac "#> Perm3_In".
+idtac "Possible points: 2".
+check_type @Perm3_In (
+(forall (X : Type) (x : X) (l1 l2 : list X),
+ @Perm3 X l1 l2 -> @In X x l1 -> @In X x l2)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions Perm3_In.
+Goal True.
+idtac " ".
+
+idtac "-------------------  le_facts  --------------------".
+idtac " ".
+
+idtac "#> le_trans".
+idtac "Possible points: 0.5".
+check_type @le_trans ((forall m n o : nat, m <= n -> n <= o -> m <= o)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions le_trans.
+Goal True.
+idtac " ".
+
+idtac "#> O_le_n".
+idtac "Possible points: 0.5".
+check_type @O_le_n ((forall n : nat, 0 <= n)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions O_le_n.
+Goal True.
+idtac " ".
+
+idtac "#> n_le_m__Sn_le_Sm".
+idtac "Possible points: 0.5".
+check_type @n_le_m__Sn_le_Sm ((forall n m : nat, n <= m -> S n <= S m)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions n_le_m__Sn_le_Sm.
+Goal True.
+idtac " ".
+
+idtac "#> Sn_le_Sm__n_le_m".
+idtac "Possible points: 1".
+check_type @Sn_le_Sm__n_le_m ((forall n m : nat, S n <= S m -> n <= m)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions Sn_le_Sm__n_le_m.
+Goal True.
+idtac " ".
+
+idtac "#> le_plus_l".
+idtac "Possible points: 0.5".
+check_type @le_plus_l ((forall a b : nat, a <= a + b)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions le_plus_l.
+Goal True.
+idtac " ".
+
+idtac "-------------------  plus_le_facts1  --------------------".
+idtac " ".
+
+idtac "#> plus_le".
+idtac "Possible points: 1".
+check_type @plus_le ((forall n1 n2 m : nat, n1 + n2 <= m -> n1 <= m /\ n2 <= m)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions plus_le.
+Goal True.
+idtac " ".
+
+idtac "#> plus_le_cases".
+idtac "Possible points: 1".
+check_type @plus_le_cases ((forall n m p q : nat, n + m <= p + q -> n <= p \/ m <= q)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions plus_le_cases.
+Goal True.
+idtac " ".
+
+idtac "-------------------  plus_le_facts2  --------------------".
+idtac " ".
+
+idtac "#> plus_le_compat_l".
+idtac "Possible points: 0.5".
+check_type @plus_le_compat_l ((forall n m p : nat, n <= m -> p + n <= p + m)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions plus_le_compat_l.
+Goal True.
+idtac " ".
+
+idtac "#> plus_le_compat_r".
+idtac "Possible points: 0.5".
+check_type @plus_le_compat_r ((forall n m p : nat, n <= m -> n + p <= m + p)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions plus_le_compat_r.
+Goal True.
+idtac " ".
+
+idtac "#> le_plus_trans".
+idtac "Possible points: 1".
+check_type @le_plus_trans ((forall n m p : nat, n <= m -> n <= m + p)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions le_plus_trans.
+Goal True.
+idtac " ".
+
 idtac "-------------------  R_provability  --------------------".
 idtac " ".
 
@@ -116,7 +263,7 @@ idtac " ".
 
 idtac "#> subseq_app".
 idtac "Advanced".
-idtac "Possible points: 1".
+idtac "Possible points: 2".
 check_type @subseq_app (
 (forall l1 l2 l3 : list nat, subseq l1 l2 -> subseq l1 (l2 ++ l3))).
 idtac "Assumptions:".
@@ -127,7 +274,7 @@ idtac " ".
 
 idtac "#> subseq_trans".
 idtac "Advanced".
-idtac "Possible points: 1".
+idtac "Possible points: 3".
 check_type @subseq_trans (
 (forall l1 l2 l3 : list nat, subseq l1 l2 -> subseq l2 l3 -> subseq l1 l3)).
 idtac "Assumptions:".
@@ -139,17 +286,17 @@ idtac " ".
 idtac "-------------------  exp_match_ex1  --------------------".
 idtac " ".
 
-idtac "#> empty_is_empty".
-idtac "Possible points: 1".
-check_type @empty_is_empty ((forall (T : Type) (s : list T), ~ (s =~ @EmptySet T))).
+idtac "#> EmptySet_is_empty".
+idtac "Possible points: 0.5".
+check_type @EmptySet_is_empty ((forall (T : Type) (s : list T), ~ (s =~ @EmptySet T))).
 idtac "Assumptions:".
 Abort.
-Print Assumptions empty_is_empty.
+Print Assumptions EmptySet_is_empty.
 Goal True.
 idtac " ".
 
 idtac "#> MUnion'".
-idtac "Possible points: 1".
+idtac "Possible points: 0.5".
 check_type @MUnion' (
 (forall (T : Type) (s : list T) (re1 re2 : reg_exp T),
  s =~ re1 \/ s =~ re2 -> s =~ @Union T re1 re2)).
@@ -160,7 +307,7 @@ Goal True.
 idtac " ".
 
 idtac "#> MStar'".
-idtac "Possible points: 1".
+idtac "Possible points: 2".
 check_type @MStar' (
 (forall (T : Type) (ss : list (list T)) (re : reg_exp T),
  (forall s : list T, @In (list T) s ss -> s =~ re) ->
@@ -265,8 +412,8 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 25".
-idtac "Max points - advanced: 47".
+idtac "Max points - standard: 36".
+idtac "Max points - advanced: 61".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -292,16 +439,44 @@ idtac "".
 idtac "********** Standard **********".
 idtac "---------- ev_double ---------".
 Print Assumptions ev_double.
+idtac "---------- Perm3_ex1 ---------".
+Print Assumptions Perm3_ex1.
+idtac "---------- Perm3_refl ---------".
+Print Assumptions Perm3_refl.
+idtac "---------- le_inversion ---------".
+Print Assumptions le_inversion.
 idtac "---------- SSSSev__even ---------".
 Print Assumptions SSSSev__even.
 idtac "---------- ev5_nonsense ---------".
 Print Assumptions ev5_nonsense.
 idtac "---------- ev_sum ---------".
 Print Assumptions ev_sum.
+idtac "---------- Perm3_In ---------".
+Print Assumptions Perm3_In.
+idtac "---------- le_trans ---------".
+Print Assumptions le_trans.
+idtac "---------- O_le_n ---------".
+Print Assumptions O_le_n.
+idtac "---------- n_le_m__Sn_le_Sm ---------".
+Print Assumptions n_le_m__Sn_le_Sm.
+idtac "---------- Sn_le_Sm__n_le_m ---------".
+Print Assumptions Sn_le_Sm__n_le_m.
+idtac "---------- le_plus_l ---------".
+Print Assumptions le_plus_l.
+idtac "---------- plus_le ---------".
+Print Assumptions plus_le.
+idtac "---------- plus_le_cases ---------".
+Print Assumptions plus_le_cases.
+idtac "---------- plus_le_compat_l ---------".
+Print Assumptions plus_le_compat_l.
+idtac "---------- plus_le_compat_r ---------".
+Print Assumptions plus_le_compat_r.
+idtac "---------- le_plus_trans ---------".
+Print Assumptions le_plus_trans.
 idtac "---------- R_provability ---------".
 idtac "MANUAL".
-idtac "---------- empty_is_empty ---------".
-Print Assumptions empty_is_empty.
+idtac "---------- EmptySet_is_empty ---------".
+Print Assumptions EmptySet_is_empty.
 idtac "---------- MUnion' ---------".
 Print Assumptions MUnion'.
 idtac "---------- MStar' ---------".
@@ -332,6 +507,6 @@ idtac "---------- merge_filter ---------".
 Print Assumptions merge_filter.
 Abort.
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:19 *)
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:19 *)

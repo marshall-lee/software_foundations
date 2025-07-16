@@ -32,15 +32,15 @@ Import Check.
 
 Goal True.
 
-idtac "-------------------  and_exercise  --------------------".
+idtac "-------------------  plus_is_O  --------------------".
 idtac " ".
 
-idtac "#> and_exercise".
+idtac "#> plus_is_O".
 idtac "Possible points: 2".
-check_type @and_exercise ((forall n m : nat, n + m = 0 -> n = 0 /\ m = 0)).
+check_type @plus_is_O ((forall n m : nat, n + m = 0 -> n = 0 /\ m = 0)).
 idtac "Assumptions:".
 Abort.
-Print Assumptions and_exercise.
+Print Assumptions plus_is_O.
 Goal True.
 idtac " ".
 
@@ -48,7 +48,7 @@ idtac "-------------------  and_assoc  --------------------".
 idtac " ".
 
 idtac "#> and_assoc".
-idtac "Possible points: 2".
+idtac "Possible points: 1".
 check_type @and_assoc ((forall P Q R : Prop, P /\ Q /\ R -> (P /\ Q) /\ R)).
 idtac "Assumptions:".
 Abort.
@@ -60,7 +60,7 @@ idtac "-------------------  mult_is_O  --------------------".
 idtac " ".
 
 idtac "#> mult_is_O".
-idtac "Possible points: 1".
+idtac "Possible points: 2".
 check_type @mult_is_O ((forall n m : nat, n * m = 0 -> n = 0 \/ m = 0)).
 idtac "Assumptions:".
 Abort.
@@ -80,20 +80,20 @@ Print Assumptions or_commut.
 Goal True.
 idtac " ".
 
-idtac "-------------------  double_neg_inf  --------------------".
+idtac "-------------------  double_neg_informal  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: double_neg_inf".
+idtac "#> Manually graded: double_neg_informal".
 idtac "Advanced".
 idtac "Possible points: 2".
-print_manual_grade manual_grade_for_double_neg_inf.
+print_manual_grade manual_grade_for_double_neg_informal.
 idtac " ".
 
 idtac "-------------------  contrapositive  --------------------".
 idtac " ".
 
 idtac "#> contrapositive".
-idtac "Possible points: 2".
+idtac "Possible points: 1".
 check_type @contrapositive ((forall P Q : Prop, (P -> Q) -> ~ Q -> ~ P)).
 idtac "Assumptions:".
 Abort.
@@ -113,13 +113,13 @@ Print Assumptions not_both_true_and_false.
 Goal True.
 idtac " ".
 
-idtac "-------------------  informal_not_PNP  --------------------".
+idtac "-------------------  not_PNP_informal  --------------------".
 idtac " ".
 
-idtac "#> Manually graded: informal_not_PNP".
+idtac "#> Manually graded: not_PNP_informal".
 idtac "Advanced".
 idtac "Possible points: 1".
-print_manual_grade manual_grade_for_informal_not_PNP.
+print_manual_grade manual_grade_for_not_PNP_informal.
 idtac " ".
 
 idtac "-------------------  de_morgan_not_or  --------------------".
@@ -179,7 +179,7 @@ idtac "-------------------  In_map_iff  --------------------".
 idtac " ".
 
 idtac "#> In_map_iff".
-idtac "Possible points: 3".
+idtac "Possible points: 2".
 check_type @In_map_iff (
 (forall (A B : Type) (f : A -> B) (l : list A) (y : B),
  @In B y (@map A B f l) <-> (exists x : A, f x = y /\ @In A x l))).
@@ -214,18 +214,6 @@ check_type @All_In (
 idtac "Assumptions:".
 Abort.
 Print Assumptions All_In.
-Goal True.
-idtac " ".
-
-idtac "-------------------  tr_rev_correct  --------------------".
-idtac " ".
-
-idtac "#> tr_rev_correct".
-idtac "Possible points: 6".
-check_type @tr_rev_correct ((forall X : Type, @tr_rev X = @rev X)).
-idtac "Assumptions:".
-Abort.
-Print Assumptions tr_rev_correct.
 Goal True.
 idtac " ".
 
@@ -307,6 +295,18 @@ Print Assumptions forallb_true_iff.
 Goal True.
 idtac " ".
 
+idtac "-------------------  tr_rev_correct  --------------------".
+idtac " ".
+
+idtac "#> tr_rev_correct".
+idtac "Possible points: 6".
+check_type @tr_rev_correct ((forall X : Type, @tr_rev X = @rev X)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions tr_rev_correct.
+Goal True.
+idtac " ".
+
 idtac "-------------------  excluded_middle_irrefutable  --------------------".
 idtac " ".
 
@@ -337,8 +337,8 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 45".
-idtac "Max points - advanced: 51".
+idtac "Max points - standard: 43".
+idtac "Max points - advanced: 49".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -362,8 +362,8 @@ idtac "  - A list of pending axioms, containing unproven assumptions. In this ca
 idtac "    the exercise is considered complete, if the axioms are all allowed.".
 idtac "".
 idtac "********** Standard **********".
-idtac "---------- and_exercise ---------".
-Print Assumptions and_exercise.
+idtac "---------- plus_is_O ---------".
+Print Assumptions plus_is_O.
 idtac "---------- and_assoc ---------".
 Print Assumptions and_assoc.
 idtac "---------- mult_is_O ---------".
@@ -388,8 +388,6 @@ idtac "---------- In_app_iff ---------".
 Print Assumptions In_app_iff.
 idtac "---------- All_In ---------".
 Print Assumptions All_In.
-idtac "---------- tr_rev_correct ---------".
-Print Assumptions tr_rev_correct.
 idtac "---------- even_double_conv ---------".
 Print Assumptions even_double_conv.
 idtac "---------- andb_true_iff ---------".
@@ -402,18 +400,20 @@ idtac "---------- eqb_list_true_iff ---------".
 Print Assumptions eqb_list_true_iff.
 idtac "---------- forallb_true_iff ---------".
 Print Assumptions forallb_true_iff.
+idtac "---------- tr_rev_correct ---------".
+Print Assumptions tr_rev_correct.
 idtac "---------- excluded_middle_irrefutable ---------".
 Print Assumptions excluded_middle_irrefutable.
 idtac "".
 idtac "********** Advanced **********".
-idtac "---------- double_neg_inf ---------".
+idtac "---------- double_neg_informal ---------".
 idtac "MANUAL".
-idtac "---------- informal_not_PNP ---------".
+idtac "---------- not_PNP_informal ---------".
 idtac "MANUAL".
 idtac "---------- not_exists_dist ---------".
 Print Assumptions not_exists_dist.
 Abort.
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:00 *)
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:00 *)

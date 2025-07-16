@@ -89,6 +89,20 @@ Print Assumptions Props.ex_ev_Sn.
 Goal True.
 idtac " ".
 
+idtac "-------------------  ex_match  --------------------".
+idtac " ".
+
+idtac "#> Props.ex_match".
+idtac "Possible points: 2".
+check_type @Props.ex_match (
+(forall (A : Type) (P Q : A -> Prop),
+ (forall x : A, P x -> Q x) -> (exists x : A, P x) -> exists x : A, Q x)).
+idtac "Assumptions:".
+Abort.
+Print Assumptions Props.ex_match.
+Goal True.
+idtac " ".
+
 idtac "-------------------  p_implies_true  --------------------".
 idtac " ".
 
@@ -276,8 +290,8 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 26".
-idtac "Max points - advanced: 31".
+idtac "Max points - standard: 28".
+idtac "Max points - advanced: 33".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -311,6 +325,8 @@ idtac "---------- Props.or_commut' ---------".
 Print Assumptions Props.or_commut'.
 idtac "---------- Props.ex_ev_Sn ---------".
 Print Assumptions Props.ex_ev_Sn.
+idtac "---------- Props.ex_match ---------".
+Print Assumptions Props.ex_match.
 idtac "---------- Props.p_implies_true ---------".
 Print Assumptions Props.p_implies_true.
 idtac "---------- Props.ex_falso_quodlibet' ---------".
@@ -345,6 +361,6 @@ idtac "---------- pe_implies_pi ---------".
 Print Assumptions pe_implies_pi.
 Abort.
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:19 *)
 
-(* 2022-08-08 17:14 *)
+(* 2025-01-13 16:19 *)
