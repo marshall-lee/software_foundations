@@ -53,7 +53,7 @@ Inductive ev : nat -> Prop :=
     between the world of logic and the world of computation:
 
                  propositions  ~  types
-                 proofs        ~  data values
+                 proofs        ~  programs
 
     See [Wadler 2015] (in Bib.v) for a brief history and up-to-date
     exposition. *)
@@ -148,11 +148,10 @@ Qed.
     evidence we've built is stored in the global context under the name
     given in the [Theorem] command. *)
 
-(** Tactic proofs are useful and convenient, but they are not
-    essential in Coq: in principle, we can always construct the
-    required evidence by hand. Then we can use [Definition] (rather
-    than [Theorem]) to give a global name directly to this
-    evidence. *)
+(** Tactic proofs are convenient, but they are not essential in Coq:
+    in principle, we can always just construct the required evidence
+    by hand. Then we can use [Definition] (rather than [Theorem]) to
+    introduce a global name for this evidence. *)
 
 Definition ev_4''' : ev 4 :=
   ev_SS 2 (ev_SS 0 ev_0).
@@ -209,9 +208,9 @@ Proof.
   apply H.
 Qed.
 
-(** What is the proof object corresponding to [ev_plus4]?
+(** What is the proof object corresponding to [ev_plus4]? *)
 
-    We're looking for an expression whose _type_ is [forall n, ev n ->
+(** We're looking for an expression whose _type_ is [forall n, ev n ->
     ev (4 + n)] -- that is, a _function_ that takes two arguments (one
     number and a piece of evidence) and returns a piece of evidence!
 
@@ -229,10 +228,7 @@ Definition ev_plus4'' (n : nat) (H : ev n)
                     : ev (4 + n) :=
   ev_SS (S (S n)) (ev_SS n H).
 
-Check ev_plus4''
-  : forall n : nat,
-    ev n ->
-    ev (4 + n).
+Check ev_plus4'' : forall n : nat, ev n -> ev (4 + n).
 
 (** When we view the proposition being proved by [ev_plus4] as a
     function type, one interesting point becomes apparent: The second
@@ -304,7 +300,7 @@ Print add1.
 Compute add1 2.
 (* ==> 3 : nat *)
 
-(** Notice that we terminate the [Definition] with a [.] rather than
+(** Notice that we terminated the [Definition] with a [.] rather than
     with [:=] followed by a term.  This tells Coq to enter _proof
     scripting mode_ to build an object of type [nat -> nat].  Also, we
     terminate the proof with [Defined] rather than [Qed]; this makes
@@ -321,11 +317,11 @@ Compute add1 2.
 (** * Logical Connectives as Inductive Types *)
 
 (** Inductive definitions are powerful enough to express most of the
-    connectives we have seen so far.  Indeed, only universal
+    logical connectives we have seen so far.  Indeed, only universal
     quantification (with implication as a special case) is built into
     Coq; all the others are defined inductively.
 
-    We'll see how in this section. *)
+    Let's see how. *)
 
 Module Props.
 
@@ -333,8 +329,8 @@ Module Props.
 (** ** Conjunction *)
 
 (** To prove that [P /\ Q] holds, we must present evidence for both
-    [P] and [Q].  Thus, it makes sense to define a proof object for [P
-    /\ Q] as consisting of a pair of two proofs: one for [P] and
+    [P] and [Q].  Thus, it makes sense to define a proof object for
+    [P /\ Q] to consist of a pair of two proofs: one for [P] and
     another one for [Q]. This leads to the following definition. *)
 
 Module And.
@@ -388,6 +384,11 @@ End And.
     manipulated by tactics as we've been doing.  We can also use it to
     build proofs directly, using pattern-matching.  For instance: *)
 
+Definition proj1'' P Q (HPQ : P /\ Q) : P :=
+  match HPQ with
+  | conj HP HQ => HP
+  end.
+
 Definition and_comm'_aux P Q (H : P /\ Q) : Q /\ P :=
   match H with
   | conj HP HQ => conj HQ HP
@@ -434,6 +435,7 @@ Definition inj_l : forall (P Q : Prop), P -> P \/ Q :=
 Theorem inj_l' : forall (P Q : Prop), P -> P \/ Q.
 Proof.
   intros P Q HP. left. apply HP.
+  Show Proof.
 Qed.
 
 Definition or_elim : forall (P Q R : Prop), (P \/ Q) -> (P -> R) -> (Q -> R) -> R :=
@@ -493,7 +495,7 @@ End Ex.
     The notation in the standard library is a slight extension of
     the above, enabling syntactic forms such as [exists x y, P x y]. *)
 
-(** The more familiar form [exists x, P x] desugars to an expression
+(** The more familiar form [exists x, ev x] desugars to an expression
     involving [ex]: *)
 
 Check ex (fun n => ev n) : Prop.
@@ -509,6 +511,29 @@ Definition some_nat_is_even : exists n, ev n :=
 
 Definition ex_ev_Sn : ex (fun n => ev (S n))
   := ex_intro (fun n => ev (S n)) 1 (ev_SS 0 ev_0).
+(** [] *)
+
+(** To destruct existentials in a proof term we simply use match: *)
+Definition dist_exists_or_term (X:Type) (P Q : X -> Prop) :
+  (exists x, P x \/ Q x) -> (exists x, P x) \/ (exists x, Q x) :=
+  fun H => match H with
+           | ex_intro _ x Hx =>
+               match Hx with
+               | or_introl HPx => or_introl (ex_intro _ x HPx)
+               | or_intror HQx => or_intror (ex_intro _ x HQx)
+               end
+           end.
+
+(** **** Exercise: 2 stars, standard (ex_match)
+
+    Construct a proof object for the following proposition: *)
+Definition ex_match : forall (A : Type) (P Q : A -> Prop),
+  (forall x, P x -> Q x) ->
+  (exists x, P x) -> (exists x, Q x)
+  := fun A P Q H HP =>
+       match HP with
+         | ex_intro _ x Hx => ex_intro (fun x => Q x) x (H x Hx)
+       end.
 (** [] *)
 
 (* ================================================================= *)
@@ -538,10 +563,11 @@ Inductive False : Prop := .
 (** That is, [False] is an inductive type with _no_ constructors --
     i.e., no way to build evidence for it. For example, there is
     no way to complete the following definition such that it
-    succeeds (rather than fails). *)
+    succeeds. *)
 
-Fail Definition contra : False :=
-  0 = 1.
+Fail
+  Definition contra : False :=
+  42.
 
 (** But it is possible to destruct [False] by pattern matching. There can
     be no patterns that match it, since it has no constructors.  So
@@ -553,9 +579,9 @@ Definition false_implies_zero_eq_one : False -> 0 = 1 :=
 
 (** Since there are no branches to evaluate, the [match] expression
     can be considered to have any type we want, including [0 = 1].
-    Indeed, it's impossible to ever cause the [match] to be evaluated,
-    because we can never construct a value of type [False] to pass to
-    the function. *)
+    Fortunately, it's impossible to ever cause the [match] to be
+    evaluated, because we can never construct a value of type [False]
+    to pass to the function. *)
 
 (** **** Exercise: 1 star, standard (ex_falso_quodlibet')
 
@@ -626,17 +652,17 @@ Definition four' : 2 + 2 == 1 + 3 :=
 Definition singleton : forall (X:Type) (x:X), []++[x] == x::[]  :=
   fun (X:Type) (x:X) => eq_refl [x].
 
-(** By pattern-matching against [n1 == n2], we obtain a term [n]
-    that is known to be convertible to both [n1] and [n2]. The term
-    [eq_refl (S n)] establishes [(S n) == (S n)]. The first [n] can be
-    converted to [n1], and the second to [n2], which yields [(S n1) ==
-    (S n2)]. Coq handles all that conversion for us. *)
-
+(** We can also pattern-match on an equality proof: *)
 Definition eq_add : forall (n1 n2 : nat), n1 == n2 -> (S n1) == (S n2) :=
   fun n1 n2 Heq =>
     match Heq with
     | eq_refl n => eq_refl (S n)
     end.
+
+(** By pattern-matching against [n1 == n2], we obtain a term [n]
+    that replaces [n1] and [n2] in the type we have to produce, so
+    instead of [(S n1) == (S n2)], we now have to produce something
+    of type [(S n) == (S n)], which we establish by [eq_refl (S n)]. *)
 
 (** A tactic-based proof runs into some difficulties if we try to use
     our usual repertoire of tactics, such as [rewrite] and
@@ -648,16 +674,16 @@ Definition eq_add : forall (n1 n2 : nat), n1 == n2 -> (S n1) == (S n2) :=
 Theorem eq_add' : forall (n1 n2 : nat), n1 == n2 -> (S n1) == (S n2).
 Proof.
   intros n1 n2 Heq.
-  Fail rewrite Heq.
-  destruct Heq.
-  Fail reflexivity.
+  Fail rewrite Heq. (* doesn't work for _our_ == relation *)
+  destruct Heq as [n]. (* n1 and n2 replaced by n in the goal! *)
+  Fail reflexivity. (* doesn't work for _our_ == relation *)
   apply eq_refl.
 Qed.
 
 (** **** Exercise: 2 stars, standard (eq_cons)
 
-    Construct the proof object for this theorem. Use pattern matching
-    against the equality hypotheses. *)
+    Construct the proof object for the following theorem. Use pattern
+    matching on the equality hypotheses. *)
 
 Definition eq_cons : forall (X : Type) (h1 h2 : X) (t1 t2 : list X),
     h1 == h2 -> t1 == t2 -> h1 :: t1 == h2 :: t2
@@ -768,9 +794,9 @@ End EqualityPlayground.
 (* ################################################################# *)
 (** * Coq's Trusted Computing Base *)
 
-(** One issue that arises with any automated proof assistant is
-    "why trust it?": what if there is a bug in the implementation that
-    renders all its reasoning suspect?
+(** One question that arises with any automated proof assistant
+    is "why should we trust it?" -- i.e., what if there is a bug in
+    the implementation that renders all its reasoning suspect?
 
     While it is impossible to allay such concerns completely, the fact
     that Coq is based on the Curry-Howard correspondence gives it a
@@ -955,7 +981,7 @@ Definition proof_irrelevance : Prop :=
 
 (** Prove that fact. Use [pe_implies_true_eq] to establish that the
     proposition [P] in [proof_irrelevance] is equal to [True]. Leverage
-    that equality to establish that both proofs objects [pf1] and
+    that equality to establish that both proof objects [pf1] and
     [pf2] must be just [I]. *)
 
 Theorem pe_implies_pi :
@@ -970,4 +996,4 @@ Proof.
 Qed.
 (** [] *)
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
