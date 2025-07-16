@@ -20,10 +20,10 @@
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From Coq Require Import Strings.String.
 From Coq Require Import Strings.Ascii.
-From Coq Require Import Arith.Arith.
+From Coq Require Import Arith.
 From Coq Require Import Init.Nat.
-From Coq Require Import Arith.EqNat.
-From Coq Require Import Lists.List. Import ListNotations.
+From Coq Require Import EqNat.
+From Coq Require Import List. Import ListNotations.
 From LF Require Import Maps Imp.
 
 (* ################################################################# *)
@@ -137,12 +137,14 @@ Notation "' p <- e1 ;; e2"
        end)
    (right associativity, p pattern, at level 60, e1 at next level).
 
-Notation "'TRY' ' p <- e1 ;; e2 'OR' e3"
-   := (match e1 with
-       | SomeE p => e2
-       | NoneE _ => e3
+Notation "'TRY' e1 'OR' e2"
+   := (
+    let result := e1 in
+    match result with
+       | SomeE _  => result
+       | NoneE _ => e2
        end)
-   (right associativity, p pattern,
+   (right associativity,
     at level 60, e1 at next level, e2 at next level).
 
 (* ----------------------------------------------------------------- *)
@@ -460,4 +462,4 @@ Example eg2 : parse "
       "x" := "z" }>.
 Proof. cbv. reflexivity. Qed.
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
