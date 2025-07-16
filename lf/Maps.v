@@ -29,13 +29,13 @@
     own definitions and theorems the same as their counterparts in the
     standard library, wherever they overlap. *)
 
-From Coq Require Import Arith.Arith.
-From Coq Require Import Bool.Bool.
-From Coq Require Import Datatypes.
-Require Export Coq.Strings.String.
-From Coq Require Import Logic.FunctionalExtensionality.
-From Coq Require Import Lists.List.
+From Coq Require Import Arith.
+From Coq Require Import Bool.
+From Coq Require Export Strings.String.
+From Coq Require Import FunctionalExtensionality.
+From Coq Require Import List.
 Import ListNotations.
+Set Default Goal Selector "!".
 
 (** Documentation for the standard library can be found at
     https://coq.inria.fr/library/.
@@ -215,7 +215,9 @@ Theorem t_update_neq : forall (A : Type) (m : total_map A) x1 x2 v,
   (x1 !-> v ; m) x2 = m x2.
 Proof.
   intros A m x1 x2 v H.
-  unfold t_update. destruct (eqb_spec x1 x2). exfalso. apply H. apply e. reflexivity.
+  unfold t_update. destruct (eqb_spec x1 x2).
+  - exfalso. apply H. apply e.
+  - reflexivity.
 Qed.
 (** [] *)
 
@@ -233,9 +235,12 @@ Proof.
   intros A m x v1 v2.
   apply functional_extensionality. intros x'.
   unfold t_update.
-  destruct (eqb_spec x x') as [_ | _]. reflexivity. reflexivity.
+  destruct (eqb_spec x x') as [_ | _].
+  - reflexivity.
+  - reflexivity.
 Qed.
 (** [] *)
+
 (** **** Exercise: 2 stars, standard (t_update_same)
 
     Given [string]s [x1] and [x2], we can use the tactic
@@ -254,7 +259,9 @@ Proof.
   apply functional_extensionality.
   intros x'.
   unfold t_update.
-  destruct (eqb_spec x x') as [H | _]. rewrite H. reflexivity. reflexivity.
+  destruct (eqb_spec x x') as [H | _].
+  - rewrite H. reflexivity.
+  - reflexivity.
 Qed.
 (** [] *)
 
@@ -329,13 +336,20 @@ Proof.
   reflexivity.
 Qed.
 
+(** The [update_eq] lemma is used very often in proofs.  Adding it to
+    Coq's global "hint database" allows proof-automation tactics such
+    as [auto] to find it. *)
+#[global] Hint Resolve update_eq : core.
+
 Theorem update_neq : forall (A : Type) (m : partial_map A) x1 x2 v,
   x2 <> x1 ->
   (x2 |-> v ; m) x1 = m x1.
 Proof.
   intros A m x1 x2 v H.
-  unfold update. rewrite t_update_neq. reflexivity.
-  apply H. Qed.
+  unfold update. rewrite t_update_neq.
+  - reflexivity.
+  - apply H.
+Qed.
 
 Lemma update_shadow : forall (A : Type) (m : partial_map A) x v1 v2,
   (x |-> v2 ; x |-> v1 ; m) = (x |-> v2 ; m).
@@ -381,9 +395,10 @@ Proof.
   destruct (eqb_spec x y) as [Hxy | Hxy].
   - rewrite Hxy.
     rewrite update_eq. rewrite update_eq. intro H1. apply H1.
-  - rewrite update_neq. rewrite update_neq.
-    + apply H.
-    + apply Hxy.
+  - rewrite update_neq.
+    + rewrite update_neq.
+      * apply H.
+      * apply Hxy.
     + apply Hxy.
 Qed.
 
@@ -393,4 +408,4 @@ Qed.
     used to keep track of which program variables are defined in a
     given scope. *)
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
