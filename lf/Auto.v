@@ -2,6 +2,7 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From Coq Require Import Lia.
+From Coq Require Import Strings.String.
 From LF Require Import Maps.
 From LF Require Import Imp.
 
@@ -74,8 +75,8 @@ Proof.
   apply H2. apply H1. assumption.
 Qed.
 
-(** The [auto] tactic frees us from this drudgery by _searching_ for a
-    sequence of applications that will prove the goal: *)
+(** The [auto] tactic tries to free us from this drudgery by _searching_
+    for a sequence of applications that will prove the goal: *)
 
 Example auto_example_1' : forall (P Q R: Prop),
   (P -> Q) -> (Q -> R) -> P -> R.
@@ -84,7 +85,8 @@ Proof.
 Qed.
 
 (** The [auto] tactic solves goals that are solvable by any combination of
-     - [intros] and
+     - [intros]
+    and
      - [apply] (of hypotheses from the local context, by default). *)
 
 (** Using [auto] is always "safe" in the sense that it will never fail
@@ -105,10 +107,10 @@ Example auto_example_2 : forall P Q R S T U : Prop,
 Proof. auto. Qed.
 
 (** Proof search could, in principle, take an arbitrarily long time,
-    so there are limits to how far [auto] will search by default. *)
+    so there are limits to how deep [auto] will search by default. *)
 
-(** If [auto] is not solving our goal as expected
-    we can use [debug auto] to see a trace *)
+(** If [auto] is not solving our goal as expected we can use [debug auto]
+    to see a trace. *)
 Example auto_example_3 : forall (P Q R S T U: Prop),
   (P -> Q) ->
   (Q -> R) ->
@@ -124,7 +126,8 @@ Proof.
   (* Let's see where [auto] gets stuck using [debug auto] *)
   debug auto.
 
-  (* Optional argument says how deep to search (default is 5) *)
+  (* Optional argument to [auto] says how deep to search
+     (default is 5) *)
   auto 6.
 Qed.
 
@@ -202,7 +205,9 @@ Qed.
 (** It is also possible to define specialized hint databases (besides
     [core]) that can be activated only when needed; indeed, it is good
     style to create your own hint databases instead of polluting
-    [core].  See the Coq reference manual for details. *)
+    [core].
+
+    See the Coq reference manual for details. *)
 
 Hint Resolve le_antisym : core.
 
@@ -245,25 +250,22 @@ Theorem ceval_deterministic': forall c st st1 st2,
 Proof.
   intros c st st1 st2 E1 E2.
   generalize dependent st2;
-       induction E1; intros st2 E2; inversion E2; subst; auto.
+    induction E1; intros st2 E2; inversion E2; subst;
+    auto.   (* <---- here's one good place for auto *)
   - (* E_Seq *)
     rewrite (IHE1_1 st'0 H1) in *.
-    auto.
-  - (* E_IfTrue *)
-    + (* b evaluates to false (contradiction) *)
-      rewrite H in H5. discriminate.
-  - (* E_IfFalse *)
-    + (* b evaluates to true (contradiction) *)
-      rewrite H in H5. discriminate.
-  - (* E_WhileFalse *)
-    + (* b evaluates to true (contradiction) *)
-      rewrite H in H2. discriminate.
-  (* E_WhileTrue *)
-  - (* b evaluates to false (contradiction) *)
+    auto.   (* <---- here's another *)
+  - (* E_IfTrue -- contradiction! *)
+    rewrite H in H5. discriminate.
+  - (* E_IfFalse -- contradiction! *)
+    rewrite H in H5. discriminate.
+  - (* E_WhileFalse -- contradiction! *)
+    rewrite H in H2. discriminate.
+  - (* E_WhileTrue, with b false -- contradiction! *)
     rewrite H in H4. discriminate.
-  - (* b evaluates to true *)
+  - (* E_WhileTrue, with b true *)
     rewrite (IHE1_1 st'0 H3) in *.
-    auto.
+    auto.   (* <---- and another *)
 Qed.
 
 (** When we are using a particular tactic many times in a proof, we
@@ -284,19 +286,15 @@ Proof with auto.
            intros st2 E2; inversion E2; subst...
   - (* E_Seq *)
     rewrite (IHE1_1 st'0 H1) in *...
-  - (* E_IfTrue *)
-    + (* b evaluates to false (contradiction) *)
-      rewrite H in H5. discriminate.
-  - (* E_IfFalse *)
-    + (* b evaluates to true (contradiction) *)
-      rewrite H in H5. discriminate.
-  - (* E_WhileFalse *)
-    + (* b evaluates to true (contradiction) *)
-      rewrite H in H2. discriminate.
-  (* E_WhileTrue *)
-  - (* b evaluates to false (contradiction) *)
+  - (* E_IfTrue -- contradiction! *)
+    rewrite H in H5. discriminate.
+  - (* E_IfFalse -- contradiction! *)
+    rewrite H in H5. discriminate.
+  - (* E_WhileFalse -- contradiction! *)
+    rewrite H in H2. discriminate.
+  - (* E_WhileTrue, with b false -- contradiction! *)
     rewrite H in H4. discriminate.
-  - (* b evaluates to true *)
+  - (* E_WhileTrue, with b true *)
     rewrite (IHE1_1 st'0 H3) in *...
 Qed.
 
@@ -340,18 +338,14 @@ Proof.
     rewrite (IHE1_1 st'0 H1) in *.
     auto.
   - (* E_IfTrue *)
-    + (* b evaluates to false (contradiction) *)
       rwd H H5.
   - (* E_IfFalse *)
-    + (* b evaluates to true (contradiction) *)
       rwd H H5.
   - (* E_WhileFalse *)
-    + (* b evaluates to true (contradiction) *)
       rwd H H2.
-  (* E_WhileTrue *)
-  - (* b evaluates to false (contradiction) *)
+  - (* E_WhileTrue - b false *)
     rwd H H4.
-  - (* b evaluates to true *)
+  - (* EWhileTrue - b true *)
     rewrite (IHE1_1 st'0 H3) in *.
     auto. Qed.
 
@@ -386,10 +380,9 @@ Proof.
   - (* E_Seq *)
     rewrite (IHE1_1 st'0 H1) in *.
     auto.
-  - (* E_WhileTrue *)
-    + (* b evaluates to true *)
-      rewrite (IHE1_1 st'0 H3) in *.
-      auto. Qed.
+  - (* E_WhileTrue - b true *)
+    rewrite (IHE1_1 st'0 H3) in *.
+    auto. Qed.
 
 (** Let's see about the remaining cases. Each of them involves
     rewriting a hypothesis after feeding it with the required
@@ -554,7 +547,7 @@ End Repeat.
     your proofs, both to avoid tedium and to "future proof" them. *)
 
 (* ################################################################# *)
-(** * Tactics [eapply] and [eauto] *)
+(** * The [eapply] and [eauto] tactics *)
 
 (** To close the chapter, we'll introduce one more convenient feature
     of Coq: its ability to delay instantiation of quantifiers.  To
@@ -640,8 +633,7 @@ Qed.
     Below is an example of [eauto].  Before using it, we need to give
     some hints to [auto] about using the constructors of [ceval]
     and the definitions of [state] and [total_map] as part of its
-    proof search.
-*)
+    proof search. *)
 
 Hint Constructors ceval : core.
 Hint Transparent state total_map : core.
@@ -749,4 +741,4 @@ Proof.
   intros P Q HP HQ. destruct HP as [y HP']. eauto.
 Qed.
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
