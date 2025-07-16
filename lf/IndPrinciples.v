@@ -120,12 +120,7 @@ Inductive rgb : Type :=
   | red
   | green
   | blue.
-Check rgb_ind :
-  forall P : rgb -> Prop,
-    P red ->
-    P green ->
-    P blue ->
-    forall x : rgb, P x.
+Check rgb_ind.
 (** [] *)
 
 (** Here's another example, this time with one of the constructors
@@ -168,7 +163,7 @@ Inductive natlist' : Type :=
   | nnil'
   | nsnoc (l : natlist') (n : nat).
 
-(** Now the induction principle case for [nsnoc1] is a bit different
+(** Now the induction principle case for [nsnoc] is a bit different
     than the earlier case for [ncons]: *)
 
 Check natlist'_ind :
@@ -295,8 +290,7 @@ Proof. exists con1. exists con2. exact Toy_ind. Qed.
 Inductive tree (X:Type) : Type :=
   | leaf (x : X)
   | node (t1 t2 : tree X).
-Check tree_ind :
-  forall (X : Type) (P : tree X -> Prop), (forall (x : X), P (leaf X x)) -> (forall (t1 : tree X), P t1 -> forall (t2 : tree X), P t2 -> P (node X t1 t2)) -> forall (t : tree X), P t.
+Check tree_ind.
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (mytype)
@@ -311,18 +305,7 @@ Check tree_ind :
             (forall m : mytype X, P m ->
                forall n : nat, P (constr3 X m n)) ->
             forall m : mytype X, P m
-*) 
-Inductive mytype (X:Type) : Type :=
-  | constr1 (x:X)
-  | constr2 (n:nat)
-  | constr3 (m:mytype X) (n:nat).
-Check mytype_ind :
-  forall (X : Type) (P : mytype X -> Prop),
-    (forall x : X, P (constr1 X x)) ->
-    (forall n : nat, P (constr2 X n)) ->
-    (forall m : mytype X, P m ->
-      forall n : nat, P (constr3 X m n)) ->
-    forall m : mytype X, P m.
+*)
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (foo)
@@ -337,18 +320,7 @@ Check mytype_ind :
              (forall f1 : nat -> foo X Y,
                (forall n : nat, P (f1 n)) -> P (quux X Y f1)) ->
              forall f2 : foo X Y, P f2
-*) 
-Inductive foo (X Y : Type) : Type :=
-  | bar (x : X)
-  | baz (y : Y)
-  | quux (f : nat -> foo X Y).
-Check foo_ind :
-  forall (X Y : Type) (P : foo X Y -> Prop),
-    (forall x : X, P (bar X Y x)) ->
-    (forall y : Y, P (baz X Y y)) ->
-    (forall f1 : nat -> foo X Y,
-      (forall n : nat, P (f1 n)) -> P (quux X Y f1)) ->
-    forall f2 : foo X Y, P f2.
+*)
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (foo')
@@ -370,12 +342,6 @@ Inductive foo' (X:Type) : Type :=
              ___________________________________________ ->
              forall f : foo' X, ________________________
 *)
-Check foo'_ind :
-  forall (X : Type) (P : foo' X -> Prop),
-    (forall (l : list X) (f : foo' X),
-      P f -> P (C1 X l f)) ->
-    P (C2 X) ->
-    forall f : foo' X, P f.
 
 (** [] *)
 
@@ -1024,4 +990,4 @@ Qed.
 
 (** [] *)
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
