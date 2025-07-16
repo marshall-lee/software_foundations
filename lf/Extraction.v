@@ -10,15 +10,15 @@
     OCaml (the most mature), Haskell (mostly works), and Scheme (a bit
     out of date). *)
 
-Require Coq.extraction.Extraction.
+From Coq Require Extraction.
 Extraction Language OCaml.
 
 (** Now we load up the Coq environment with some definitions, either
     directly or by importing them from other modules. *)
 
-From Coq Require Import Arith.Arith.
+From Coq Require Import Arith.
 From Coq Require Import Init.Nat.
-From Coq Require Import Arith.EqNat.
+From Coq Require Import EqNat.
 From LF Require Import ImpCEvalFun.
 
 (** Finally, we tell Coq the name of a definition to extract and the
@@ -129,4 +129,4 @@ Extraction "imp.ml" empty_st ceval_step parse.
     chapter in _Verified Functional Algorithms_ (_Software
     Foundations_ volume 3). *)
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
