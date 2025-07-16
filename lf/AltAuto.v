@@ -32,7 +32,7 @@
     A deeper treatment of [auto] can be found in the [UseAuto]
     chapter in _Programming Language Foundations_.  *)
 
-Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
+Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality,-deprecated-syntactic-definition,-deprecated]".
 From Coq Require Import Arith List.
 From LF Require Import IndProp.
 
@@ -66,7 +66,7 @@ Proof.
   induction M
     as [| x'
         | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
-        | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+        | s1 re1 re2 Hmatch IH | s2 re1 re2 Hmatch IH
         | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2].
   - (* MEmpty *) simpl. apply MEmpty.
   - (* MChar *) simpl. apply MChar.
@@ -212,7 +212,7 @@ Proof.
   induction M
     as [| x'
         | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
-        | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+        | s1 re1 re2 Hmatch IH | s2 re1 re2 Hmatch IH
         | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2];
     (* Do the [simpl] for every case here: *)
     simpl.
@@ -298,7 +298,7 @@ Proof.
   induction M
     as [| x'
         | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
-        | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+        | s1 re1 re2 Hmatch IH | s2 re1 re2 Hmatch IH
         | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2];
     (* Do the [simpl] for every case here: *)
     simpl.
@@ -390,7 +390,7 @@ Proof.
   induction M
     as [| x'
         | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
-        | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+        | s1 re1 re2 Hmatch IH | s2 re1 re2 Hmatch IH
         | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2].
   - (* MEmpty *) simpl. apply MEmpty.
   - (* MChar *) simpl. apply MChar.
@@ -591,7 +591,7 @@ Proof.
   induction M
     as [| x'
         | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
-        | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+        | s1 re1 re2 Hmatch IH | s2 re1 re2 Hmatch IH
         | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2].
   - (* MEmpty *) simpl; apply MEmpty.
   - (* MChar *) simpl; apply MChar.
@@ -1177,7 +1177,7 @@ Proof.
   induction M
     as [| x'
         | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
-        | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
+        | s1 re1 re2 Hmatch IH | s2 re1 re2 Hmatch IH
         | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2].
   - (* MEmpty *) auto with re_db.
   - (* MChar *) auto with re_db.
@@ -1303,7 +1303,7 @@ Proof.
   - (* MApp *)
     intros H. simpl in H.
     rewrite app_length in H.
-    apply add_le_cases in H. destruct H.
+    apply plus_le_cases in H. destruct H.
     + apply IH1 in H.
       destruct H as [s1' [s2' [s3' [Happ [Hne Hnapp]]]]].
       exists s1'. exists s2'. exists (s3' ++ s2).
@@ -1386,22 +1386,19 @@ Proof.
   intros T re s Hmatch.
   induction Hmatch
     as [ | x | s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
-       | s1 re1 re2 Hmatch IH | re1 s2 re2 Hmatch IH
-       | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ].
-  - (* MEmpty *)
-    simpl. intros contra. lia.
-  - (* MChar *)
-    intros contra. apply Sn_le_Sm__n_le_m in contra. lia.
+       | s1 re1 re2 Hmatch IH | s2 re1 re2 Hmatch IH
+       | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ];
+    simpl; try lia;
+    intros Hlen.
   - (* MApp *)
-    intros H.
-    rewrite app_length in H. simpl in H.
+    rewrite app_length in Hlen.
     destruct (lt_ge_cases (length s1) (pumping_constant re1)) as [H1 | H1].
     + destruct (lt_ge_cases (length s2) (pumping_constant re2)) as [H2 | H2].
-      * apply add_le_cases in H. destruct H as [H1' | H2'].
+      * apply plus_le_cases in Hlen. destruct Hlen as [H1' | H2'].
         ** lia.
         ** lia.
       * apply IH2 in H2.
-        destruct H2 as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+        destruct H2 as [s1' [s2' [s3' [Happ [Hne [Hlen' Hnapp]]]]]].
         exists (s1 ++ s1'). exists s2'. exists s3'.
         split. rewrite Happ.
         rewrite <- app_assoc with T s1 s1' (s2' ++ s3').
@@ -1409,13 +1406,13 @@ Proof.
         split. apply Hne.
         split. simpl. rewrite app_length. rewrite <- add_assoc.
         apply le_trans with (n := length s1 + pumping_constant re2).
-        apply plus_le_compat_l. apply Hlen.
+        apply plus_le_compat_l. apply Hlen'.
         apply plus_le_compat_r. apply n_lt_m__n_le_m in H1. apply H1.
         intros m.
         rewrite <- app_assoc with T s1 s1' (napp m s2' ++ s3').
         auto with re_db.
     + apply IH1 in H1.
-      destruct H1 as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+      destruct H1 as [s1' [s2' [s3' [Happ [Hne [Hlen' Hnapp]]]]]].
       exists s1'. exists s2'. exists (s3' ++ s2).
       split. rewrite Happ.
       rewrite <- app_assoc with T s1' (s2' ++ s3') s2.
@@ -1424,15 +1421,14 @@ Proof.
       split. apply Hne.
       split. simpl.
       apply le_trans with (n := pumping_constant re1).
-      apply Hlen. apply le_plus_l.
+      apply Hlen'. apply le_plus_l.
       intros m.
       rewrite app_assoc with T s1' (napp m s2') (s3' ++ s2).
       rewrite app_assoc with T (s1' ++ napp m s2') s3' s2.
       rewrite <- app_assoc with T s1' (napp m s2') s3'.
       auto with re_db.
   - (* MUnionL *)
-    intros H. simpl in H.
-    apply plus_le in H. destruct H as [H H'].
+    apply plus_le in Hlen. destruct Hlen as [H H'].
     apply IH in H.
     destruct H as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
     exists s1'. exists s2'. exists s3'.
@@ -1441,8 +1437,7 @@ Proof.
     split. simpl. apply le_trans with (n := pumping_constant re1). apply Hlen. apply le_plus_l.
     auto with re_db.
   - (* MUnionR *)
-    intros H. simpl in H.
-    apply plus_le in H. destruct H as [H' H].
+    apply plus_le in Hlen. destruct Hlen as [H' H].
     apply IH in H.
     destruct H as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
     exists s1'. exists s2'. exists s3'.
@@ -1451,17 +1446,15 @@ Proof.
     split. simpl. apply le_trans with (n := pumping_constant re2). apply Hlen. rewrite add_comm. apply le_plus_l.
     intros m. apply MUnionR. apply Hnapp.
   - (* MStar0 *)
-    intros H.
     assert (Hp : (pumping_constant re) >= 1).
     { apply pumping_constant_ge_1. }
-    inversion H as [H0|]. rewrite H0 in Hp. inversion Hp.
+    inversion Hlen as [H0|]. rewrite H0 in Hp. inversion Hp.
   - (* MStarApp *)
-    intros H.
-    rewrite app_length in H.
+    rewrite app_length in Hlen.
     assert (Hp : (pumping_constant re) >= 1).
     { apply pumping_constant_ge_1. }
     assert (Hl: (1 <= length s1 \/ 1 <= length s2)).
-    { destruct s1. right. apply le_trans with (pumping_constant re). apply Hp. apply H. left. simpl. apply n_le_m__Sn_le_Sm. apply O_le_n. }
+    { destruct s1. right. apply le_trans with (pumping_constant re). apply Hp. apply Hlen. left. simpl. apply n_le_m__Sn_le_Sm. apply O_le_n. }
     destruct s1 as [| x s11].
     + destruct (lt_ge_cases (length s2) (pumping_constant (Star re))) as [H2 | H2].
       * exists []. exists s2. exists [].
@@ -1472,7 +1465,7 @@ Proof.
         ** split. apply n_lt_m__n_le_m in H2. apply H2.
         induction m. apply MStar0. simpl. rewrite <- app_assoc. apply star_app. apply Hmatch2. apply IHm.
       * apply IH2 in H2.
-        destruct H2 as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+        destruct H2 as [s1' [s2' [s3' [Happ [Hne [Hlen' Hnapp]]]]]].
         exists s1'. exists s2'. exists s3'. auto.
     + remember (x :: s11) as s1.
       destruct (lt_ge_cases (length s1) (pumping_constant re)) as [H1 | H1].
@@ -1482,14 +1475,14 @@ Proof.
         split. apply n_lt_m__n_le_m in H1. apply H1.
         intros m. simpl. apply napp_star. apply Hmatch1. apply Hmatch2.
       * apply IH1 in H1.
-        destruct H1 as [s1' [s2' [s3' [Happ [Hne [Hlen Hnapp]]]]]].
+        destruct H1 as [s1' [s2' [s3' [Happ [Hne [Hlen' Hnapp]]]]]].
         exists s1'. exists s2'. exists (s3' ++ s2).
         split. rewrite Happ. simpl.
         rewrite <- app_assoc with (m := s2' ++ s3').
         rewrite <- app_assoc with (m := s3').
         reflexivity.
         split. apply Hne.
-        split. apply Hlen.
+        split. apply Hlen'.
         intros m. rewrite app_assoc. rewrite app_assoc. apply MStarApp.
         rewrite <- app_assoc. apply Hnapp. apply Hmatch2.
 Qed.
@@ -1511,7 +1504,7 @@ Example trans_example1:  forall a b c d,
     a <= d.
 Proof.
   intros a b c d H1 H2.
-  apply le_trans with (b + b * c).
+  apply Nat.le_trans with (b + b * c).
     (* ^ We must supply the intermediate value *)
   - apply H1.
   - simpl in H2. rewrite mul_comm. apply H2.
@@ -1540,7 +1533,7 @@ Example trans_example1':  forall a b c d,
     a <= d.
 Proof.
   intros a b c d H1 H2.
-  eapply le_trans. (* 1 *)
+  eapply Nat.le_trans. (* 1 *)
   - apply H1. (* 2 *)
   - simpl in H2. rewrite mul_comm. apply H2.
 Qed.
@@ -1569,7 +1562,7 @@ Example trans_example2:  forall a b c d,
     a <= d.
 Proof.
   intros a b c d H1 H2.
-  info_eauto using le_trans.
+  info_eauto using Nat.le_trans.
 Qed.
 
 (** The [eauto] tactic works just like [auto], except that it
@@ -2054,81 +2047,81 @@ Proof. imp_intuition. Qed.
 Example imp3 : forall (P Q R : Prop), (P -> Q -> R) -> (Q -> P -> R).
 Proof. imp_intuition. Qed.
 
-(** Suppose we were to add a new logical connective: [nand], the "not
-    and" connective, aka _Sheffer stroke_. *)
+(** Suppose we were to add a new logical connective: [nor], the "not
+    or" connective. *)
 
-Inductive nand (P Q : Prop) :=
-| stroke : ~P -> ~Q -> nand P Q.
+Inductive nor (P Q : Prop) :=
+| stroke : ~P -> ~Q -> nor P Q.
 
-(** Classically, [nand P Q] would be equivalent to [~(P /\ Q)].  But
+(** Classically, [nor P Q] would be equivalent to [~(P \/ Q)].  But
     constructively, only one direction of that is provable. *)
 
-Theorem nand_not_and : forall (P Q : Prop),
-    nand P Q -> ~ (P /\ Q).
+Theorem nor_not_or : forall (P Q : Prop),
+    nor P Q -> ~ (P \/ Q).
 Proof.
-  intros P Q Hnand [HP HQ]. destruct Hnand as [HNP HNQ]. auto.
+  intros. destruct H. unfold not. intros. destruct H. auto. auto.
 Qed.
 
-(** Some other usual theorems about [nand] are still provable,
+(** Some other usual theorems about [nor] are still provable,
     though. *)
 
-Theorem nand_comm : forall (P Q : Prop),
-    nand P Q <-> nand Q P.
+Theorem nor_comm : forall (P Q : Prop),
+    nor P Q <-> nor Q P.
 Proof.
   intros P Q. split.
   - intros H. destruct H. apply stroke; assumption.
   - intros H. destruct H. apply stroke; assumption.
 Qed.
 
-Theorem nand_not : forall (P : Prop),
-    nand P P <-> ~P.
+Theorem nor_not : forall (P : Prop),
+    nor P P <-> ~P.
 Proof.
   intros P. split.
   - intros H. destruct H. assumption.
   - intros H. apply stroke; assumption.
 Qed.
 
-(** **** Exercise: 4 stars, advanced (nand_intuition) *)
+(** **** Exercise: 4 stars, advanced (nor_intuition) *)
 
-(** Create your own tactic [nand_intuition]. It should be able to
-    prove the three theorems above -- [nand_not_and], [nand_comm], and
-    [nand_not] -- fully automatically. You may not use [intuition] or
+(** Create your own tactic [nor_intuition]. It should be able to
+    prove the three theorems above -- [nor_not_and], [nor_comm], and
+    [nor_not] -- fully automatically. You may not use [intuition] or
     any other automated solvers in your solution.
 
     Begin by copying the code from [imp_intuition]. You will then need
     to expand it to handle conjunctions, negations, bi-implications,
-    and [nand]. *)
+    and [nor]. *)
 
-Ltac nand_intuition :=
+Ltac nor_intuition :=
   repeat match goal with
-         | [ |- nand _ _  ] => constructor
-         | [ H : nand _ _ |- _] => destruct H
-         | [ H : ?P |- ?P ] => apply H
-         | [ |- forall _, _ ] => intro
-         | [ |- ?P <-> ?Q ] => split
-         | [ H : ?P /\ ?Q |- _ ] => destruct H
-         | [ H1 : ?P -> ?Q, H2 : ?P |- _ ] => apply H1 in H2
-         | [ |- ~?P ] => intro
-         | [ |- ?P ] => auto
-         end.
+    | [ H : ?P |- ?P ] => apply H
+    | [ |- forall _, _ ] => intro
+    | [ |- _ <-> _] => split
+    | [ |- ~ _ ] => unfold not
+    | [ H : _ /\ _ |- ?P ] => destruct H
+    | [ H : ~ ?P |- False ] => apply H
+    | [ H1 : ?P -> ?Q, H2 : ?P |- _ ] => apply H1 in H2
+    | [ H : nor _ _ |- _ ] => destruct H
+    | [ |- nor _ _ ] => apply stroke
+    end.
 
 (** Each of the three theorems below, and many others involving these
     logical connectives, should be provable with just
-    [Proof. nand_intuition. Qed.] *)
+    [Proof. nor_intuition. Qed.] *)
 
-Theorem nand_comm' : forall (P Q : Prop),
-    nand P Q <-> nand Q P.
-Proof. nand_intuition. Qed.
+Theorem nor_comm' : forall (P Q : Prop),
+    nor P Q <-> nor Q P.
+Proof. nor_intuition. Qed.
 
-Theorem nand_not' : forall (P : Prop),
-    nand P P <-> ~P.
-Proof. nand_intuition. Qed.
+Theorem nor_not' : forall (P : Prop),
+    nor P P <-> ~P.
+Proof. nor_intuition. Qed.
 
-Theorem nand_not_and' : forall (P Q : Prop),
-    nand P Q -> ~ (P /\ Q).
-Proof. nand_intuition. Qed.
+Theorem nor_not_and' : forall (P Q : Prop),
+    nor P Q -> ~ (P /\ Q).
+Proof. nor_intuition. Qed.
 (* Do not modify the following line: *)
-Definition manual_grade_for_nand_intuition : option (nat*string) := None.
+Definition manual_grade_for_nor_intuition : option (nat*string) := None.
 (** [] *)
 
 (* ################################################################# *)
@@ -2146,4 +2139,4 @@ Definition manual_grade_for_nand_intuition : option (nat*string) := None.
 
     - Ltac functions and [match goal] *)
 
-(* 2022-08-08 17:13 *)
+(* 2025-01-13 16:00 *)
