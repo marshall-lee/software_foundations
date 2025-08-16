@@ -2078,23 +2078,27 @@ Proof.
   apply or_commut. apply Hi. intros HP. apply HP.
 Qed.
 
-Theorem excluded_middle_peirce :
-  excluded_middle -> peirce.
+Theorem excluded_middle_consequentia_mirabilis :
+  excluded_middle -> consequentia_mirabilis.
 Proof.
   unfold excluded_middle.
-  unfold peirce.
-  intros Hem P Q HPQ.
-  destruct (Hem P) as [HP | HnP].
-  - apply HP.
-  - apply HPQ. intros HP. exfalso. apply HnP. apply HP.
+  unfold consequentia_mirabilis.
+  intros Hem P HnPP.
+  destruct (Hem P).
+  - apply H.
+  - apply HnPP. apply H.
 Qed.
 
-Theorem peirce_consequentia_mirabilis :
-  peirce -> consequentia_mirabilis.
+Theorem consequentia_mirabilis_peirce :
+  consequentia_mirabilis -> peirce.
 Proof.
-  intros Peirce.
-  intros P H.
-  apply Peirce with (P:=P) (Q:=False). apply H.
+  unfold consequentia_mirabilis.
+  unfold peirce.
+  intros Hcons P Q HPQ.
+  assert (HnPQ : ~P -> ~ (P -> Q)). { apply contrapositive. apply HPQ. }
+  apply Hcons. intros Hnp. exfalso. apply HnPQ.
+  - apply Hnp.
+  - intros. contradiction.
 Qed.
 
 (* 2025-01-13 16:00 *)
