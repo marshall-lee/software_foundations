@@ -982,14 +982,8 @@ Proof.
   intros b.
   induction b as [|b'|b'].
   - reflexivity.
-  - simpl. rewrite <- IHb'.
-    destruct (bin_to_nat b').
-    + reflexivity.
-    + rewrite <- double_plus. rewrite -> nat_to_bin_double.
-      reflexivity.
-  - simpl. rewrite <- IHb'.
-    rewrite <- double_plus. rewrite -> nat_to_bin_double.
-    reflexivity.
+  - simpl. rewrite <- double_plus. rewrite nat_to_bin_double. rewrite IHb'. reflexivity.
+  - simpl. rewrite <- double_plus. rewrite nat_to_bin_double. rewrite IHb'. reflexivity.
 Qed.
 
 (** [] *)
