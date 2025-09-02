@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import RecordSub.
 
 Parameter MISSING: Type.
@@ -62,7 +62,8 @@ check_type @RecordSub.Examples.subtyping_example_2 (
          (RecordSub.Ty_Base
             (String.String
                (Ascii.Ascii true true false false false false true false)
-               String.EmptyString))) RecordSub.Examples.TRcd_j))).
+               String.EmptyString)))
+      RecordSub.Examples.TRcd_j))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions RecordSub.Examples.subtyping_example_2.
@@ -84,7 +85,8 @@ check_type @RecordSub.Examples.subtyping_example_3 (
          (RecordSub.Ty_Base
             (String.String
                (Ascii.Ascii true false false false false false true false)
-               String.EmptyString)) RecordSub.Ty_RNil))
+               String.EmptyString))
+         RecordSub.Ty_RNil))
    (RecordSub.Ty_Arrow
       (RecordSub.Ty_RCons
          (String.String
@@ -93,7 +95,9 @@ check_type @RecordSub.Examples.subtyping_example_3 (
          (RecordSub.Ty_Base
             (String.String
                (Ascii.Ascii false true false false false false true false)
-               String.EmptyString)) RecordSub.Ty_RNil) RecordSub.Ty_RNil))).
+               String.EmptyString))
+         RecordSub.Ty_RNil)
+      RecordSub.Ty_RNil))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions RecordSub.Examples.subtyping_example_3.
@@ -130,7 +134,8 @@ check_type @RecordSub.Examples.subtyping_example_4 (
             (RecordSub.Ty_Base
                (String.String
                   (Ascii.Ascii true true false false false false true false)
-                  String.EmptyString)) RecordSub.Ty_RNil)))
+                  String.EmptyString))
+            RecordSub.Ty_RNil)))
    (RecordSub.Ty_RCons
       (String.String (Ascii.Ascii false true false true true true true false)
          String.EmptyString)
@@ -153,7 +158,8 @@ check_type @RecordSub.Examples.subtyping_example_4 (
             (RecordSub.Ty_Base
                (String.String
                   (Ascii.Ascii true false false false false false true false)
-                  String.EmptyString)) RecordSub.Ty_RNil))))).
+                  String.EmptyString))
+            RecordSub.Ty_RNil))))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions RecordSub.Examples.subtyping_example_4.
@@ -193,7 +199,8 @@ check_type @RecordSub.Examples2.typing_example_1 (
       (RecordSub.tm_abs
          (String.String
             (Ascii.Ascii false false false true true true true false)
-            String.EmptyString) RecordSub.Examples.TRcd_j
+            String.EmptyString)
+         RecordSub.Examples.TRcd_j
          (RecordSub.tm_rproj
             (RecordSub.tm_var
                (String.String
@@ -201,7 +208,8 @@ check_type @RecordSub.Examples2.typing_example_1 (
                   String.EmptyString))
             (String.String
                (Ascii.Ascii false true false true false true true false)
-               String.EmptyString))) RecordSub.Examples2.trcd_kj)
+               String.EmptyString)))
+      RecordSub.Examples2.trcd_kj)
    (RecordSub.Ty_Arrow
       (RecordSub.Ty_Base
          (String.String
@@ -284,6 +292,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2025-01-06 19:49 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:49 *)
+(* 2025-08-24 14:29 *)

@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import Imp.
 
 Parameter MISSING: Type.
@@ -364,6 +364,6 @@ idtac "---------- BreakImp.seq_stops_on_break ---------".
 Print Assumptions BreakImp.seq_stops_on_break.
 Abort.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:28 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

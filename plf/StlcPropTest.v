@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import StlcProp.
 
 Parameter MISSING: Type.
@@ -83,7 +83,8 @@ idtac "Possible points: 3".
 check_type @STLCProp.unique_types (
 (forall (Gamma : Stlc.STLC.context) (e : Stlc.STLC.tm)
    (T T' : Stlc.STLC.ty) (_ : Stlc.STLC.has_type Gamma e T)
-   (_ : Stlc.STLC.has_type Gamma e T'), @eq Stlc.STLC.ty T T')).
+   (_ : Stlc.STLC.has_type Gamma e T'),
+ @eq Stlc.STLC.ty T T')).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCProp.unique_types.
@@ -155,7 +156,8 @@ check_type @STLCArith.weakening (
 (forall (Gamma Gamma' : Maps.partial_map STLCArith.ty)
    (t : STLCArith.tm) (T : STLCArith.ty)
    (_ : @Maps.includedin STLCArith.ty Gamma Gamma')
-   (_ : STLCArith.has_type Gamma t T), STLCArith.has_type Gamma' t T)).
+   (_ : STLCArith.has_type Gamma t T),
+ STLCArith.has_type Gamma' t T)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCArith.weakening.
@@ -246,6 +248,6 @@ idtac "---------- STLCProp.substitution_preserves_typing_from_typing_ind -------
 Print Assumptions STLCProp.substitution_preserves_typing_from_typing_ind.
 Abort.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import Records.
 
 Parameter MISSING: Type.
@@ -54,26 +54,31 @@ check_type @STLCExtendedRecords.typing_example_2 (
                (STLCExtendedRecords.Ty_Base
                   (String.String
                      (Ascii.Ascii true false false false false false true
-                        false) String.EmptyString))
+                        false)
+                     String.EmptyString))
                (STLCExtendedRecords.Ty_Base
                   (String.String
                      (Ascii.Ascii true false false false false false true
-                        false) String.EmptyString)))
+                        false)
+                     String.EmptyString)))
             (STLCExtendedRecords.Ty_RCons
                (String.String
                   (Ascii.Ascii true false false true false true true false)
                   (String.String
                      (Ascii.Ascii false true false false true true false
-                        false) String.EmptyString))
+                        false)
+                     String.EmptyString))
                (STLCExtendedRecords.Ty_Arrow
                   (STLCExtendedRecords.Ty_Base
                      (String.String
                         (Ascii.Ascii false true false false false false true
-                           false) String.EmptyString))
+                           false)
+                        String.EmptyString))
                   (STLCExtendedRecords.Ty_Base
                      (String.String
                         (Ascii.Ascii false true false false false false true
-                           false) String.EmptyString)))
+                           false)
+                        String.EmptyString)))
                STLCExtendedRecords.Ty_RNil))
          (STLCExtendedRecords.tm_rproj
             (STLCExtendedRecords.tm_var
@@ -116,11 +121,13 @@ check_type @STLCExtendedRecords.typing_example_2 (
                (STLCExtendedRecords.Ty_Base
                   (String.String
                      (Ascii.Ascii false true false false false false true
-                        false) String.EmptyString))
+                        false)
+                     String.EmptyString))
                (STLCExtendedRecords.tm_var
                   (String.String
                      (Ascii.Ascii true false false false false true true
-                        false) String.EmptyString)))
+                        false)
+                     String.EmptyString)))
             STLCExtendedRecords.tm_rnil)))
    (STLCExtendedRecords.Ty_Arrow
       (STLCExtendedRecords.Ty_Base
@@ -154,16 +161,19 @@ check_type @STLCExtendedRecords.typing_nonexample (
                   (Ascii.Ascii true false false true false true true false)
                   (String.String
                      (Ascii.Ascii false true false false true true false
-                        false) String.EmptyString))
+                        false)
+                     String.EmptyString))
                (STLCExtendedRecords.Ty_Arrow
                   (STLCExtendedRecords.Ty_Base
                      (String.String
                         (Ascii.Ascii true false false false false false true
-                           false) String.EmptyString))
+                           false)
+                        String.EmptyString))
                   (STLCExtendedRecords.Ty_Base
                      (String.String
                         (Ascii.Ascii true false false false false false true
-                           false) String.EmptyString)))
+                           false)
+                        String.EmptyString)))
                STLCExtendedRecords.Ty_RNil))
          (STLCExtendedRecords.tm_rcons
             (String.String
@@ -178,15 +188,18 @@ check_type @STLCExtendedRecords.typing_nonexample (
                (STLCExtendedRecords.Ty_Base
                   (String.String
                      (Ascii.Ascii false true false false false false true
-                        false) String.EmptyString))
+                        false)
+                     String.EmptyString))
                (STLCExtendedRecords.tm_var
                   (String.String
                      (Ascii.Ascii true false false false false true true
-                        false) String.EmptyString)))
+                        false)
+                     String.EmptyString)))
             (STLCExtendedRecords.tm_var
                (String.String
                   (Ascii.Ascii true false false false false true true false)
-                  String.EmptyString))) T)))).
+                  String.EmptyString)))
+         T)))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCExtendedRecords.typing_nonexample.
@@ -217,35 +230,41 @@ check_type @STLCExtendedRecords.typing_nonexample_2 (
                      (Ascii.Ascii true false false true false true true false)
                      (String.String
                         (Ascii.Ascii true false false false true true false
-                           false) String.EmptyString))
+                           false)
+                        String.EmptyString))
                   (STLCExtendedRecords.Ty_Base
                      (String.String
                         (Ascii.Ascii true false false false false false true
-                           false) String.EmptyString))
+                           false)
+                        String.EmptyString))
                   STLCExtendedRecords.Ty_RNil)
                (STLCExtendedRecords.tm_rproj
                   (STLCExtendedRecords.tm_var
                      (String.String
                         (Ascii.Ascii true false false false false true true
-                           false) String.EmptyString))
+                           false)
+                        String.EmptyString))
                   (String.String
                      (Ascii.Ascii true false false true false true true false)
                      (String.String
                         (Ascii.Ascii true false false false true true false
-                           false) String.EmptyString))))
+                           false)
+                        String.EmptyString))))
             (STLCExtendedRecords.tm_rcons
                (String.String
                   (Ascii.Ascii true false false true false true true false)
                   (String.String
                      (Ascii.Ascii true false false false true true false
-                        false) String.EmptyString))
+                        false)
+                     String.EmptyString))
                (STLCExtendedRecords.tm_var y)
                (STLCExtendedRecords.tm_rcons
                   (String.String
                      (Ascii.Ascii true false false true false true true false)
                      (String.String
                         (Ascii.Ascii false true false false true true false
-                           false) String.EmptyString))
+                           false)
+                        String.EmptyString))
                   (STLCExtendedRecords.tm_var y) STLCExtendedRecords.tm_rnil)))
          T)))).
 idtac "Assumptions:".
@@ -288,6 +307,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2025-01-06 19:49 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:49 *)
+(* 2025-08-24 14:29 *)

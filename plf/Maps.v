@@ -24,21 +24,21 @@
     [Require Import] the chapter before it (nor, transitively, all the
     earlier chapters).  Instead, in this chapter and from now, on
     we're going to import the definitions and theorems we need
-    directly from Coq's standard library stuff.  You should not notice
+    directly from Rocq's standard library stuff.  You should not notice
     much difference, though, because we've been careful to name our
     own definitions and theorems the same as their counterparts in the
     standard library, wherever they overlap. *)
 
-From Coq Require Import Arith.
-From Coq Require Import Bool.
-From Coq Require Export Strings.String.
-From Coq Require Import FunctionalExtensionality.
-From Coq Require Import List.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Bool.
+From Stdlib Require Export Strings.String.
+From Stdlib Require Import FunctionalExtensionality.
+From Stdlib Require Import List.
 Import ListNotations.
 Set Default Goal Selector "!".
 
 (** Documentation for the standard library can be found at
-    https://coq.inria.fr/library/.
+    https://rocq-prover.org/doc/V9.0.0/stdlib/index.html.
 
     The [Search] command is a good way to look for theorems involving
     objects of specific types. See [Lists] for a reminder of how
@@ -63,7 +63,7 @@ Print Init.Nat.add.
 (** First, we need a type for the keys that we will use to index into
     our maps.  In [Lists.v] we introduced a fresh type [id] for a
     similar purpose; here and for the rest of _Software Foundations_
-    we will use the [string] type from Coq's standard library. *)
+    we will use the [string] type from Rocq's standard library. *)
 
 (** To compare strings, we use the function [eqb] from the [String]
     module in the standard library. *)
@@ -378,4 +378,4 @@ Qed.
     used to keep track of which program variables are defined in a
     given scope. *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

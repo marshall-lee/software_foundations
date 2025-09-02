@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import MoreStlc.
 
 Parameter MISSING: Type.
@@ -66,7 +66,8 @@ idtac "#> STLCExtended.has_type".
 idtac "Possible points: 3".
 check_type @STLCExtended.has_type (
 (forall (_ : STLCExtended.context) (_ : STLCExtended.tm)
-   (_ : STLCExtended.ty), Prop)).
+   (_ : STLCExtended.ty),
+ Prop)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions STLCExtended.has_type.
@@ -163,6 +164,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2025-01-06 19:49 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:49 *)
+(* 2025-08-24 14:29 *)

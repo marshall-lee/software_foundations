@@ -31,14 +31,14 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 Set Warnings "-deprecated-syntactic-definition".
-From Coq Require Import Strings.String.
-From Coq Require Import Init.Nat.
-From Coq Require Import Arith.
-From Coq Require Import PeanoNat.
-From Coq Require Import Lia.
+From Stdlib Require Import Strings.String.
+From Stdlib Require Import Init.Nat.
+From Stdlib Require Import Arith.
+From Stdlib Require Import PeanoNat.
+From Stdlib Require Import Lia.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
-From Coq Require Import List. Import Datatypes.
+From Stdlib Require Import List. Import Datatypes.
 Check length.
 
 Import Nat.
@@ -1971,4 +1971,4 @@ Qed.
 End RefsAndNontermination.
 End STLCRef.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

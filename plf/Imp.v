@@ -21,14 +21,14 @@
     equivalence_ and introduce _Hoare Logic_, a popular logic for
     reasoning about imperative programs. *)
 
-Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Bool.
-From Coq Require Import Init.Nat.
-From Coq Require Import Arith.
-From Coq Require Import EqNat. Import Nat.
-From Coq Require Import Lia.
-From Coq Require Import List. Import ListNotations.
-From Coq Require Import Strings.String.
+Set Warnings "-notation-overridden,-notation-incompatible-prefix".
+From Stdlib Require Import Bool.
+From Stdlib Require Import Init.Nat.
+From Stdlib Require Import Arith.
+From Stdlib Require Import EqNat. Import Nat.
+From Stdlib Require Import Lia.
+From Stdlib Require Import List. Import ListNotations.
+From Stdlib Require Import Strings.String.
 From PLF Require Import Maps.
 Set Default Goal Selector "!".
 
@@ -579,7 +579,7 @@ Proof.
   intros. lia.
 Qed.
 
-(** (Note the [From Coq Require Import Lia.] at the top of
+(** (Note the [From Stdlib Require Import Lia.] at the top of
     this file, which makes [lia] available.) *)
 
 (* ================================================================= *)
@@ -2087,4 +2087,4 @@ End BreakImp.
 
     [] *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

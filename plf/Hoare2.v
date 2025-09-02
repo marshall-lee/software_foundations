@@ -2,13 +2,13 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 Set Warnings "-intuition-auto-with-star".
-From Coq Require Import Strings.String.
+From Stdlib Require Import Strings.String.
 From PLF Require Import Maps.
-From Coq Require Import Bool.
-From Coq Require Import Arith.
-From Coq Require Import EqNat.
-From Coq Require Import PeanoNat. Import Nat.
-From Coq Require Import Lia.
+From Stdlib Require Import Bool.
+From Stdlib Require Import Arith.
+From Stdlib Require Import EqNat.
+From Stdlib Require Import PeanoNat. Import Nat.
+From Stdlib Require Import Lia.
 From PLF Require Export Imp.
 From PLF Require Import Hoare.
 Set Default Goal Selector "!".
@@ -2214,4 +2214,4 @@ Qed.
 End Himp2.
 (** [] *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

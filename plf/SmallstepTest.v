@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import Smallstep.
 
 Parameter MISSING: Type.
@@ -263,6 +263,6 @@ idtac "---------- compiler_is_correct ---------".
 Print Assumptions compiler_is_correct.
 Abort.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

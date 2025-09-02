@@ -26,15 +26,16 @@
     from the library [LibTactics.v], which is presented in the chapter
     [UseTactics]. *)
 
-From Coq Require Import Arith.
+From Stdlib Require Import Arith.
 
+Set Warnings "-parsing".
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
 From PLF Require Import LibTactics.
 From PLF Require Stlc.
 From PLF Require Imp.
 
-From Coq Require Import List.
+From Stdlib Require Import List.
 
 
 (* ################################################################# *)
@@ -948,7 +949,7 @@ End PreservationProgressStlc.
 (** ** BigStep and SmallStep *)
 
 From PLF Require Import Smallstep.
-Require Import Program.
+From Stdlib Require Import Program.
 Module Semantics.
 
 (** Consider the proof relating a small-step reduction judgment
@@ -1022,9 +1023,9 @@ End Semantics.
 (* ================================================================= *)
 (** ** Preservation for STLCRef *)
 
-From Coq Require Import Lia.
+From Stdlib Require Import Lia.
 From PLF Require Import References.
-Require Import Program.
+From Stdlib Require Import Program.
 Module PreservationProgressReferences.
 Import STLCRef.
 Hint Resolve store_weakening extends_refl : core.
@@ -1120,7 +1121,7 @@ Proof.
         { replace <{ Ref T1 }>
             with <{ Ref {store_Tlookup (length st) (ST ++ T1::nil)} }>.
           { apply T_Loc.
-            rewrite <- H. rewrite app_length, add_comm. simpl. lia. }
+            rewrite <- H. rewrite length_app, add_comm. simpl. lia. }
           unfold store_Tlookup. rewrite <- H. rewrite nth_eq_last.
           reflexivity. }
         apply store_well_typed_app; assumption. *)
@@ -1141,10 +1142,10 @@ Proof.
         rewrite Nat.sub_diag. simpl. reflexivity.
     (* To justify the inequality, there is no need to call [rewrite <- H],
        because the tactic [lia] is able to exploit [H] on its own.
-       So, only the rewriting of [app_length] and the call to the
+       So, only the rewriting of [length_app] and the call to the
        tactic [lia] remain, with a call to [simpl] to unfold the
        definition of [app]. *)
-        rewrite app_length. simpl. lia.
+        rewrite length_app. simpl. lia.
       apply* store_well_typed_app.
   - forwards*: IHHt.
 
@@ -1240,7 +1241,7 @@ Proof.
     apply extends_app.
     applys_eq T_Loc.
       unfold store_Tlookup. rewrite* nth_eq_last'.
-      rewrite app_length. simpl. lia.
+      rewrite length_app. simpl. lia.
     apply* store_well_typed_app.
   - forwards*: IHHt.
   - exists ST. splits*. lets [_ Hsty]: HST.
@@ -1760,7 +1761,7 @@ Abort.
     Before using [lia], one needs to import the module [Lia],
     as follows. *)
 
-Require Import Lia.
+From Stdlib Require Import Lia.
 
 (** Here is an example. Let [x] and [y] be two natural numbers
     (they cannot be negative). Assume [y] is less than 4, assume
@@ -1821,7 +1822,7 @@ Qed.
     not natural numbers (type [nat]). Here is an example showing how
     to use [ring]. *)
 
-Require Import ZArith.
+From Stdlib Require Import ZArith.
 Module RingDemo.
   Open Scope Z_scope.
   (* Arithmetic symbols are now interpreted in [Z] *)
@@ -1938,4 +1939,4 @@ Proof. congruence. Qed.
     some investment, however this investment will pay off very quickly.
 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

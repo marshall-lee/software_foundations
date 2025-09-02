@@ -18,7 +18,7 @@
     the [ProofObjects] chapter in _Logical
     Foundations_ (_Software Foundations_, volume 1). *)
 
-Set Warnings "-deprecated-hint-without-locality,-deprecated-hint-without-locality".
+Set Warnings "-deprecated-hint-without-locality,-deprecated-hint-without-locality,-parsing".
 From PLF Require Import Maps.
 From PLF Require Import Hoare.
 
@@ -392,4 +392,4 @@ Proof.
     of Coq's logic. But this logic is far too powerful to be
     decidable. *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

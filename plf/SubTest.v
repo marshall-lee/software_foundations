@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import Sub.
 
 Parameter MISSING: Type.
@@ -233,6 +233,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2025-01-06 19:49 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:49 *)
+(* 2025-08-24 14:29 *)

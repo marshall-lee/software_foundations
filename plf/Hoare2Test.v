@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import Hoare2.
 
 Parameter MISSING: Type.
@@ -132,6 +132,6 @@ idtac "---------- factorial_correct ---------".
 Print Assumptions factorial_correct.
 Abort.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

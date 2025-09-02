@@ -44,7 +44,7 @@
     Coquand and Huet, it forms the foundation of Coq's logic. *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Strings.String.
+From Stdlib Require Import Strings.String.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
 Set Default Goal Selector "!".
@@ -942,4 +942,4 @@ Proof.
 
 End STLC.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

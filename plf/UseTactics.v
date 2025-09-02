@@ -12,7 +12,7 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 
-From Coq Require Import Arith.
+From Stdlib Require Import Arith.
 
 From PLF Require Maps.
 From PLF Require Stlc.
@@ -316,6 +316,9 @@ Proof.
   intros. splits.
 Abort.
 
+(** Note that [splits] is less agressive than [repeat split],
+    which might unfold predicates unexpectedly. *)
+
 (* ================================================================= *)
 (** ** The Tactic [branch] *)
 
@@ -346,7 +349,6 @@ End NaryExamples.
 
 (** This section presents the following tactics:
     - [asserts_rewrite] for introducing an equality to rewrite with,
-    - [substs] for improving the [subst] tactic,
     - [fequals] for improving the [f_equal] tactic,
     - [applys_eq] for proving [P x y] using an hypothesis [P x z],
       automatically producing an equality [y = z] as subgoal. *)
@@ -356,8 +358,9 @@ Module EqualityExamples.
 (* ================================================================= *)
 (** ** The Tactic [asserts_rewrite] *)
 
-(** The tactic [asserts_rewrite (E1 = E2)] replaces [E1] with [E2] in
-    the goal, and produces the goal [E1 = E2]. *)
+(** The tactic [asserts_rewrite] is an enhanced version of [replace].
+    A call to [asserts_rewrite (E1 = E2)] first produces the
+    goal [E1 = E2], then replaces [E1] with [E2] in the goal. *)
 
 Theorem mult_0_plus : forall n m : nat,
   (0 + n) * m = n * m.
@@ -375,11 +378,8 @@ Proof.
     reflexivity. (* subgoal [n*m = n*m] *)
 Qed.
 
-(** Remark: the syntax [asserts_rewrite (E1 = E2) in H] allows
-     rewriting in the hypothesis [H] rather than in the goal. *)
-
-(** More generally, the tactic [asserts_rewrite] can be provided
-    a lemma as argument. For example, one can write
+(** Unlike [replace], the tactic [asserts_rewrite] can be provided
+    a lemma statement as argument. For example, one can write
     [asserts_rewrite (forall a b, a*(S b) = a*b+a)].
     This formulation is useful when [a] and [b] are big terms,
     since there is no need to repeat their statements. *)
@@ -392,24 +392,10 @@ Proof.
     (* second subgoal: [(u + v) * (w * x + y) + (u + v) = z] *)
 Abort.
 
-(** The tactic [cuts_rewrite] is similar to [asserts_write] except that
-    it the two subgoals produced are swapped. *)
-
-(* ================================================================= *)
-(** ** The Tactic [substs] *)
-
-(** The tactic [substs] is similar to [subst] except that it
-    does not fail when the goal contains "circular equalities",
-    such as [x = f x]. *)
-
-Lemma demo_substs : forall x y (f:nat->nat),
-  x = f x ->
-  y = x ->
-  y = f x.
-Proof.
-  intros. substs. (* the tactic [subst] would fail here *)
-  assumption.
-Qed.
+(** The syntax [asserts_rewrite (E1 = E2) in H] allows rewriting in an
+    hypothesis [H] rather than in the goal. The tactic [cuts_rewrite]
+    is similar to [asserts_write] except that it the two subgoals
+    produced are swapped. *)
 
 (* ================================================================= *)
 (** ** The Tactic [fequals] *)
@@ -900,8 +886,8 @@ End ExamplesLets.
 
     - [splits] and [branch], to deal with n-ary constructs.
 
-    - [asserts_rewrite], [cuts_rewrite], [substs] and [fequals] help
-      working with equalities.
+    - [asserts_rewrite], [cuts_rewrite], and [fequals] help working
+      with equalities.
 
     - [lets], [forwards], [specializes] and [applys] provide means
       of very conveniently instantiating lemmas.
@@ -920,4 +906,4 @@ End ExamplesLets.
 
 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

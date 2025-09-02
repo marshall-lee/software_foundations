@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import Equiv.
 
 Parameter MISSING: Type.
@@ -184,7 +184,8 @@ idtac "Advanced".
 idtac "Possible points: 3".
 check_type @Himp.p1_may_diverge (
 (forall (st : forall _ : String.string, nat) (st' : state)
-   (_ : not (@eq nat (st X) 0)), not (Himp.ceval Himp.p1 st st'))).
+   (_ : not (@eq nat (st X) 0)),
+ not (Himp.ceval Himp.p1 st st'))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions Himp.p1_may_diverge.
@@ -196,7 +197,8 @@ idtac "Advanced".
 idtac "Possible points: 3".
 check_type @Himp.p2_may_diverge (
 (forall (st : forall _ : String.string, nat) (st' : state)
-   (_ : not (@eq nat (st X) 0)), not (Himp.ceval Himp.p2 st st'))).
+   (_ : not (@eq nat (st X) 0)),
+ not (Himp.ceval Himp.p2 st st'))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions Himp.p2_may_diverge.
@@ -289,6 +291,6 @@ idtac "---------- Himp.p3_p4_inequiv ---------".
 Print Assumptions Himp.p3_p4_inequiv.
 Abort.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:28 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import HoareAsLogic.
 
 Parameter MISSING: Type.
@@ -67,7 +67,8 @@ idtac "#> hoare_sound".
 idtac "Possible points: 3".
 check_type @hoare_sound (
 (forall (P : Hoare.Assertion) (c : Imp.com) (Q : Hoare.Assertion)
-   (_ : derivable P c Q), valid P c Q)).
+   (_ : derivable P c Q),
+ valid P c Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_sound.
@@ -99,8 +100,8 @@ check_type @wp_invariant (
  valid
    (fun st : Imp.state =>
     and ((wp (Imp.CWhile b c) Q : Hoare.Assertion) st)
-      ((Hoare.bassertion b : Hoare.Assertion) st)) c
-   (wp (Imp.CWhile b c) Q))).
+      ((Hoare.bassertion b : Hoare.Assertion) st))
+   c (wp (Imp.CWhile b c) Q))).
 idtac "Assumptions:".
 Abort.
 Print Assumptions wp_invariant.
@@ -114,7 +115,8 @@ idtac "#> hoare_complete".
 idtac "Possible points: 6".
 check_type @hoare_complete (
 (forall (P : Hoare.Assertion) (c : Imp.com) (Q : Hoare.Assertion)
-   (_ : valid P c Q), derivable P c Q)).
+   (_ : valid P c Q),
+ derivable P c Q)).
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_complete.
@@ -161,6 +163,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

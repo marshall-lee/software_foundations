@@ -8,7 +8,7 @@
     are nonstandard. *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Strings.String.
+From Stdlib Require Import Strings.String.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
 
@@ -861,4 +861,4 @@ Proof with eauto.
 
 End RecordSub.
 
-(* 2024-12-25 17:02 *)
+(* 2025-08-24 13:47 *)

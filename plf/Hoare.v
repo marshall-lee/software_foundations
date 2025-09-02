@@ -2,11 +2,11 @@
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From PLF Require Import Maps.
-From Coq Require Import Bool.
-From Coq Require Import Arith.
-From Coq Require Import EqNat.
-From Coq Require Import PeanoNat. Import Nat.
-From Coq Require Import Lia.
+From Stdlib Require Import Bool.
+From Stdlib Require Import Arith.
+From Stdlib Require Import EqNat.
+From Stdlib Require Import PeanoNat. Import Nat.
+From Stdlib Require Import Lia.
 From PLF Require Export Imp.
 Set Default Goal Selector "!".
 
@@ -314,9 +314,8 @@ Notation "P <<->> Q" := (P ->> Q /\ Q ->> P)
     - [forall m, {{X = m}} X := X + 1 {{X = m + 1}}] is a
       _proposition_ stating that the Hoare triple [{{X = m}} X := X +
       1 {{X = m + 1}}] is valid for any choice of [m].  Note that [m]
-      in the two assertions and the command in the middle is a
-      reference to the _Coq_ variable [m], which is bound outside the
-      Hoare triple. *)
+      in the two assertions is a reference to the _Coq_ variable [m],
+      which is bound outside the Hoare triple. *)
 
 (** **** Exercise: 1 star, standard, optional (triples) *)
 (* FILL IN HERE
@@ -2556,4 +2555,4 @@ End HoareAssertAssume.
 
 
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

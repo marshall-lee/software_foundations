@@ -1,7 +1,7 @@
 (** * Records: Adding Records to STLC *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Strings.String.
+From Stdlib Require Import Strings.String.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
 From PLF Require Import Stlc.
@@ -756,4 +756,4 @@ Qed.
 
 End STLCExtendedRecords.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

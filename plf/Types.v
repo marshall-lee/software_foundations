@@ -11,7 +11,7 @@
     Coq!). *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Arith.
+From Stdlib Require Import Arith.
 From PLF Require Import Maps.
 From PLF Require Import Smallstep.
 Set Default Goal Selector "!".
@@ -124,11 +124,11 @@ Hint Unfold value : core.
                           iszero 0 --> true
 
                          numeric value v
-                      -------------------------                  (ST_IszeroSucc)
+                      -------------------------                  (ST_IsZeroSucc)
                       iszero (succ v) --> false
 
                             t1 --> t1'
-                       ------------------------                      (ST_Iszero)
+                       ------------------------                      (ST_IsZero)
                        iszero t1 --> iszero t1'
 *)
 
@@ -155,12 +155,12 @@ Inductive step : tm -> tm -> Prop :=
   | ST_Pred : forall t1 t1',
       t1 --> t1' ->
       <{ pred t1 }> --> <{ pred t1' }>
-  | ST_Iszero0 :
+  | ST_IsZero0 :
       <{ iszero 0 }> --> <{ true }>
-  | ST_IszeroSucc : forall v,
+  | ST_IsZeroSucc : forall v,
        nvalue v ->
       <{ iszero (succ v) }> --> <{ false }>
-  | ST_Iszero : forall t1 t1',
+  | ST_IsZero : forall t1 t1',
       t1 --> t1' ->
       <{ iszero t1 }> --> <{ iszero t1' }>
 
@@ -279,7 +279,7 @@ Inductive ty : Type :=
                           |-- pred t1 \in Nat
 
                             |-- t1 \in Nat
-                          ----------------------               (T_Iszero)
+                          ----------------------               (T_IsZero)
                           |-- iszero t1 \in Bool
 *)
 
@@ -711,4 +711,4 @@ Definition manual_grade_for_prog_pres_bigstep : option (nat*string) := None.
 (** [] *)
 End TM.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)

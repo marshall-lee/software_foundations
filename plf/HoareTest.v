@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import Hoare.
 
 Parameter MISSING: Type.
@@ -95,7 +95,8 @@ check_type @hoare_asgn_fwd (
          @eq nat ((Aexp_of_aexp (AId X) : Aexp) st0)
            ((Aexp_of_nat m : Aexp) st0))
         :
-        Assertion) st)) (CAsgn X a)
+        Assertion) st))
+   (CAsgn X a)
    (fun st : state =>
     and (P (@Maps.t_update nat st X m))
       (@eq nat (st X) (aeval (@Maps.t_update nat st X m) a))))).
@@ -136,7 +137,8 @@ check_type @assertion_sub_ex2' (
       (((fun st0 : state =>
          le ((Aexp_of_nat 3 : Aexp) st0) ((Aexp_of_nat 5 : Aexp) st0))
         :
-        Assertion) st)) (CAsgn X (ANum 3))
+        Assertion) st))
+   (CAsgn X (ANum 3))
    (fun st : state =>
     and
       (((fun st0 : state =>
@@ -286,7 +288,8 @@ check_type @If1.hoare_if1_good (
          PeanoNat.Nat.add ((Aexp_of_aexp (AId X) : Aexp) st0)
            ((Aexp_of_aexp (AId Y) : Aexp) st0))
         :
-        Aexp) st) ((Aexp_of_aexp (AId Z) : Aexp) st))
+        Aexp) st)
+      ((Aexp_of_aexp (AId Z) : Aexp) st))
    (If1.CIf1 (BNeq (AId Y) (ANum 0)) (If1.CAsgn X (APlus (AId X) (AId Y))))
    (fun st : state =>
     @eq nat ((Aexp_of_aexp (AId X) : Aexp) st)
@@ -446,6 +449,6 @@ idtac "---------- Himp.havoc_post ---------".
 Print Assumptions Himp.havoc_post.
 Abort.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:28 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

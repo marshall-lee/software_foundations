@@ -1,5 +1,5 @@
 Set Warnings "-notation-overridden,-parsing".
-From Coq Require Export String.
+From Stdlib Require Export String.
 From PLF Require Import Types.
 
 Parameter MISSING: Type.
@@ -222,6 +222,6 @@ idtac "---------- prog_pres_bigstep ---------".
 idtac "MANUAL".
 Abort.
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 14:29 *)

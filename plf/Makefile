@@ -10,7 +10,7 @@ clean::
 	$(RM) $(wildcard Makefile.coq Makefile.coq.conf) 
 
 Makefile.coq:
-	coq_makefile $(COQMFFLAGS) -o Makefile.coq $(ALLVFILES)
+	rocq makefile $(COQMFFLAGS) -o Makefile.coq $(ALLVFILES)
 
 -include Makefile.coq
 

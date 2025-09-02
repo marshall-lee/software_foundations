@@ -1,11 +1,11 @@
 (** * Smallstep: Small-step Operational Semantics *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
-From Coq Require Import Arith.
-From Coq Require Import EqNat.
-From Coq Require Import Init.Nat.
-From Coq Require Import Lia.
-From Coq Require Import List. Import ListNotations.
+From Stdlib Require Import Arith.
+From Stdlib Require Import EqNat.
+From Stdlib Require Import Init.Nat.
+From Stdlib Require Import Lia.
+From Stdlib Require Import List. Import ListNotations.
 From PLF Require Import Maps.
 From PLF Require Import Imp.
 Set Default Goal Selector "!".
@@ -1909,4 +1909,4 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(* 2025-01-06 19:48 *)
+(* 2025-08-24 13:47 *)
