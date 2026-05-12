@@ -5,7 +5,7 @@
     constructors were presented as _theorems_ about the evaluation
     behavior of programs, and proofs of program correctness (validity
     of Hoare triples) were constructed by combining these theorems
-    directly in Coq.
+    directly in Rocq.
 
     Another way of presenting Hoare logic is to define a completely
     separate proof system -- a set of axioms and inference rules that
@@ -493,7 +493,7 @@ Qed.
 
     Similarly, the triple [{{True}} skip {{P}}] is valid if and only
     if [forall s, P s] is valid, where [P] is an arbitrary assertion
-    of Coq's logic. But this logic is far too powerful to be
+    of Rocq's logic. But this logic is far too powerful to be
     decidable. *)
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:33 *)

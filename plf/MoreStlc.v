@@ -1,11 +1,10 @@
 (** * MoreStlc: More on the Simply Typed Lambda-Calculus *)
 
-Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
+Set Warnings "-notation-overridden,-parsing".
 From PLF Require Import Maps.
 From PLF Require Import Types.
 From PLF Require Import Smallstep.
 From PLF Require Import Stlc.
-Set Default Goal Selector "!".
 
 (* ################################################################# *)
 (** * Simple Extensions to STLC *)
@@ -21,7 +20,7 @@ Set Default Goal Selector "!".
 (* ================================================================= *)
 (** ** Numbers *)
 
-(** As we saw in exercise [stlc_arith] at the end of the [StlcProp]
+(** As we saw in the [STLCArith] exercises at the end of the [StlcProp]
     chapter, adding types, constants, and primitive operations for
     natural numbers is easy -- basically just a matter of combining
     the [Types] and [Stlc] chapters.  Adding more realistic
@@ -35,7 +34,7 @@ Set Default Goal Selector "!".
 (** When writing a complex expression, it is useful to be able
     to give names to some of its subexpressions to avoid repetition
     and increase readability.  Most languages provide one or more ways
-    of doing this.  In OCaml (and Coq), for example, we can write [let
+    of doing this.  In OCaml (and Rocq), for example, we can write [let
     x=t1 in t2] to mean "reduce the expression [t1] to a value and
     bind the name [x] to this value while reducing [t2]."
 
@@ -56,7 +55,7 @@ Set Default Goal Selector "!".
 
        t ::=                Terms
            | ...               (other terms same as before)
-           | let x=t in t      let-binding
+           | let x=t1 in t2    let-binding
 *)
 
 (**
@@ -79,7 +78,7 @@ Set Default Goal Selector "!".
 (* ================================================================= *)
 (** ** Pairs *)
 
-(** Our functional programming examples in Coq have made
+(** Our functional programming examples in Rocq have made
     frequent use of _pairs_ of values.  The type of such a pair is
     called a _product type_.
 
@@ -87,7 +86,7 @@ Set Default Goal Selector "!".
     discussing.  However, let's look briefly at the various parts of
     the definition to emphasize the common pattern. *)
 
-(** In Coq, the primitive way of extracting the components of a pair
+(** In Rocq, the primitive way of extracting the components of a pair
     is _pattern matching_.  An alternative is to take [fst] and
     [snd] -- the first- and second-projection operators -- as
     primitives.  Just for fun, let's do our pairs this way.  For
@@ -110,17 +109,17 @@ Set Default Goal Selector "!".
 
        t ::=                Terms
            | ...
-           | (t,t)             pair
-           | t.fst             first projection
-           | t.snd             second projection
+           | (t1,t2)           pair
+           | t0.fst            first projection
+           | t0.snd            second projection
 
        v ::=                Values
            | ...
-           | (v,v)             pair value
+           | (v1,v2)           pair value
 
        T ::=                Types
            | ...
-           | T * T             product type
+           | T1 * T2           product type
 *)
 
 (** For reduction, we need several new rules specifying how pairs and
@@ -134,16 +133,16 @@ Set Default Goal Selector "!".
                          --------------------                        (ST_Pair2)
                          (v1,t2) --> (v1,t2')
 
-                               t1 --> t1'
+                               t0 --> t0'
                            ------------------                        (ST_Fst1)
-                           t1.fst --> t1'.fst
+                           t0.fst --> t0'.fst
 
                           ------------------                       (ST_FstPair)
                           (v1,v2).fst --> v1
 
-                               t1 --> t1'
+                               t0 --> t0'
                            ------------------                        (ST_Snd1)
-                           t1.snd --> t1'.snd
+                           t0.snd --> t0'.snd
 
                           ------------------                       (ST_SndPair)
                           (v1,v2).snd --> v2
@@ -232,6 +231,8 @@ Set Default Goal Selector "!".
     have a type for the (trivial) result of an expression that is
     evaluated only for its effect. *)
 
+(** No! For instance (\x:Unit,x) unit is also a _term_ of type unit. *)
+
 (* ================================================================= *)
 (** ** Sums *)
 
@@ -265,7 +266,7 @@ Set Default Goal Selector "!".
     elements of [T1] tagged with the token [inl], plus the elements of
     [T2] tagged with [inr]. *)
 
-(** As we've seen in Coq programming, one important use of sums is
+(** As we've seen in Rocq programming, one important use of sums is
     signaling errors:
 
       div \in Nat -> Nat -> (Nat + Unit)
@@ -277,11 +278,11 @@ Set Default Goal Selector "!".
             inl ...
 *)
 (** The type [Nat + Unit] above is in fact isomorphic to [option
-    nat] in Coq -- i.e., it's easy to write functions that translate
+    nat] in Rocq -- i.e., it's easy to write functions that translate
     back and forth. *)
 
 (** To _use_ elements of sum types, we introduce a [case]
-    construct (a very simplified form of Coq's [match]) to destruct
+    construct (a very simplified form of Rocq's [match]) to destruct
     them. For example, the following procedure converts a [Nat+Bool]
     into a [Nat]:
 
@@ -299,20 +300,20 @@ Set Default Goal Selector "!".
 
        t ::=                Terms
            | ...               (other terms same as before)
-           | inl T t           tagging (left)
-           | inr T t           tagging (right)
-           | case t of         case
-               inl x => t
-             | inr x => t
+           | inl T2 t1         tagging (left)
+           | inr T1 t2         tagging (right)
+           | case t0 of        case analysis
+               inl x1 => t1
+             | inr x2 => t2
 
        v ::=                Values
            | ...
-           | inl T v           tagged value (left)
-           | inr T v           tagged value (right)
+           | inl T2 v1         tagged value (left)
+           | inr T1 v2         tagged value (right)
 
        T ::=                Types
            | ...
-           | T + T             sum type
+           | T1 + T2           sum type
 *)
 
 (** Reduction:
@@ -385,7 +386,7 @@ Set Default Goal Selector "!".
     constructor is [List].  For every type [T], the type [List T]
     describes finite-length lists whose elements are drawn from [T].
 
-    In principle, we could encode lists using pairs, sums and
+    In principle, we could encode lists using pairs, sums, unit, and
     _recursive_ types. But giving semantics to recursive types is
     non-trivial. Instead, we'll just discuss the special case of lists
     directly.
@@ -393,7 +394,7 @@ Set Default Goal Selector "!".
     Below we give the syntax, semantics, and typing rules for lists.
     Except for the fact that explicit type annotations are mandatory
     on [nil] and cannot appear on [cons], these lists are essentially
-    identical to those we built in Coq.  We use [case], rather than
+    identical to those we built in Rocq.  We use [case], rather than
     [head] and [tail] operators, to destruct lists, to avoid dealing
     with questions like "what is the [head] of the empty list?" *)
 
@@ -413,16 +414,16 @@ Set Default Goal Selector "!".
 
        t ::=                Terms
            | ...
-           | nil T
-           | cons t t
-           | case t of
-               nil     => t
-               | x::x' => t
+           | nil T             empty list
+           | t1 :: t2          cons
+           | case t1 of        case analysis
+               nil      => t2
+               | xh::xt => t3
 
        v ::=                Values
            | ...
            | nil T             nil value
-           | cons v v          cons value
+           | v1 :: v2          cons value
 
        T ::=                Types
            | ...
@@ -433,11 +434,11 @@ Set Default Goal Selector "!".
 
                                 t1 --> t1'
                        --------------------------                    (ST_Cons1)
-                       cons t1 t2 --> cons t1' t2
+                         t1 :: t2 --> t1' :: t2
 
                                 t2 --> t2'
                        --------------------------                    (ST_Cons2)
-                       cons v1 t2 --> cons v1 t2'
+                         v1 :: t2 --> v1 :: t2'
 
                               t1 --> t1'
                 -------------------------------------------         (ST_Lcase1)
@@ -448,9 +449,9 @@ Set Default Goal Selector "!".
                (case nil T1 of nil => t2 | xh::xt => t3)
                                 --> t2
 
-            ------------------------------------------------     (ST_LcaseCons)
-            (case (cons vh vt) of nil => t2 | xh::xt => t3)
-                          --> [xh:=vh,xt:=vt]t3
+              -------------------------------------------         (ST_LcaseCons)
+              (case (vh::vt) of nil => t2 | xh::xt => t3)
+                          --> [xh:=vh][xt:=vt]t3
 *)
 
 (** Typing:
@@ -460,25 +461,25 @@ Set Default Goal Selector "!".
 
             Gamma |-- t1 \in T1      Gamma |-- t2 \in List T1
             -------------------------------------------------           (T_Cons)
-                    Gamma |-- cons t1 t2 \in List T1
+                    Gamma |-- t1 :: t2 \in List T1
 
                         Gamma |-- t1 \in List T1
                         Gamma |-- t2 \in T2
-                (h|->T1; t|->List T1; Gamma) |-- t3 \in T2
+                (xh|->T1; xt|->List T1; Gamma) |-- t3 \in T2
           ----------------------------------------------------         (T_Lcase)
-          Gamma |-- (case t1 of nil => t2 | h::t => t3) \in T2
+          Gamma |-- (case t1 of nil => t2 | xh::xt => t3) \in T2
 *)
 
 (* ================================================================= *)
 (** ** General Recursion *)
 
 (** Another facility found in most programming languages (including
-    Coq) is the ability to define recursive functions.  For example,
+    Rocq) is the ability to define recursive functions.  For example,
     we would like to be able to define and use the factorial function
     like this:
 
       let fact = \x:Nat,
-             if x=0 then 1 else x * (fact (pred x))) in
+                   if x=0 then 1 else x * (fact (pred x))) in
       fact 3.
 
    Note that the right-hand side of this binder mentions [fact], the
@@ -535,7 +536,8 @@ Set Default Goal Selector "!".
         [let]-binding for [fact].
 *)
 
-(** The intuition here is that the higher-order function [f]
+(** For the mathematically inclined,
+    the intuition here is that the higher-order function [f]
     passed to [fix] is a _generator_ for the [fact] function: if [f]
     is applied to a function that "approximates" the desired behavior
     of [fact] up to some number [n] (that is, a function that returns
@@ -556,7 +558,7 @@ Set Default Goal Selector "!".
 
        t ::=                Terms
            | ...
-           | fix t             fixed-point operator
+           | fix t1            fixed-point operator
 
    Reduction:
 
@@ -595,7 +597,7 @@ Set Default Goal Selector "!".
 
     3 * (fix F (pred 3))
 
-[-->] [ST_FixAbs + ST_Mult2]
+[-->] [ST_FixAbs + ST_Mult2 + ST_App1]
 
     3 * ((\x. if x=0 then 1 else x * (fix F (pred x))) (pred 3))
 
@@ -611,7 +613,7 @@ Set Default Goal Selector "!".
 
     3 * (2 * (fix F (pred 2)))
 
-[-->] [ST_FixAbs + 2 x ST_Mult2]
+[-->] [ST_FixAbs + 2 x ST_Mult2 + ST_App1]
 
     3 * (2 * ((\x. if x=0 then 1 else x * (fix F (pred x))) (pred 2)))
 
@@ -627,7 +629,7 @@ Set Default Goal Selector "!".
 
     3 * (2 * (1 * (fix F (pred 1))))
 
-[-->] [ST_FixAbs + 3 x ST_Mult2]
+[-->] [ST_FixAbs + 3 x ST_Mult2 + ST_App1]
 
     3 * (2 * (1 * ((\x. if x=0 then 1 else x * (fix F (pred x))) (pred 1))))
 
@@ -734,7 +736,7 @@ Set Default Goal Selector "!".
        t ::=                          Terms
            | ...
            | {i1=t1, ..., in=tn}         record
-           | t.i                         projection
+           | t0.i                        projection
 
        v ::=                          Values
            | ...
@@ -834,35 +836,48 @@ Set Default Goal Selector "!".
     tuple, [{5,6}] is a 2-tuple (morally the same as a pair),
     [{5,6,7}] is a triple, etc.
 
-      {} ----> unit {t1, t2, ..., tn} ----> (t1, trest) where {t2,
-      ..., tn} ----> trest
+      {}                 ---->  unit
+      {t1, t2, ..., tn}  ---->  (t1, trest)
+                                where {t2, ..., tn} ----> trest
 
     Similarly, we can encode tuple types using nested product types:
 
-      {} ----> Unit {T1, T2, ..., Tn} ----> T1 * TRest where {T2, ...,
-      Tn} ----> TRest
+      {}                 ---->  Unit
+      {T1, T2, ..., Tn}  ---->  T1 * TRest
+                                where {T2, ..., Tn} ----> TRest
 
     The operation of projecting a field from a tuple can be encoded
     using a sequence of second projections followed by a first
     projection:
 
-      t.0 ----> t.fst t.(n+1) ----> (t.snd).n
+      t.0        ---->  t.fst
+      t.(n+1)    ---->  (t.snd).n
 
     Next, suppose that there is some total ordering on record labels,
     so that we can associate each label with a unique natural number.
     This number is called the _position_ of the label.  For example,
     we might assign positions like this:
 
-      LABEL POSITION a 0 b 1 c 2 ...  ...  bar 1395 ...  ...  foo 4460
-      ...  ...
+      LABEL   POSITION
+      a       0
+      b       1
+      c       2
+      ...     ...
+      bar     1395
+      ...     ...
+      foo     4460
+      ...     ...
 
     We use these positions to encode record values as tuples (i.e., as
     nested pairs) by sorting the fields according to their positions.
     For example:
 
-      {a=5,b=6} ----> {5,6} {a=5,c=7} ----> {5,unit,7} {c=7,a=5} ---->
-      {5,unit,7} {c=5,b=3} ----> {unit,3,5} {f=8,c=5,a=7} ---->
-      {7,unit,5,unit,unit,8} {f=8,c=5} ----> {unit,unit,5,unit,unit,8}
+      {a=5,b=6}       ---->   {5,6}
+      {a=5,c=7}       ---->   {5,unit,7}
+      {c=7,a=5}       ---->   {5,unit,7}
+      {c=5,b=3}       ---->   {unit,3,5}
+      {f=8,c=5,a=7}   ---->   {7,unit,5,unit,unit,8}
+      {f=8,c=5}       ---->   {unit,unit,5,unit,unit,8}
 
     Note that each field appears in the position associated with its
     label, that the size of the tuple is determined by the label with
@@ -871,8 +886,9 @@ Set Default Goal Selector "!".
 
     We do exactly the same thing with record types:
 
-      {a:Nat,b:Nat} ----> {Nat,Nat} {c:Nat,a:Nat} ----> {Nat,Unit,Nat}
-      {f:Nat,c:Nat} ----> {Unit,Unit,Nat,Unit,Unit,Nat}
+      {a:Nat,b:Nat}       ---->   {Nat,Nat}
+      {c:Nat,a:Nat}       ---->   {Nat,Unit,Nat}
+      {f:Nat,c:Nat}       ---->   {Unit,Unit,Nat,Unit,Unit,Nat}
 
     Finally, record projection is encoded as a tuple projection from
     the appropriate position:
@@ -929,14 +945,14 @@ Module STLCExtended.
     You need to complete the implementations for:
      - pairs
      - let (which involves binding)
-     - [fix]
+     - fix
 
-    A good strategy is to work on the extensions one at a time, in
-    separate passes, rather than trying to work through the file from
-    start to finish in a single pass.  For each definition or proof,
-    begin by reading carefully through the parts that are provided for
-    you, referring to the text in the [Stlc] chapter for
-    high-level intuitions and the embedded comments for detailed
+    A good strategy is to work on the extensions one at a time (first
+    pairs, then let, then fix), in separate passes, rather than trying
+    to do all three at once in a single pass.  For each definition or
+    proof, begin by reading carefully through the parts that are
+    provided for you, referring to the text in the [Stlc] chapter
+    for high-level intuitions and the embedded comments for detailed
     mechanics. *)
 
 (* ----------------------------------------------------------------- *)
@@ -1017,8 +1033,10 @@ Notation "S -> T" := (Ty_Arrow S T) (in custom stlc_ty at level 99, right associ
 
 Notation "$( t )" := t (in custom stlc_ty at level 0, t constr) : stlc_scope.
 
-Notation "$( x )" := x (in custom stlc_tm at level 0, x constr, only parsing) : stlc_scope.
-Notation "x" := x (in custom stlc_tm at level 0, x constr at level 0) : stlc_scope.
+Notation "x" := x (in custom stlc_tm at level 0, x global) : stlc_scope.
+Notation "'_'" := _ (in custom stlc_tm at level 0) : stlc_scope.
+Notation "'$' x" := x (in custom stlc_tm at level 0, x constr at level 0) : stlc_scope.
+Notation "'$(' x ')'" := x (in custom stlc_tm at level 0, x constr, only parsing) : stlc_scope.
 Notation "<{ e }>" := e (e custom stlc_tm at level 200) : stlc_scope.
 Notation "( x )" := x (in custom stlc_tm at level 0, x custom stlc_tm) : stlc_scope.
 
@@ -1160,9 +1178,9 @@ Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
 
 where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc_tm) : stlc_scope.
 
-(* Make sure the following tests are valid by reflexzivity: *)
+(* Make sure the following tests are valid by reflexivity: *)
 Example substeg1 :
-  <{ [z:=0] (let w = z in z) }> = <{ let w = 0 in 0 }>.
+  <{ [z:=$0] (let w = z in z) }> = <{ let w = $0 in $0 }>.
 Proof.
 (*
   reflexivity.
@@ -1170,7 +1188,7 @@ Proof.
 (* FILL IN HERE *) Admitted.
 
 Example substeg2 :
-  <{ [z:=0] (let w = z in w) }> = <{ let w = 0 in w }>.
+  <{ [z:=$0] (let w = z in w) }> = <{ let w = $0 in w }>.
 Proof.
 (*
   reflexivity.
@@ -1178,7 +1196,7 @@ Proof.
 (* FILL IN HERE *) Admitted.
 
 Example substeg3 :
-  <{ [z:=0] (let y = succ 0 in z) }> = <{ let y = succ 0 in 0 }>.
+  <{ [z:=$0] (let y = succ $0 in z) }> = <{ let y = succ $0 in $0 }>.
 Proof.
 (*
   reflexivity.
@@ -1261,7 +1279,7 @@ Inductive step : tm -> tm -> Prop :=
          t1 --> t1' ->
          <{if0 t1 then t2 else t3}> --> <{if0 t1' then t2 else t3}>
   | ST_If0_Zero : forall t2 t3,
-         <{if0 0 then t2 else t3}> --> t2
+         <{if0 $0 then t2 else t3}> --> t2
   | ST_If0_Nonzero : forall n t2 t3,
          <{if0 $(S n) then t2 else t3}> --> t3
   (* sums *)
@@ -1328,10 +1346,10 @@ Definition context := partial_map ty.
     transcriptions of the inference rules shown above. *)
 
 Notation "x '|->' v ';' m " := (update m x v)
-  (in custom stlc_tm at level 0, x constr at level 0, v  custom stlc_ty, right associativity) : stlc_scope.
+  (in custom stlc_tm at level 0, x global, v custom stlc_ty, right associativity) : stlc_scope.
 
 Notation "x '|->' v " := (update empty x v)
-  (in custom stlc_tm at level 0, x constr at level 0, v custom stlc_ty) : stlc_scope.
+  (in custom stlc_tm at level 0, x global, v custom stlc_ty) : stlc_scope.
 
 Notation "'empty'" := empty (in custom stlc_tm) : stlc_scope.
 
@@ -1458,7 +1476,7 @@ Notation even := "even".
 Notation odd := "odd".
 Notation eo := "eo".
 
-(** Next, a bit of Coq hackery to automate searching for typing
+(** Next, a bit of Rocq hackery to automate searching for typing
     derivations.  You don't need to understand this bit in detail --
     just have a look over it so that you'll know what to look for if
     you ever find yourself needing to make custom extensions to
@@ -1489,9 +1507,9 @@ Definition tm_test :=
     (pred
       (succ
         (pred
-          (2 * 0))))
-    then 5
-    else 6}>.
+          ($2 * $0))))
+    then $5
+    else $6}>.
 
 Example typechecks :
   <{ empty |-- tm_test \in Nat }>.
@@ -1519,7 +1537,7 @@ End Numtest.
 Module ProdTest.
 
 Definition tm_test :=
-  <{((5,6),7).fst.snd}>.
+  <{(($5,$6),$7).fst.snd}>.
 
 Example typechecks :
   <{ empty |-- tm_test \in Nat }>.
@@ -1541,7 +1559,7 @@ End ProdTest.
 Module LetTest.
 
 Definition tm_test :=
-  <{let x = (pred 6) in
+  <{let x = (pred $6) in
     (succ x)}>.
 
 Example typechecks :
@@ -1562,7 +1580,7 @@ End LetTest.
 Module LetTest1.
 
 Definition tm_test :=
-  <{ let z = pred 6 in
+  <{ let z = pred $6 in
      (succ z) }>.
 
 Example typechecks :
@@ -1586,7 +1604,7 @@ End LetTest1.
 Module Sumtest1.
 
 Definition tm_test :=
-  <{ case (inl Nat 5) of
+  <{ case (inl Nat $5) of
      | inl x => x
      | inr y => y }>.
 
@@ -1618,15 +1636,15 @@ Definition tm_test :=
      (\x:Nat + Nat,
        case x of
         | inl n => n
-        | inr n => (if0 n then 1 else 0)) in
-     (processSum (inl Nat 5), processSum (inr Nat 5)) }>.
+        | inr n => (if0 n then $1 else $0)) in
+     (processSum (inl Nat $5), processSum (inr Nat $5)) }>.
 
 Example typechecks :
   <{ empty |-- tm_test \in Nat * Nat }>.
 Proof. unfold tm_test. eauto 10. (* FILL IN HERE *) Admitted.
 
 Example reduces :
-  tm_test -->* <{ (5, 0) }>.
+  tm_test -->* <{ ($5, $0) }>.
 Proof.
 (*
   unfold tm_test. normalize.
@@ -1646,9 +1664,9 @@ Module ListTest.
    | x::y => x*x *)
 
 Definition tm_test :=
-  <{ let l = (5 :: 6 :: (nil Nat)) in
+  <{ let l = ($5 :: $6 :: (nil Nat)) in
      case l of
-     | nil => 0
+     | nil => $0
      | x :: y => (x * x) }>.
 
 Example typechecks :
@@ -1674,7 +1692,7 @@ Definition fact :=
   <{ fix
       (\f:Nat->Nat,
         \a:Nat,
-         if0 a then 1 else (a * (f (pred a)))) }>.
+         if0 a then $1 else (a * (f (pred a)))) }>.
 
 (** (Warning: you may be able to typecheck [fact] but still have some
     rules wrong!) *)
@@ -1684,7 +1702,7 @@ Example typechecks :
 Proof. unfold fact. auto 10. (* FILL IN HERE *) Admitted.
 
 Example reduces :
-  <{ fact 4 }> -->* 24.
+  <{ fact $4 }> -->* 24.
 Proof.
 (*
   unfold fact. normalize.
@@ -1710,8 +1728,8 @@ Example typechecks :
 Proof. unfold map. auto 10. (* FILL IN HERE *) Admitted.
 
 Example reduces :
-  <{ map (\a:Nat, succ a) (1 :: 2 :: (nil Nat)) }>
-  -->* <{ 2 :: 3 :: (nil Nat) }>.
+  <{ map (\a:Nat, succ a) ($1 :: $2 :: (nil Nat)) }>
+  -->* <{ $2 :: $3 :: (nil Nat) }>.
 Proof.
 (*
   unfold map. normalize.
@@ -1726,9 +1744,9 @@ Definition equal :=
   <{ fix
         (\eq:Nat->Nat->Nat,
            \m:Nat, \n:Nat,
-             if0 m then (if0 n then 1 else 0)
+             if0 m then (if0 n then $1 else $0)
              else (if0 n
-                   then 0
+                   then $0
                    else (eq (pred m) (pred n)))) }>.
 
 Example typechecks :
@@ -1736,7 +1754,7 @@ Example typechecks :
 Proof. unfold equal. auto 10. (* FILL IN HERE *) Admitted.
 
 Example reduces :
-  <{ equal 4 4 }> -->* 1.
+  <{ equal $4 $4 }> -->* 1.
 Proof.
 (*
   unfold equal. normalize.
@@ -1745,7 +1763,7 @@ Proof.
 (* GRADE_THEOREM 0.25: reduces *)
 
 Example reduces2 :
-  <{ equal 4 5 }> -->* 0.
+  <{ equal $4 $5 }> -->* 0.
 Proof.
 (*
   unfold equal. normalize.
@@ -1761,18 +1779,18 @@ Definition eotest :=
   <{ let evenodd =
            fix
            (\eo: (Nat -> Nat) * (Nat -> Nat),
-              (\n:Nat, if0 n then 1 else (eo.snd (pred n)),
-               \n:Nat, if0 n then 0 else (eo.fst (pred n)))) in
+              (\n:Nat, if0 n then $1 else (eo.snd (pred n)),
+               \n:Nat, if0 n then $0 else (eo.fst (pred n)))) in
      let even = evenodd.fst in
      let odd  = evenodd.snd in
-     (even 3, even 4) }>.
+     (even $3, even $4) }>.
 
 Example typechecks :
   <{ empty |-- eotest \in Nat * Nat }>.
 Proof. unfold eotest. eauto 30. (* FILL IN HERE *) Admitted.
 
 Example reduces :
-  eotest -->* <{ (0, 1) }>.
+  eotest -->* <{ ($0, $1) }>.
 Proof.
 (*
   unfold eotest. eauto 10. normalize.
@@ -2119,4 +2137,4 @@ Proof with eauto.
 
 End STLCExtended.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:33 *)

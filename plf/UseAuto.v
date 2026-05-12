@@ -1,20 +1,20 @@
-(** * UseAuto: Theory and Practice of Automation in Coq Proofs *)
+(** * UseAuto: Theory and Practice of Automation in Rocq Proofs *)
 (* Chapter written and maintained by Arthur Chargueraud *)
 
 (** In a machine-checked proof, every single detail has to be
     justified.  This can result in huge proof scripts. Fortunately,
-    Coq comes with a proof-search mechanism and with several decision
+    Rocq comes with a proof-search mechanism and with several decision
     procedures that enable the system to automatically synthesize
     simple pieces of proof. Automation is very powerful when set up
     appropriately. The purpose of this chapter is to explain the
-    basics of how automation works in Coq.
+    basics of how automation works in Rocq.
 
     The chapter is organized in two parts. The first part focuses on a
     general mechanism called "proof search." In short, proof search
     consists in naively trying to apply lemmas and assumptions in all
     possible ways. The second part describes "decision procedures",
     which are tactics that are very good at solving proof obligations
-    that fall in some particular fragments of the logic of Coq.
+    that fall in some particular fragments of the logic of Rocq.
 
     Many of the examples used in this chapter consist of small lemmas
     that have been made up to illustrate particular aspects of automation.
@@ -60,7 +60,7 @@ From Stdlib Require Import List.
 
 (** We are going to study four proof-search tactics: [auto], [eauto],
     [iauto] and [jauto]. The tactics [auto] and [eauto] are builtin
-    in Coq. The tactic [iauto] is a shorthand for the builtin tactic
+    in Rocq. The tactic [iauto] is a shorthand for the builtin tactic
     [try solve [intuition eauto]]. The tactic [jauto] is defined in
     the library [LibTactics], and simply performs some preprocessing
     of the goal before calling [eauto]. The goal of this chapter is
@@ -206,7 +206,7 @@ Proof. jauto. (* or [iauto] *) Qed.
     reason, those tactics are not good at dealing with conjunctions
     that occur as the conclusion of some universally quantified
     hypothesis. The following example illustrates a general weakness
-    of Coq proof search mechanisms. *)
+    of Rocq proof search mechanisms. *)
 
 Lemma solving_conj_hyp_forall : forall (P Q : nat->Prop),
   (forall n, P n /\ Q n) ->
@@ -334,7 +334,7 @@ Proof. jauto. (* or [iauto] *) Qed.
 (* ================================================================= *)
 (** ** Equalities *)
 
-(** Coq's proof-search feature is not good at exploiting equalities.
+(** Rocq's proof-search feature is not good at exploiting equalities.
     It can do very basic operations, like exploiting reflexivity
     and symmetry, but that's about it. Here is a simple example
     that [auto] can solve, by first calling [symmetry] and then
@@ -601,7 +601,7 @@ Local Hint Resolve nat_le_refl : core.
 
 (** The standard library adds a few lemmas in the hint database.
     For example, the [eq_sym] lemma, which characterizes symmetry of equality,
-    is registered in module [Coq.Init.Logic] via the line
+    is registered in module [Rocq.Init.Logic] via the line
     [Hint Immediate eq_sym not_eq_sym: core.]. There [Hint Immediate] is used
     instead of [Hint Resolve] to limit the search depth after symmetry is
     exploited. In practice, [auto] is able to prove a result such as the
@@ -642,7 +642,7 @@ Proof. info_auto. Qed.
 
 Ltac auto_star ::= try solve [ jauto ].
 
-(** Nearly all standard Coq tactics and all the tactics from
+(** Nearly all standard Rocq tactics and all the tactics from
     "LibTactics" can be called with a star symbol. For example, one
     can invoke [subst*], [destruct* H], [inverts* H], [lets* I: H x],
     [specializes* H x], and so on... There are two notable exceptions.
@@ -783,7 +783,7 @@ Qed.
     brittle.  The tactic [assert (st' = st'0)] is used to assert the
     conclusion that we want to derive from the induction
     hypothesis. So, rather than stating this conclusion explicitly, we
-    are going to ask Coq to instantiate the induction hypothesis,
+    are going to ask Rocq to instantiate the induction hypothesis,
     using automation to figure out how to instantiate it. The tactic
     [forwards], described in [LibTactics.v] precisely helps with
     instantiating a fact. So, let's see how it works out on our
@@ -956,7 +956,7 @@ Module Semantics.
     to a big-step reduction judgment. *)
 
 Theorem multistep__eval : forall t v,
-  normal_form_of t v -> exists n, v = C n /\ t ==> n.
+  normal_form_of step t v -> exists n, v = C n /\ t ==> n.
 Proof.
   intros t v Hnorm.
   unfold normal_form_of in Hnorm.
@@ -965,7 +965,7 @@ Proof.
   exists n. split. reflexivity.
   induction Hs; subst.
   - (* multi_refl *)
-    apply E_Const.
+    apply E_C.
   - (* multi_step *)
     eapply step__eval. eassumption. apply IHHs. reflexivity.
 Qed.
@@ -992,7 +992,7 @@ Admitted.
     The solution fits on 2 lines. *)
 
 Theorem multistep__eval' : forall t v,
-  normal_form_of t v -> exists n, v = C n /\ t ==> n.
+  normal_form_of step t v -> exists n, v = C n /\ t ==> n.
 Proof.
   (* FILL IN HERE *) admit.
 Admitted.
@@ -1013,7 +1013,7 @@ Admitted.
     The solution fits on 6 lines. *)
 
 Theorem multistep__eval'' : forall t v,
-  normal_form_of t v -> exists n, v = C n /\ t ==> n.
+  normal_form_of step t v -> exists n, v = C n /\ t ==> n.
 Proof.
   (* FILL IN HERE *) admit.
 Admitted.
@@ -1429,7 +1429,7 @@ Qed.
 
 (** To automate the unfolding of definitions that appear as proof
     obligation, one can use the command [Hint Unfold myFact] to tell
-    Coq that it should always try to unfold [myFact] when [myFact]
+    Rocq that it should always try to unfold [myFact] when [myFact]
     appears in the goal. *)
 
 Hint Unfold myFact : core.
@@ -1675,7 +1675,7 @@ End HintsTransitivity.
     a particular lemma should be tried out during proof search.
 
     For the case of transitivity of subtyping, we are going to tell
-    Coq to try and apply the transitivity lemma on a goal of the form
+    Rocq to try and apply the transitivity lemma on a goal of the form
     [subtype S U] only when the proof context already contains an
     assumption either of the form [subtype S T] or of the form
     [subtype T U]. In other words, we only apply the transitivity
@@ -1939,4 +1939,4 @@ Proof. congruence. Qed.
     some investment, however this investment will pay off very quickly.
 *)
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

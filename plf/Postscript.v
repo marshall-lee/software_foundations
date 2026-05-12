@@ -28,7 +28,7 @@
           - proof objects *)
 
 (**
-     - _Coq_, an industrial-strength proof assistant
+     - _Rocq_, an industrial-strength proof assistant
           - functional core language
           - core tactics
           - automation
@@ -71,7 +71,7 @@
     _CompCert_ is a fully verified optimizing compiler for almost all
     of the ISO C90 / ANSI C language, generating code for x86, ARM,
     and PowerPC processors.  The whole of CompCert is is written in
-    Gallina and extracted to an efficient OCaml program using Coq's
+    Gallina and extracted to an efficient OCaml program using Rocq's
     extraction facilities.
 
     "The CompCert project investigates the formal verification of
@@ -125,7 +125,7 @@
 (** *** CertiKOS
 
     _CertiKOS_ is a clean-slate, fully verified hypervisor, written in
-    CompCert C and verified in Coq.
+    CompCert C and verified in Rocq.
 
     "The CertiKOS project aims to develop a novel and practical
     programming infrastructure for constructing large-scale certified
@@ -178,7 +178,7 @@
     techniques. Developers can verify an application in an idealized
     fault model, and then apply a VST to obtain an application that is
     guaranteed to have analogous properties in a more adversarial
-    environment.  Verdi is developed using the Coq proof assistant,
+    environment.  Verdi is developed using the Rocq proof assistant,
     and systems are extracted to OCaml for execution. Verdi systems,
     including a fault-tolerant key-value store, achieve comparable
     performance to unverified counterparts."
@@ -239,7 +239,7 @@
         set and the RockSalt Software Fault Isolation tool (a better,
         faster, more secure version of Google's Native Client)
       - Ur/Web, a programming language for verified web applications
-        embedded in Coq
+        embedded in Rocq
       - the Princeton Verified Software Toolchain
 *)
 
@@ -269,7 +269,7 @@
               C. Mitchell [Mitchell 1996] (in Bib.v).
 
         - Iron Lambda (http://iron.ouroborus.net/) is a collection
-          of Coq formalisations for functional languages of
+          of Rocq formalisations for functional languages of
           increasing complexity. It fills part of the gap between
           the end of the Software Foundations course and what
           appears in current research papers.  The collection has
@@ -292,4 +292,4 @@
 
 (** $Date$ *)
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

@@ -12,21 +12,21 @@
     We'll define two flavors of maps: _total_ maps, which include a
     "default" element to be returned when a key being looked up
     doesn't exist, and _partial_ maps, which instead return an
-    [option] to indicate success or failure.  The latter is defined in
-    terms of the former, using [None] as the default element. *)
+    [option] to indicate success or failure.  Partial maps are defined
+    in terms of total maps, using [None] as the default element. *)
 
 (* ################################################################# *)
-(** * The Coq Standard Library *)
+(** * The  Standard Library *)
 
 (** One small digression before we begin...
 
     Unlike the chapters we have seen so far, this one does not
-    [Require Import] the chapter before it (nor, transitively, all the
-    earlier chapters).  Instead, in this chapter and from now, on
+    [Require Import] the chapter before it (or, transitively, all the
+    earlier chapters).  Instead, in this chapter and from now on,
     we're going to import the definitions and theorems we need
-    directly from Rocq's standard library stuff.  You should not notice
-    much difference, though, because we've been careful to name our
-    own definitions and theorems the same as their counterparts in the
+    directly from Rocq's standard library.  You should not notice much
+    difference, though, because we've been careful to name our own
+    definitions and theorems the same as their counterparts in the
     standard library, wherever they overlap. *)
 
 From Stdlib Require Import Arith.
@@ -35,7 +35,6 @@ From Stdlib Require Export Strings.String.
 From Stdlib Require Import FunctionalExtensionality.
 From Stdlib Require Import List.
 Import ListNotations.
-Set Default Goal Selector "!".
 
 (** Documentation for the standard library can be found at
     https://rocq-prover.org/doc/V9.0.0/stdlib/index.html.
@@ -60,12 +59,13 @@ Print Init.Nat.add.
 (* ################################################################# *)
 (** * Identifiers *)
 
-(** First, we need a type for the keys that we will use to index into
-    our maps.  In [Lists.v] we introduced a fresh type [id] for a
-    similar purpose; here and for the rest of _Software Foundations_
-    we will use the [string] type from Rocq's standard library. *)
+(** To define maps, we first need a type for the keys that we will use
+    to index into our maps.  In [Lists.v] we introduced a fresh type
+    [id] for a similar purpose; here and for the rest of _Software
+    Foundations_ we will use the [string] type from Rocq's standard
+    library. *)
 
-(** To compare strings, we use the function [eqb] from the [String]
+(** To compare strings, we use the function [eqb_refl] from the [String]
     module in the standard library. *)
 
 Check String.eqb_refl :
@@ -91,8 +91,8 @@ Check String.eqb_spec :
     this representation is that it offers a more "extensional" view of
     maps: two maps that respond to queries in the same way will be
     represented as exactly the same function, rather than just as
-    "equivalent" list structures.  This, in turn, simplifies proofs
-    that use maps. *)
+    "equivalent" list structures.  This simplifies proofs that use
+    maps. *)
 
 (** We build up to partial maps in two steps.  First, we define a type
     of _total maps_ that return a default value when we look up a key
@@ -137,22 +137,22 @@ Definition examplemap :=
 
 (** First, we use the following notation to represent an empty total
     map with a default value. *)
-Notation "'_' '!->' v" := (t_empty v)
+Notation "'__' '!->' v" := (t_empty v)
   (at level 100, right associativity).
 
-Example example_empty := (_ !-> false).
+Example example_empty := ( false).
 
-(** We next introduce a convenient notation for extending an existing
+(** We next introduce a symbolic notation for extending an existing
     map with a new binding. *)
 Notation "x '!->' v ';' m" := (t_update m x v)
-                                (at level 100, x constr, right associativity).
+                                (at level 100, v constr at level 100, right associativity).
 
 (** The [examplemap] above can now be defined as follows: *)
 
 Definition examplemap' :=
   ( "bar" !-> true;
     "foo" !-> true;
-    _     !-> false
+    __    !-> false
   ).
 
 (** This completes the definition of total maps.  Note that we
@@ -174,9 +174,8 @@ Proof. reflexivity. Qed.
 (** When we use maps in later chapters, we'll need several fundamental
     facts about how they behave. *)
 
-(** Even if you don't bother to work the following exercises,
-    make sure you thoroughly understand the statements of the
-    lemmas! *)
+(** Even if you don't work the following exercises, make sure
+    you thoroughly understand the statements of the lemmas! *)
 
 (** (Some of the proofs require the functional extensionality axiom,
     which was discussed in the [Logic] chapter.) *)
@@ -186,7 +185,7 @@ Proof. reflexivity. Qed.
     First, the empty map returns its default element for all keys: *)
 
 Lemma t_apply_empty : forall (A : Type) (x : string) (v : A),
-  (_ !-> v) x = v.
+  (__ !-> v) x = v.
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
@@ -307,7 +306,7 @@ Proof.
 Qed.
 
 (** The [update_eq] lemma is used very often in proofs.  Adding it to
-    Coq's global "hint database" allows proof-automation tactics such
+    Rocq's global "hint database" allows proof-automation tactics such
     as [auto] to find it. *)
 #[global] Hint Resolve update_eq : core.
 
@@ -352,7 +351,7 @@ Qed.
 Definition includedin {A : Type} (m m' : partial_map A) :=
   forall x v, m x = Some v -> m' x = Some v.
 
-(** We can then show that map update preserves map inclusion -- that is: *)
+(** We can then show that map update preserves map inclusion, that is: *)
 
 Lemma includedin_update : forall (A : Type) (m m' : partial_map A)
                                  (x : string) (vx : A),
@@ -378,4 +377,4 @@ Qed.
     used to keep track of which program variables are defined in a
     given scope. *)
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:33 *)

@@ -228,80 +228,10 @@ Print Assumptions s_compile_correct.
 Goal True.
 idtac " ".
 
-idtac "-------------------  break_imp  --------------------".
-idtac " ".
-
-idtac "#> BreakImp.break_ignore".
-idtac "Advanced".
-idtac "Possible points: 1.5".
-check_type @BreakImp.break_ignore (
-(forall (c : BreakImp.com) (st st' : state) (s : BreakImp.result)
-   (_ : BreakImp.ceval (BreakImp.CSeq BreakImp.CBreak c) st s st'),
- @eq state st st')).
-idtac "Assumptions:".
-Abort.
-Print Assumptions BreakImp.break_ignore.
-Goal True.
-idtac " ".
-
-idtac "#> BreakImp.while_continue".
-idtac "Advanced".
-idtac "Possible points: 1.5".
-check_type @BreakImp.while_continue (
-(forall (b : bexp) (c : BreakImp.com) (st st' : state)
-   (s : BreakImp.result) (_ : BreakImp.ceval (BreakImp.CWhile b c) st s st'),
- @eq BreakImp.result s BreakImp.SContinue)).
-idtac "Assumptions:".
-Abort.
-Print Assumptions BreakImp.while_continue.
-Goal True.
-idtac " ".
-
-idtac "#> BreakImp.while_stops_on_break".
-idtac "Advanced".
-idtac "Possible points: 1".
-check_type @BreakImp.while_stops_on_break (
-(forall (b : bexp) (c : BreakImp.com) (st st' : state)
-   (_ : @eq bool (beval st b) true)
-   (_ : BreakImp.ceval c st BreakImp.SBreak st'),
- BreakImp.ceval (BreakImp.CWhile b c) st BreakImp.SContinue st')).
-idtac "Assumptions:".
-Abort.
-Print Assumptions BreakImp.while_stops_on_break.
-Goal True.
-idtac " ".
-
-idtac "#> BreakImp.seq_continue".
-idtac "Advanced".
-idtac "Possible points: 1".
-check_type @BreakImp.seq_continue (
-(forall (c1 c2 : BreakImp.com) (st st' st'' : state)
-   (_ : BreakImp.ceval c1 st BreakImp.SContinue st')
-   (_ : BreakImp.ceval c2 st' BreakImp.SContinue st''),
- BreakImp.ceval (BreakImp.CSeq c1 c2) st BreakImp.SContinue st'')).
-idtac "Assumptions:".
-Abort.
-Print Assumptions BreakImp.seq_continue.
-Goal True.
-idtac " ".
-
-idtac "#> BreakImp.seq_stops_on_break".
-idtac "Advanced".
-idtac "Possible points: 1".
-check_type @BreakImp.seq_stops_on_break (
-(forall (c1 c2 : BreakImp.com) (st st' : state)
-   (_ : BreakImp.ceval c1 st BreakImp.SBreak st'),
- BreakImp.ceval (BreakImp.CSeq c1 c2) st BreakImp.SBreak st')).
-idtac "Assumptions:".
-Abort.
-Print Assumptions BreakImp.seq_stops_on_break.
-Goal True.
-idtac " ".
-
 idtac " ".
 
 idtac "Max points - standard: 29".
-idtac "Max points - advanced: 35".
+idtac "Max points - advanced: 29".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -352,18 +282,8 @@ idtac "---------- s_compile_correct ---------".
 Print Assumptions s_compile_correct.
 idtac "".
 idtac "********** Advanced **********".
-idtac "---------- BreakImp.break_ignore ---------".
-Print Assumptions BreakImp.break_ignore.
-idtac "---------- BreakImp.while_continue ---------".
-Print Assumptions BreakImp.while_continue.
-idtac "---------- BreakImp.while_stops_on_break ---------".
-Print Assumptions BreakImp.while_stops_on_break.
-idtac "---------- BreakImp.seq_continue ---------".
-Print Assumptions BreakImp.seq_continue.
-idtac "---------- BreakImp.seq_stops_on_break ---------".
-Print Assumptions BreakImp.seq_stops_on_break.
 Abort.
 
-(* 2025-08-24 14:28 *)
+(* 2026-01-07 13:34 *)
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)

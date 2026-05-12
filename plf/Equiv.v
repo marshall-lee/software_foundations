@@ -1,6 +1,6 @@
 (** * Equiv: Program Equivalence *)
 
-Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
+Set Warnings "-notation-overridden".
 From PLF Require Import Maps.
 From Stdlib Require Import Bool.
 From Stdlib Require Import Arith.
@@ -11,16 +11,16 @@ From Stdlib Require Import Lia.
 From Stdlib Require Import List. Import ListNotations.
 From Stdlib Require Import FunctionalExtensionality.
 From PLF Require Export Imp.
-Set Default Goal Selector "!".
 
 (** *** Before You Get Started:
 
-    - Create a fresh directory for this volume. (Do not try to mix the
+    - Create a fresh directory for this volume. Do not try to mix the
       files from this volume with files from _Logical Foundations_ in
-      the same directory: the result will not make you happy.)  You
-      can either start with an empty directory and populate it with
-      the files listed below, or else download the whole PLF zip file
-      and unzip it.
+      the same directory: the result will not make you happy.
+
+      You can either start with an empty directory and populate it
+      with the files listed below (and others as you go along), or
+      else download the whole PLF zip file and unzip it.
 
     - The new directory should contain at least the following files:
          - [Imp.v] (make sure it is the one from the PLF distribution,
@@ -33,9 +33,8 @@ Set Default Goal Selector "!".
 
     - If you see errors like this...
 
-             Compiled library PLF.Maps (in file
-             /Users/.../plf/Maps.vo) makes inconsistent assumptions
-             over library Coq.Init.Logic
+           Compiled library PLF.Maps (in file .../plf/Maps.vo)
+           makes inconsistent assumptions over library Rocq.Init.Logic
 
       ... it may mean something went wrong with the above steps.
       Doing "[make clean]" (or manually removing everything except
@@ -50,13 +49,13 @@ Set Default Goal Selector "!".
 
 (** *** Advice for Working on Exercises:
 
-    - Most of the Coq proofs we ask you to do in this chapter are
+    - Most of the Rocq proofs we ask you to do in this chapter are
       similar to proofs that we've provided.  Before starting to work
       on exercises, take the time to work through our proofs (both
-      informally and in Coq) and make sure you understand them in
-      detail.  This will save you a lot of time.
+      informally and in Rocq) and make sure you understand them in
+      detail.  This will save you a lot of effort.
 
-    - The Coq proofs we're doing now are sufficiently complicated that
+    - The Rocq proofs we're doing now are sufficiently complicated that
       it is more or less impossible to complete them by random
       experimentation or following your nose.  You need to start with
       an idea about why the property is true and how the proof is
@@ -135,28 +134,19 @@ Qed.
 
     What we need instead is this: two commands are behaviorally
     equivalent if, for any given starting state, they either (1) both
-    diverge or (2) both terminate in the same final state.  A compact
-    way to express this is "if the first one terminates in a
+    diverge or else (2) both terminate in the same final state.  A
+    compact way to express this is "if the first one terminates in a
     particular state then so does the second, and vice versa." *)
 
 Definition cequiv (c1 c2 : com) : Prop :=
   forall (st st' : state),
     (st =[ c1 ]=> st') <-> (st =[ c2 ]=> st').
 
-(** We can also define an asymmetric variant of this relation: We say
-    that [c1] _refines_ [c2] if they produce the same final states
-    _when [c1] terminates_ (but [c1] may not terminate in some cases
-    where [c2] does). *)
-
-Definition refines (c1 c2 : com) : Prop :=
-  forall (st st' : state),
-    (st =[ c1 ]=> st') -> (st =[ c2 ]=> st').
-
 (* ================================================================= *)
 (** ** Simple Examples *)
 
 (** For examples of command equivalence, let's start by looking at
-    a trivial program equivalence involving [skip]: *)
+    a trivial equivalence involving [skip]: *)
 
 Theorem skip_left : forall c,
   cequiv
@@ -178,12 +168,12 @@ Qed.
 
 (** **** Exercise: 2 stars, standard (skip_right)
 
-    Prove that adding a [skip] after a command results in an
+    Prove that adding a [skip] _after_ a command also results in an
     equivalent program *)
 
 Theorem skip_right : forall c,
   cequiv
-    <{ c ; skip }>
+    <{ c; skip }>
     c.
 Proof.
   intros c st st'.
@@ -218,14 +208,15 @@ Proof.
     + reflexivity.
     + assumption.  Qed.
 
-(** Of course, no (human) programmer would write a conditional whose
-    condition is literally [true].  But they might write one whose
-    condition is _equivalent_ to true:
+(** Of course, no programmer would write a conditional whose condition
+    is literally [true].  (At least, no human programmer -- compilers
+    and macro preprocessors do this sort of thing internally all the
+    time!) But they might write one whose condition is _equivalent_ to
+    true: *)
 
-    _Theorem_: If [b] is equivalent to [true], then [if b then c1
+(** _Theorem_: If [b] is equivalent to [true], then [if b then c1
     else c2 end] is equivalent to [c1].
    _Proof_:
-
      - ([->]) We must show, for all [st] and [st'], that if [st =[
        if b then c1 else c2 end ]=> st'] then [st =[ c1 ]=> st'].
 
@@ -311,7 +302,7 @@ Qed.
 
 Theorem swap_if_branches : forall b c1 c2,
   cequiv
-    <{ if b then c1 else c2 end }>
+    <{ if b   then c1 else c2 end }>
     <{ if ~ b then c2 else c1 end }>.
 Proof.
   intros b c1 c2.
@@ -374,7 +365,7 @@ Proof.
     _Proof_: Suppose that [st =[ while b do c end ]=> st'].  We show,
     by induction on a derivation of [st =[ while b do c end ]=> st'],
     that this assumption leads to a contradiction. The only two cases
-    to consider are [E_WhileFalse] and [E_WhileTrue], the others
+    to consider are [E_WhileFalse] and [E_WhileTrue]; the others
     are contradictory.
 
     - Suppose [st =[ while b do c end ]=> st'] is proved using rule
@@ -383,12 +374,12 @@ Proof.
       [true].
 
     - Suppose [st =[ while b do c end ]=> st'] is proved using rule
-      [E_WhileTrue].  We must have that:
+      [E_WhileTrue].  We must have:
 
-      1. [beval st b = true],
+      1. [beval st b = true], and
       2. there is some [st0] such that [st =[ c ]=> st0] and
-         [st0 =[ while b do c end ]=> st'],
-      3. and we are given the induction hypothesis that
+         [st0 =[ while b do c end ]=> st'].
+      3. Also, we are given an induction hypothesis saying that
          [st0 =[ while b do c end ]=> st'] leads to a contradiction,
 
       We obtain a contradiction by 2 and 3. [] *)
@@ -441,7 +432,8 @@ Qed.
     of copies of the body can be "unrolled" without changing meaning.
 
     Loop unrolling is an important transformation in any real
-    compiler: its correctness is of more than academic interest! *)
+    compiler, so its correctness is of more than just academic
+    interest! *)
 
 Theorem loop_unrolling : forall b c,
   cequiv
@@ -492,8 +484,9 @@ Qed.
 (** [] *)
 
 (** Proving program properties involving assignments is one place
-    where the fact that program states are treated extensionally
-    (e.g., [x !-> m x ; m] and [m] are equal maps) comes in handy. *)
+    where the fact that we are treating equality on program states
+    extensionally (e.g., [x !-> m x ; m] and [m] are equal maps) comes
+    in handy. *)
 
 Theorem identity_assignment : forall x,
   cequiv
@@ -527,7 +520,7 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 2 stars, standard (equiv_classes) *)
+(** **** Exercise: 2 stars, standard, optional (equiv_classes) *)
 
 (** Given the following programs, group together those that are
     equivalent in Imp. Your answer should be given as a list of lists,
@@ -602,7 +595,7 @@ Definition manual_grade_for_equiv_classes : option (nat*string) := None.
     equivalence. *)
 
 (* ================================================================= *)
-(** ** Behavioral Equivalence Is an Equivalence *)
+(** ** Behavioral Equivalence is an Equivalence *)
 
 (** First, let's verify that the equivalences on [aexps], [bexps], and
     [com]s really are _equivalences_ -- i.e., that they are reflexive,
@@ -811,7 +804,7 @@ Proof.
 Qed.
 (** [] *)
 
-(** For example, here are two equivalent programs and a proof of their
+(** For example, here are two programs and a proof of their
     equivalence using these congruence theorems... *)
 
 Example congruence_example:
@@ -840,7 +833,8 @@ Qed.
     a congruence on commands.  Can you think of a relation on commands
     that is an equivalence but _not_ a congruence?  Write down the
     relation (formally), together with an informal sketch of a proof
-    that it is an equivalence but not a congruence. *)
+    that it is an equivalence and a counterexample showing it is not a
+    congruence. *)
 
 (* FILL IN HERE *)
 (* Do not modify the following line: *)
@@ -852,10 +846,10 @@ Definition manual_grade_for_not_congr : option (nat*string) := None.
 
 (** A _program transformation_ is a function that takes a program as
     input and produces a modified program as output.  Compiler
-    optimizations such as constant folding are a canonical example,
+    optimizations such as constant folding are canonical examples,
     but there are many others. *)
 
-(** A program transformation is said to be _sound_ if it preserves the
+(** A program transformation is _sound_ if it preserves the
     behavior of the original program. *)
 
 Definition atrans_sound (atrans : aexp -> aexp) : Prop :=
@@ -912,12 +906,12 @@ Proof. reflexivity. Qed.
 
 (** Note that this version of constant folding doesn't do other
     "obvious" things like eliminating trivial additions (e.g.,
-    rewriting [0 + X] to just [X]).: we are focusing attention on a
-    single optimization for the sake of simplicity.
+    rewriting [0 + X] to just [X]).: we are focusing on a single
+    optimization for the sake of simplicity.
 
     It is not hard to incorporate other ways of simplifying
     expressions -- the definitions and proofs just get longer.  We'll
-    consider optimizations in the exercises. *)
+    consider some in the exercises. *)
 
 Example fold_aexp_ex2 :
   fold_constants_aexp <{ X - ((0 * 6) + Y) }> = <{ X - (0 + Y) }>.
@@ -990,8 +984,8 @@ Example fold_bexp_ex2 :
   = <{ (X = Y) && true }>.
 Proof. reflexivity. Qed.
 
-(** To fold constants in a command, we apply the appropriate folding
-    functions on all embedded expressions. *)
+(** To fold constants in a command, we simply apply the
+    appropriate folding functions on all embedded expressions. *)
 
 Fixpoint fold_constants_com (c : com) : com :=
   match c with
@@ -1619,7 +1613,7 @@ Qed.
     _non_-determinism is an important part of the definition of many
     real programming languages. For example, in many imperative
     languages (such as C and its relatives), the order in which
-    function arguments are evaluated is unspecified.  The program
+    function arguments are evaluated is unspecified: the program
     fragment
 
       x = 0;
@@ -1627,7 +1621,7 @@ Qed.
 
     might call [f] with arguments [(1, 0)] or [(1, 1)], depending how
     the compiler chooses to order things.  This can be a little
-    confusing for programmers, but it gives the compiler writer useful
+    confusing for programmers, but it gives compiler writers useful
     freedom.
 
     In this exercise, we will extend Imp with a simple
@@ -1654,7 +1648,7 @@ Qed.
     so it is good to leave it open to the compiler to choose whichever
     will run faster).
 
-    We call this new language _Himp_ (``Imp extended with [HAVOC]''). *)
+    We call this new language _Himp_ ("Imp extended with [HAVOC]"). *)
 
 Module Himp.
 
@@ -1671,22 +1665,21 @@ Inductive com : Type :=
 
 Notation "'havoc' l" := (CHavoc l)
                           (in custom com at level 60, l constr at level 0).
-Notation "'skip'"  :=
-         CSkip (in custom com at level 0).
-Notation "x := y"  :=
-         (CAsgn x y)
-            (in custom com at level 0, x constr at level 0,
-             y at level 85, no associativity).
-Notation "x ; y" :=
-         (CSeq x y)
-           (in custom com at level 90, right associativity).
-Notation "'if' x 'then' y 'else' z 'end'" :=
-         (CIf x y z)
-           (in custom com at level 89, x at level 99,
-            y at level 99, z at level 99).
-Notation "'while' x 'do' y 'end'" :=
-         (CWhile x y)
-            (in custom com at level 89, x at level 99, y at level 99).
+Notation "'skip'"  := CSkip
+  (in custom com at level 0) : com_scope.
+Notation "x := y"  := (CAsgn x y)
+  (in custom com at level 0, x constr at level 0, y at level 85, no associativity,
+    format "x  :=  y") : com_scope.
+Notation "x ; y" := (CSeq x y)
+  (in custom com at level 90,
+    right associativity,
+    format "'[v' x ; '/' y ']'") : com_scope.
+Notation "'if' x 'then' y 'else' z 'end'" := (CIf x y z)
+  (in custom com at level 89, x at level 99, y at level 99, z at level 99,
+    format "'[v' 'if'  x  'then' '/  ' y '/' 'else' '/  ' z '/' 'end' ']'") : com_scope.
+Notation "'while' x 'do' y 'end'" := (CWhile x y)
+  (in custom com at level 89, x at level 99, y at level 99,
+    format "'[v' 'while'  x  'do' '/  ' y '/' 'end' ']'") : com_scope.
 
 (** **** Exercise: 2 stars, standard (himp_ceval)
 
@@ -1695,9 +1688,11 @@ Notation "'while' x 'do' y 'end'" :=
    semantics. What rule(s) must be added to the definition of [ceval]
    to formalize the behavior of the [HAVOC] command? *)
 
-Reserved Notation "st '=[' c ']=>' st'"
-         (at level 40, c custom com at level 99, st constr,
-          st' constr at next level).
+Reserved Notation
+         "st0 '=[' c ']=>' st1"
+         (at level 40, c custom com at level 99,
+          st0 constr, st1 constr at next level,
+          format "'[hv' st0  =[ '/  ' '[' c ']' '/' ]=>  st1 ']'").
 
 Inductive ceval : com -> state -> state -> Prop :=
   | E_Skip : forall st,
@@ -2167,4 +2162,4 @@ Proof.
 Qed.
 (** [] *)
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:33 *)

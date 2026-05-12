@@ -586,7 +586,7 @@ Proof. intros st pe_st V n. apply functional_extensionality. intros V0.
           Y := 4
       else skip end
 
-    Programming this case in Coq calls for several auxiliary
+    Programming this case in Rocq calls for several auxiliary
     functions: we need to compute the intersection of two [pe_state]s
     and turn their difference into sequences of assignments.
 
@@ -837,7 +837,7 @@ Local Hint Constructors ceval : core.
 (** Below are some examples of using the partial evaluator.  To make
     the [pe_com] relation actually usable for automatic partial
     evaluation, we would need to define more automation tactics in
-    Coq.  That is not hard to do, but it is not needed here. *)
+    Rocq.  That is not hard to do, but it is not needed here. *)
 
 Example pe_example1:
   <{X := 3 ; Y := Z * (X + X)}>
@@ -1674,4 +1674,4 @@ Proof. intros.
       eapply E_Some; eauto. apply pe_block_correct. apply Hkeval.
 Qed.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

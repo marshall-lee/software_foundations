@@ -1,6 +1,6 @@
 (** * Imp: Simple Imperative Programs *)
 
-(** In this chapter, we take a more serious look at how to use Coq as
+(** In this chapter, we take a more serious look at how to use Rocq as
     a tool to study other things.  Our case study is a _simple
     imperative programming language_ called Imp, embodying a tiny core
     fragment of conventional mainstream languages such as C and Java.
@@ -21,7 +21,7 @@
     equivalence_ and introduce _Hoare Logic_, a popular logic for
     reasoning about imperative programs. *)
 
-Set Warnings "-notation-overridden,-notation-incompatible-prefix".
+Set Warnings "-notation-overridden".
 From Stdlib Require Import Bool.
 From Stdlib Require Import Init.Nat.
 From Stdlib Require Import Arith.
@@ -30,7 +30,6 @@ From Stdlib Require Import Lia.
 From Stdlib Require Import List. Import ListNotations.
 From Stdlib Require Import Strings.String.
 From PLF Require Import Maps.
-Set Default Goal Selector "!".
 
 (* ################################################################# *)
 (** * Arithmetic and Boolean Expressions *)
@@ -95,7 +94,7 @@ Inductive bexp : Type :=
         | b && b
 *)
 
-(** Compared to the Coq version above...
+(** Compared to the Rocq version above...
 
        - The BNF is more informal -- for example, it gives some
          suggestions about the surface syntax of expressions (like the
@@ -107,7 +106,7 @@ Inductive bexp : Type :=
          intelligence -- would be required to turn this description
          into a formal definition, e.g., for implementing a compiler.
 
-         The Coq version consistently omits all this information and
+         The Rocq version consistently omits all this information and
          concentrates on the abstract syntax only.
 
        - Conversely, the BNF version is lighter and easier to read.
@@ -214,7 +213,7 @@ Proof.
     simpl. rewrite IHa1. rewrite IHa2. reflexivity.  Qed.
 
 (* ################################################################# *)
-(** * Coq Automation *)
+(** * Rocq Automation *)
 
 (** The amount of repetition in this last proof is a little
     annoying.  And if either the language of arithmetic expressions or
@@ -222,11 +221,11 @@ Proof.
     complex, it would start to be a real problem.
 
     So far, we've been doing all our proofs using just a small handful
-    of Coq's tactics and completely ignoring its powerful facilities
+    of Rocq's tactics and completely ignoring its powerful facilities
     for constructing parts of proofs automatically.  This section
     introduces some of these facilities, and we will see more over the
     next several chapters.  Getting used to them will take some
-    energy -- Coq's automation is a power tool -- but it will allow us
+    energy -- Rocq's automation is a power tool -- but it will allow us
     to scale up our efforts to more complex definitions and more
     interesting properties without becoming overwhelmed by boring,
     repetitive, low-level details. *)
@@ -234,7 +233,7 @@ Proof.
 (* ================================================================= *)
 (** ** Tacticals *)
 
-(** _Tacticals_ is Coq's term for tactics that take other tactics as
+(** _Tacticals_ is Rocq's term for tactics that take other tactics as
     arguments -- "higher-order tactics," if you will.  *)
 
 (* ----------------------------------------------------------------- *)
@@ -317,7 +316,7 @@ Proof.
     + (* a1 = ANum n *) destruct n eqn:En;
       simpl; rewrite IHa2; reflexivity.   Qed.
 
-(** Coq experts often use this "[...; try... ]" idiom after a tactic
+(** Rocq experts often use this "[...; try... ]" idiom after a tactic
     like [induction] to take care of many similar cases all at once.
     Indeed, this practice has an analog in informal proofs.  For
     example, here is an informal proof of the optimization theorem
@@ -437,19 +436,19 @@ Theorem repeat_loop : forall (m n : nat),
 Proof.
   intros m n.
   (* Uncomment the next line to see the infinite loop occur.  You will
-     then need to interrupt Coq to make it listen to you again.  (In
+     then need to interrupt Rocq to make it listen to you again.  (In
      Proof General, [C-c C-c] does this.) *)
   (* repeat rewrite Nat.add_comm. *)
 Admitted.
 
-(** Wait -- did we just write an infinite loop in Coq?!?!
+(** Wait -- did we just write an infinite loop in Rocq?!?!
 
     Sort of.
 
-    While evaluation in Coq's term language, Gallina, is guaranteed to
-    terminate, _tactic_ evaluation is not.  This does not affect Coq's
+    While evaluation in Rocq's term language, Gallina, is guaranteed to
+    terminate, _tactic_ evaluation is not.  This does not affect Rocq's
     logical consistency, however, since the job of [repeat] and other
-    tactics is to guide Coq in constructing proofs; if the
+    tactics is to guide Rocq in constructing proofs; if the
     construction process diverges (i.e., it does not terminate), this
     simply means that we have failed to construct a proof at all, not
     that we have constructed a bad proof. *)
@@ -499,7 +498,7 @@ Proof.
 (* ================================================================= *)
 (** ** Defining New Tactics *)
 
-(** Coq also provides facilities for "programming" in tactic
+(** Rocq also provides facilities for "programming" in tactic
     scripts.
 
     The [Ltac] idiom illustrated below gives a handy way to define
@@ -516,11 +515,11 @@ Proof.
     that what we will need in this course, but is considered by many
     the best reference for Ltac programming.
 
-    Just for future reference: Coq provides two other ways of defining
+    Just for future reference: Rocq provides two other ways of defining
     new tactics.  There is a [Tactic Notation] command that allows
     defining new tactics with custom control over their concrete
     syntax. And there is also a low-level API that can be used to
-    build tactics that directly manipulate Coq's internal structures.
+    build tactics that directly manipulate Rocq's internal structures.
     We will not need either of these for present purposes.
 
     Here's an example [Ltac] script called [invert]. *)
@@ -665,7 +664,7 @@ Inductive aevalR : aexp -> nat -> Prop :=
       (H2 : aevalR e2 n2) :
       aevalR (AMult e1 e2) (n1 * n2).
 
-(** This style gives us more control over the names that Coq chooses
+(** This style gives us more control over the names that Rocq chooses
     during proofs involving [aevalR], at the cost of making the
     definition a little more verbose. *)
 
@@ -683,7 +682,7 @@ Notation "e '==>' n"
 End aevalR_first_try.
 
 (** As we saw in our case study of regular expressions in
-    chapter [IndProp], Coq provides a way to use this notation in
+    chapter [IndProp], Rocq provides a way to use this notation in
     the definition of [aevalR] itself. *)
 
 Reserved Notation "e '==>' n" (at level 90, left associativity).
@@ -772,7 +771,7 @@ Inductive aevalR : aexp -> nat -> Prop :=
 
 (** **** Exercise: 1 star, standard, optional (beval_rules)
 
-    Here, again, is the Coq definition of the [beval] function:
+    Here, again, is the Rocq definition of the [beval] function:
 
   Fixpoint beval (e : bexp) : bool :=
     match e with
@@ -973,7 +972,7 @@ End aevalR_extended.
     One point in favor of relational definitions is that they can be
     more elegant and easier to understand.
 
-    Another is that Coq automatically generates nice inversion and
+    Another is that Rocq automatically generates nice inversion and
     induction principles from [Inductive] definitions.
 
     On the other hand, functional definitions can often be more
@@ -981,7 +980,7 @@ End aevalR_extended.
      - Functions are automatically deterministic and total; for a
        relational definition, we have to _prove_ these properties
        explicitly if we need them.
-     - With functions we can also take advantage of Coq's computation
+     - With functions we can also take advantage of Rocq's computation
        mechanism to simplify expressions during proofs.
 
     Furthermore, functions can be directly "extracted" from Gallina to
@@ -989,7 +988,7 @@ End aevalR_extended.
 
     Ultimately, the choice often comes down to either the specifics of
     a particular situation or simply a question of taste.  Indeed, in
-    large Coq developments it is common to see a definition given in
+    large Rocq developments it is common to see a definition given in
     _both_ functional and relational styles, plus a lemma stating that
     the two coincide, allowing further proofs to switch from one point
     of view to the other at will. *)
@@ -1076,9 +1075,9 @@ Inductive bexp : Type :=
          type.  For instance, the coercion declaration for [AId]
          allows us to use plain strings when an [aexp] is expected;
          the string will implicitly be wrapped with [AId].
-       - [Declare Custom Entry com] tells Coq to create a new "custom
+       - [Declare Custom Entry com] tells Rocq to create a new "custom
          grammar" for parsing Imp expressions and programs. The first
-         notation declaration after this tells Coq that anything
+         notation declaration after this tells Rocq that anything
          between [<{] and [}>] should be parsed using the Imp
          grammar. Again, it is not necessary to understand the
          details, but it is important to recognize that we are
@@ -1091,18 +1090,17 @@ Coercion ANum : nat >-> aexp.
 
 Declare Custom Entry com.
 Declare Scope com_scope.
-Declare Custom Entry com_aux.
 
-Notation "<{ e }>" := e (e custom com_aux) : com_scope.
-Notation "e" := e (in custom com_aux at level 0, e custom com) : com_scope.
+Notation "<{ e }>" := e
+  (e custom com, format "'[hv' <{ '/  ' '[v' e ']' '/' }> ']'") : com_scope.
 
-Notation "( x )" := x (in custom com, x at level 99) : com_scope.
-Notation "x" := x (in custom com at level 0, x constr at level 0) : com_scope.
+Notation "( x )" := x (in custom com, x at level 99).
+Notation "x" := x (in custom com at level 0, x constr at level 0).
 
 Notation "f x .. y" := (.. (f x) .. y)
                   (in custom com at level 0, only parsing,
                   f constr at level 0, x constr at level 1,
-                      y constr at level 1) : com_scope.
+                      y constr at level 1).
 Notation "x + y"   := (APlus x y) (in custom com at level 50, left associativity).
 Notation "x - y"   := (AMinus x y) (in custom com at level 50, left associativity).
 Notation "x * y"   := (AMult x y) (in custom com at level 40, left associativity).
@@ -1156,13 +1154,13 @@ Fixpoint beval (st : state) (* <--- NEW *)
   end.
 
 (** We can use our notation for total maps in the specific case of
-    states -- i.e., we write the empty state as [(_ !-> 0)]. *)
+    states -- i.e., we write the empty state as [(__ !-> 0)]. *)
 
-Definition empty_st := (_ !-> 0).
+Definition empty_st := (__ !-> 0).
 
 (** Also, we can add a notation for a "singleton state" with just one
     variable bound to a value. *)
-Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100, v at level 200).
+Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100, right associativity).
 
 Example aexp1 :
     aeval (X !-> 5) <{ 3 + (X * 2) }>
@@ -1211,27 +1209,28 @@ Inductive com : Type :=
     declarations to make reading and writing Imp programs more
     convenient. *)
 
-Notation "'skip'"  :=
-         CSkip (in custom com at level 0) : com_scope.
-Notation "x := y"  :=
-         (CAsgn x y)
-            (in custom com at level 0, x constr at level 0,
-             y at level 85, no associativity) : com_scope.
-Notation "x ; y" :=
-         (CSeq x y)
-           (in custom com at level 90,
-            right associativity) : com_scope.
-Notation "'if' x 'then' y 'else' z 'end'" :=
-         (CIf x y z)
-           (in custom com at level 89, x at level 99,
-            y at level 99, z at level 99) : com_scope.
-Notation "'while' x 'do' y 'end'" :=
-         (CWhile x y)
-           (in custom com at level 89, x at level 99,
-            y at level 99) : com_scope.
+(* SOON: (NOTATION NDS'25)
+   I considered changing maps to also span multiple lines, but I
+   have not attempted this yet, as this would have required changes
+   in earlier chapters. *)
+Notation "'skip'"  := CSkip
+  (in custom com at level 0) : com_scope.
+Notation "x := y"  := (CAsgn x y)
+  (in custom com at level 0, x constr at level 0, y at level 85, no associativity,
+    format "x  :=  y") : com_scope.
+Notation "x ; y" := (CSeq x y)
+  (in custom com at level 90,
+    right associativity,
+    format "'[v' x ; '/' y ']'") : com_scope.
+Notation "'if' x 'then' y 'else' z 'end'" := (CIf x y z)
+  (in custom com at level 89, x at level 99, y at level 99, z at level 99,
+    format "'[v' 'if'  x  'then' '/  ' y '/' 'else' '/  ' z '/' 'end' ']'") : com_scope.
+Notation "'while' x 'do' y 'end'" := (CWhile x y)
+  (in custom com at level 89, x at level 99, y at level 99,
+    format "'[v' 'while'  x  'do' '/  ' y '/' 'end' ']'") : com_scope.
 
 (** For example, here is the factorial function again, written as a
-    formal Coq definition.  When this command terminates, the variable
+    formal Rocq definition.  When this command terminates, the variable
     [Y] will contain the factorial of the initial value of [X]. *)
 
 Definition fact_in_coq : com :=
@@ -1247,7 +1246,7 @@ Print fact_in_coq.
 (* ================================================================= *)
 (** ** Desugaring Notations *)
 
-(** Coq offers a rich set of features to manage the increasing
+(** Rocq offers a rich set of features to manage the increasing
     complexity of the objects we work with, such as coercions and
     notations. However, their heavy usage can make it hard to
     understand what the expressions we enter actually mean. In such
@@ -1327,9 +1326,9 @@ Locate "&&".
 Locate ";".
 (* ===>
     Notation
-      "x '|->' v ';' m" := update m x v (default interpretation)
-      "x ; y" := CSeq x y : com_scope (default interpretation)
-      "x '!->' v ';' m" := t_update m x v (default interpretation)
+      "x '|->' v ';' m" := (update m x v) (default interpretation)
+      "x ; y" := (CSeq x y) (default interpretation)
+      "x '!->' v ';' m" := (t_update m x v) (default interpretation)
       "[ x ; y ; .. ; z ]" := cons x (cons y .. (cons z nil) ..) : list_scope
       (default interpretation) *)
 
@@ -1337,7 +1336,7 @@ Locate "while".
 (* ===>
     Notation
       "'while' x 'do' y 'end'" :=
-          CWhile x y : com_scope (default interpretation)
+          (CWhile x y) (default interpretation)
 *)
 
 (* ================================================================= *)
@@ -1419,26 +1418,26 @@ Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
                   else st
           end.
 
-    Coq doesn't accept such a definition ("Error: Cannot guess
+    Rocq doesn't accept such a definition ("Error: Cannot guess
     decreasing argument of fix") because the function we want to
     define is not guaranteed to terminate. Indeed, it _doesn't_ always
     terminate: for example, the full version of the [ceval_fun]
     function applied to the [loop] program above would never
-    terminate. Since Coq aims to be not just a functional programming
+    terminate. Since Rocq aims to be not just a functional programming
     language but also a consistent logic, any potentially
     non-terminating function needs to be rejected.
 
-    Here is an example showing what would go wrong if Coq allowed
+    Here is an example showing what would go wrong if Rocq allowed
     non-terminating recursive functions:
 
          Fixpoint loop_false (n : nat) : False := loop_false n.
 
     That is, propositions like [False] would become provable
     ([loop_false 0] would be a proof of [False]), which would be
-    a disaster for Coq's logical consistency.
+    a disaster for Rocq's logical consistency.
 
     Thus, because it doesn't terminate on all inputs, [ceval_fun]
-    cannot be written in Coq -- at least not without additional tricks
+    cannot be written in Rocq -- at least not without additional tricks
     and workarounds (see chapter [ImpCEvalFun] if you're curious
     about those). *)
 
@@ -1504,9 +1503,10 @@ Fixpoint ceval_fun_no_while (st : state) (c : com) : state :=
     how it corresponds to the inference rules. *)
 
 Reserved Notation
-         "st '=[' c ']=>' st'"
+         "st0 '=[' c ']=>' st1"
          (at level 40, c custom com at level 99,
-          st constr, st' constr at next level).
+          st0 constr, st1 constr at next level,
+          format "'[hv' st0  =[ '/  ' '[' c ']' '/' ]=>  st1 ']'").
 
 Inductive ceval : com -> state -> state -> Prop :=
   | E_Skip : forall st,
@@ -1535,12 +1535,12 @@ Inductive ceval : com -> state -> state -> Prop :=
       st' =[ while b do c end ]=> st'' ->
       st  =[ while b do c end ]=> st''
 
-  where "st =[ c ]=> st'" := (ceval c st st').
+  where "st0 =[ c ]=> st1" := (ceval c st0 st1).
 
 (** The cost of defining evaluation as a relation instead of a
     function is that we now need to construct a _proof_ that some
     program evaluates to some result state, rather than just letting
-    Coq's computation mechanism do it for us. *)
+    Rocq's computation mechanism do it for us. *)
 
 Example ceval_example1:
   empty_st =[
@@ -1655,7 +1655,7 @@ Theorem plus2_spec : forall st n st',
 Proof.
   intros st n st' HX Heval.
 
-  (** Inverting [Heval] essentially forces Coq to expand one step of
+  (** Inverting [Heval] essentially forces Rocq to expand one step of
       the [ceval] computation -- in this case revealing that [st']
       must be [st] extended with the new value of [X], since [plus2]
       is an assignment. *)
@@ -1890,7 +1890,7 @@ Proof.
     [] *)
 
 Module BreakImp.
-(** **** Exercise: 4 stars, advanced (break_imp)
+(** **** Exercise: 4 stars, standard, optional (break_imp)
 
     Imperative languages like C and Java often include a [break] or
     similar statement for interrupting the execution of loops. In this
@@ -1905,23 +1905,22 @@ Inductive com : Type :=
   | CIf (b : bexp) (c1 c2 : com)
   | CWhile (b : bexp) (c : com).
 
-Notation "'break'" := CBreak (in custom com at level 0).
-Notation "'skip'"  :=
-         CSkip (in custom com at level 0) : com_scope.
-Notation "x := y"  :=
-         (CAsgn x y)
-            (in custom com at level 0, x constr at level 0,
-             y at level 85, no associativity) : com_scope.
-Notation "x ; y" :=
-         (CSeq x y)
-           (in custom com at level 90, right associativity) : com_scope.
-Notation "'if' x 'then' y 'else' z 'end'" :=
-         (CIf x y z)
-           (in custom com at level 89, x at level 99,
-            y at level 99, z at level 99) : com_scope.
-Notation "'while' x 'do' y 'end'" :=
-         (CWhile x y)
-            (in custom com at level 89, x at level 99, y at level 99) : com_scope.
+Notation "'break'" := CBreak (in custom com at level 0) : com_scope.
+Notation "'skip'"  := CSkip
+  (in custom com at level 0) : com_scope.
+Notation "x := y"  := (CAsgn x y)
+  (in custom com at level 0, x constr at level 0, y at level 85, no associativity,
+    format "x  :=  y") : com_scope.
+Notation "x ; y" := (CSeq x y)
+  (in custom com at level 90,
+    right associativity,
+    format "'[v' x ; '/' y ']'") : com_scope.
+Notation "'if' x 'then' y 'else' z 'end'" := (CIf x y z)
+  (in custom com at level 89, x at level 99, y at level 99, z at level 99,
+    format "'[v' 'if'  x  'then' '/  ' y '/' 'else' '/  ' z '/' 'end' ']'") : com_scope.
+Notation "'while' x 'do' y 'end'" := (CWhile x y)
+  (in custom com at level 89, x at level 99, y at level 99,
+    format "'[v' 'while'  x  'do' '/  ' y '/' 'end' ']'") : com_scope.
 
 (** Next, we need to define the behavior of [break].  Informally,
     whenever [break] is executed in a sequence of commands, it stops
@@ -1956,8 +1955,11 @@ Inductive result : Type :=
   | SContinue
   | SBreak.
 
-Reserved Notation "st '=[' c ']=>' st' '/' s"
-     (at level 40, c custom com at level 99, st' constr at next level).
+Reserved Notation
+         "st0 '=[' c ']=>' st1 '/' s"
+         (at level 40, c custom com at level 99,
+          st0 constr, st1 constr at next level,
+          format "'[hv' st0  =[ '/  ' '[' c ']' '/' ]=>  st1 / s ']'").
 
 (** Intuitively, [st =[ c ]=> st' / s] means that, if [c] is started in
     state [st], then it terminates in state [st'] and either signals
@@ -2073,7 +2075,7 @@ End BreakImp.
     Add C-style [for] loops to the language of commands, update the
     [ceval] definition to define the semantics of [for] loops, and add
     cases for [for] loops as needed so that all the proofs in this
-    file are accepted by Coq.
+    file are accepted by Rocq.
 
     A [for] loop should be parameterized by (a) a statement executed
     initially, (b) a test that is run on each iteration of the loop to
@@ -2087,4 +2089,4 @@ End BreakImp.
 
     [] *)
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:33 *)

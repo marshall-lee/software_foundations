@@ -111,15 +111,6 @@ Print Assumptions eval__multistep.
 Goal True.
 idtac " ".
 
-idtac "-------------------  eval__multistep_inf  --------------------".
-idtac " ".
-
-idtac "#> Manually graded: eval__multistep_inf".
-idtac "Advanced".
-idtac "Possible points: 3".
-print_manual_grade manual_grade_for_eval__multistep_inf.
-idtac " ".
-
 idtac "-------------------  step__eval  --------------------".
 idtac " ".
 
@@ -139,7 +130,7 @@ idtac " ".
 idtac "#> multistep__eval".
 idtac "Possible points: 3".
 check_type @multistep__eval (
-(forall (t t' : tm) (_ : normal_form_of t t'),
+(forall (t t' : tm) (_ : @normal_form_of tm step t t'),
  @ex nat (fun n : nat => and (@eq tm t' (C n)) (eval t n)))).
 idtac "Assumptions:".
 Abort.
@@ -212,7 +203,7 @@ idtac " ".
 idtac " ".
 
 idtac "Max points - standard: 26".
-idtac "Max points - advanced: 32".
+idtac "Max points - advanced: 29".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -257,12 +248,10 @@ idtac "---------- normalize_ex ---------".
 Print Assumptions normalize_ex.
 idtac "".
 idtac "********** Advanced **********".
-idtac "---------- eval__multistep_inf ---------".
-idtac "MANUAL".
 idtac "---------- compiler_is_correct ---------".
 Print Assumptions compiler_is_correct.
 Abort.
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)

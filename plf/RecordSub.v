@@ -279,7 +279,7 @@ Proof.
     unfold TRcd_kj, TRcd_j. apply S_RcdWidth; auto.
 Qed.
 
-(** The following facts are mostly easy to prove in Coq.  To get full
+(** The following facts are mostly easy to prove in Rocq.  To get full
     benefit, make sure you also understand how to prove them on
     paper! *)
 
@@ -861,4 +861,4 @@ Proof with eauto.
 
 End RecordSub.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

@@ -1,6 +1,6 @@
 (** * Hoare: Hoare Logic, Part I *)
 
-Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
+Set Warnings "-notation-overridden".
 From PLF Require Import Maps.
 From Stdlib Require Import Bool.
 From Stdlib Require Import Arith.
@@ -8,7 +8,6 @@ From Stdlib Require Import EqNat.
 From Stdlib Require Import PeanoNat. Import Nat.
 From Stdlib Require Import Lia.
 From PLF Require Export Imp.
-Set Default Goal Selector "!".
 
 (** In the final chaper of _Logical Foundations_ (_Software
     Foundations_, volume 1), we began applying the mathematical tools
@@ -59,11 +58,10 @@ Set Default Goal Selector "!".
     soundness_.  In this chapter, though, we turn to a different set
     of issues.
 *)
-
-(** Our goal in this chapter is to carry out some simple examples of
-    _program verification_ -- i.e., to use the precise definition of
-    Imp to prove formally that particular programs satisfy particular
-    specifications of their behavior.
+(** Our goal in this chapter is to develop the tools to work through
+    some simple examples of _program verification_ -- i.e., to use the
+    precise definition of Imp to prove formally that particular
+    programs satisfy particular specifications of their behavior.
 
     We'll develop a reasoning system called _Floyd-Hoare Logic_ --
     often shortened to just _Hoare Logic_ -- in which each of the
@@ -143,24 +141,22 @@ End ExAssertions.
 (** This example also illustrates a convention that we'll use
     throughout the Hoare Logic chapters: in informal assertions,
     capital letters like [X], [Y], and [Z] are Imp variables, while
-    lowercase letters like [x], [y], [m], and [n] are ordinary Coq
+    lowercase letters like [x], [y], [m], and [n] are ordinary Rocq
     variables (of type [nat]).  This is why, when translating from
     informal to formal, we replace [X] with [st X] but leave [m]
-    alone. *)
+    alone.
 
-(** The convention described above can be implemented in Coq with a
+    The convention described above can be implemented in Rocq with a
     little syntax magic, using coercions and annotation scopes, much
     as we did with the [<{ com }>] notation in [Imp]. This new
     notation automatically lifts [aexp]s, numbers, and [Prop]s into
-    [Assertion]s when they appear in the [{{ _ }}] scope, or when Coq
+    [Assertion]s when they appear in the [{{ _ }}] scope, or when Rocq
     knows that the type of an expression is [Assertion].
 
     There is no need to understand the details of how these notation
     hacks work, so we hide them in the HTML version of the notes.  (We
     barely understand some of it ourselves!)  For the gory details,
-    see the Coq development.  *)
-
-(** Define syntax notations for working with [Assertion]s *)
+    see the Rocq development.  *)
 
 Definition Aexp : Type := state -> nat.
 
@@ -219,14 +215,13 @@ Notation "a * b" := (fun st => (a:Aexp) st * (b:Aexp) st) (in custom assn at lev
 
 Notation "( x )" := x (in custom assn at level 0, x at level 99) : assertion_scope.
 
-(** Occasionally we need to "escape" a raw "Coq-defined" function to express
+(** Occasionally we need to "escape" a raw "Rocq-defined" function to express
     a particularly complicated assertion.  We can do that using a [$] prefix,
-    as in [{{ $(raw_coq) }}].
+    as in [{{ $(raw_rocq) }}].
 
     For example, [{{ $(fun st => forall X, st X = 0) }}] indicates an assertion that
     every variable of [X] maps to [0] in the given state.
  *)
-
 
 Notation "$ f" := f (in custom assn at level 0, f constr at level 0) : assertion_scope.
 Notation "x" := (x%assertion) (in custom assn at level 0, x constr at level 0) : assertion_scope.
@@ -241,8 +236,7 @@ Open Scope assertion_scope.
 (** ** Example Assertions *)
 
 (** Here are some example assertions that take advantage of this
-    new notation.
- *)
+    new notation. *)
 
 Module  ExamplePrettyAssertions.
 Definition assertion1 : Assertion := {{ X = 3 }}.
@@ -253,7 +247,7 @@ Definition assertion5 : Assertion := {{ X <= Y }}.
 Definition assertion6 : Assertion := {{ X = 3 \/ X <= Y }}.
 Definition assertion7 : Assertion := {{ Z = (#max X Y) }}.
 Definition assertion8 : Assertion := {{ Z * Z <= X
-                                        /\  ~ (((# S Z) * (# S Z)) <= X) }}.
+                                        /\  ~ (((#S Z) * (#S Z)) <= X) }}.
 Definition assertion9 : Assertion := {{ #add X Y > #max Y X }}.
 End ExamplePrettyAssertions.
 
@@ -268,7 +262,7 @@ Definition assert_implies (P Q : Assertion) : Prop :=
   forall st, P st -> Q st.
 
 (** Note that the notation for _assertion implication_ is analogous
-to the "usual" Coq implication [->]. *)
+    to the "usual" Rocq implication [->]. *)
 
 Notation "P ->> Q" := (assert_implies P Q)
                         (at level 80) : hoare_spec_scope.
@@ -279,7 +273,7 @@ Notation "P ->> Q" := (assert_implies P Q)
 Notation "P <<->> Q" := (P ->> Q /\ Q ->> P)
                           (at level 80) : hoare_spec_scope.
 
-(** (The [hoare_spec_scope] annotation here tells Coq that this
+(** (The [hoare_spec_scope] annotation here tells Rocq that this
     notation is not global but is intended to be used in particular
     contexts.) *)
 
@@ -300,24 +294,51 @@ Notation "P <<->> Q" := (P ->> Q /\ Q ->> P)
     Assertion [P] is called the _precondition_ of the triple, and [Q] is
     the _postcondition_.
 
-    Because single braces are already used for other things in Coq, we'll write
+    Because single braces are already used for other things in Rocq, we'll write
     Hoare triples with double braces:
 
        {{P}} c {{Q}}
 *)
 (** For example,
 
-    - [{{X = 0}} X := X + 1 {{X = 1}}] is a valid Hoare triple,
-      stating that command [X := X + 1] will transform a state in
+    - The Hoare triple
+
+          {{X = 0}} X := X + 1 {{X = 1}}
+
+      states that command [X := X + 1] will transform a state in
       which [X = 0] to a state in which [X = 1].
 
-    - [forall m, {{X = m}} X := X + 1 {{X = m + 1}}] is a
-      _proposition_ stating that the Hoare triple [{{X = m}} X := X +
-      1 {{X = m + 1}}] is valid for any choice of [m].  Note that [m]
-      in the two assertions is a reference to the _Coq_ variable [m],
-      which is bound outside the Hoare triple. *)
+    - On the other hand,
 
-(** **** Exercise: 1 star, standard, optional (triples) *)
+          forall m, {{X = m}} X := X + 1 {{X = m + 1}}
+
+      is a _proposition_ stating that the Hoare triple [{{X = m}} X :=
+      X + 1 {{X = m + 1}}] is valid for any choice of [m].  Note that
+      [m] in the two assertions is a reference to the _Rocq_ variable
+      [m], which is bound outside the Hoare triple. *)
+
+(** **** Exercise: 1 star, standard, optional (triples)
+
+    Paraphrase the following in English.
+
+     1) {{True}} c {{X = 5}}
+
+     2) forall m, {{X = m}} c {{X = m + 5)}}
+
+     3) {{X <= Y}} c {{Y <= X}}
+
+     4) {{True}} c {{False}}
+
+     5) forall m,
+          {{X = m}}
+          c
+          {{Y = real_fact m}}
+
+     6) forall m,
+          {{X = m}}
+          c
+          {{(Z * Z) <= m /\ ~ (((S Z) * (S Z)) <= m)}}
+*)
 (* FILL IN HERE
 
     [] *)
@@ -356,20 +377,21 @@ Notation "P <<->> Q" := (P ->> Q /\ Q ->> P)
 (* ################################################################# *)
 (** * Hoare Triples, Formally *)
 
-(** We can formalize valid Hoare triples in Coq as follows: *)
+(** We formalize valid Hoare triples in Rocq as follows: *)
 
 Definition valid_hoare_triple
            (P : Assertion) (c : com) (Q : Assertion) : Prop :=
   forall st st',
      st =[ c ]=> st' ->
-     (P st)  ->
-     (Q st').
+     P st  ->
+     Q st'.
 
 (** Notation for Hoare triples *)
 
 Notation "{{ P }} c {{ Q }}" :=
   (valid_hoare_triple P c Q)
-    (at level 2, P custom assn at level 99, c custom com at level 99, Q custom assn at level 99)
+    (at level 2, P custom assn at level 99, c custom com at level 99,
+     Q custom assn at level 99)
     : hoare_spec_scope.
 
 (** **** Exercise: 1 star, standard (hoare_post_true) *)
@@ -386,7 +408,7 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 1 star, standard (hoare_pre_false) *)
+(** **** Exercise: 1 star, standard, optional (hoare_pre_false) *)
 
 (** Prove that if [P] holds in no state, then any triple with [P] as
     its precondition is valid. *)
@@ -535,31 +557,32 @@ Qed.
 (** To many people, this rule seems "backwards" at first, because
     it proceeds from the postcondition to the precondition.  Actually
     it makes good sense to go in this direction: the postcondition is
-    often what is more important, because it characterizes what we
-    can assume afer running the code.
+    often what is more important, because it characterizes what will be
+    true after running the code.
 
     Nonetheless, it's also possible to formulate a "forward" assignment
     rule.  We'll do that later in some exercises. *)
 
 (** Here are some valid instances of the assignment rule:
 
-      {{ (X <= 5) [X |-> X + 1] }}   (that is, X + 1 <= 5)
+      {{ (X <= 5) [X |-> X + 1] }}         (that is, X + 1 <= 5)
         X := X + 1
       {{ X <= 5 }}
 
-      {{ (X = 3) [X |-> 3] }}        (that is, 3 = 3)
+      {{ (X = 3) [X |-> 3] }}              (that is, 3 = 3)
         X := 3
       {{ X = 3 }}
 
-      {{ (0 <= X /\ X <= 5) [X |-> 3]  (that is, 0 <= 3 /\ 3 <= 5)
+      {{ (0 <= X /\ X <= 5) [X |-> 3] }}.  (that is, 0 <= 3 /\ 3 <= 5)
         X := 3
       {{ 0 <= X /\ X <= 5 }}
 *)
 
 (** To formalize the rule, we must first formalize the idea of
     "substituting an expression for an Imp variable in an assertion",
-    which we refer to as assertion substitution, or [assertion_sub].  That
-    is, intuitively, given a proposition [P], a variable [X], and an
+    which we refer to as assertion substitution, or [assertion_sub].
+
+    Intuitively, given a proposition [P], a variable [X], and an
     arithmetic expression [a], we want to derive another proposition
     [P'] that is just the same as [P] except that [P'] should mention
     [a] wherever [P] mentions [X]. *)
@@ -567,7 +590,7 @@ Qed.
 (** This operation is related to the idea of substituting Imp
     expressions for Imp variables that we saw in [Equiv]
     ([subst_aexp] and friends). The difference is that, here,
-    [P] is an arbitrary Coq assertion, so we can't directly
+    [P] is an arbitrary Rocq assertion, so we can't directly
     "edit" its text. *)
 
 (** However, we can achieve the same effect by evaluating [P] in an
@@ -578,21 +601,23 @@ Definition assertion_sub X (a:aexp) (P:Assertion) : Assertion :=
     (P%_assertion) (X !-> ((a:Aexp) st); st).
 
 Notation "P [ X |-> a ]" := (assertion_sub X a P)
-                              (in custom assn at level 10, left associativity, P custom assn, X global, a custom com) : assertion_scope.
+                              (in custom assn at level 10, left associativity,
+                               P custom assn, X global, a custom com)
+                          : assertion_scope.
 
 (**  This notation allows us to write this operation as:
 
-     [P[ X |-> a]]
+        P[ X |-> a ]
 *)
 
 (** That is, [P [X |-> a]] stands for an assertion -- let's call it
-    [P'] -- that is just like [P] except that, wherever [P] looks up
+    [P'] -- that behaves just like [P] except that, wherever [P] looks up
     the variable [X] in the current state, [P'] instead uses the value
     of the expression [a]. *)
 
-(** To see how this works in more detail, let's calculate what happens with a couple
-    of examples.  First, suppose [P'] is [(X <= 5) [X |-> 3]] -- that
-    is, more formally, [P'] is the Coq expression
+(** To see how this works in more detail, let's calculate what happens with
+    a couple of examples.  First, suppose [P'] is [(X <= 5) [X |-> 3]] --
+    that is, more formally, [P'] is the Rocq expression
 
     fun st =>
       (fun st' => st' X <= 5)
@@ -618,11 +643,11 @@ Notation "P [ X |-> a ]" := (assertion_sub X a P)
     [5] (as expected). *)
 
 (** For a more interesting example, suppose [P'] is [(X <= 5) [X |->
-    X + 1]].  Formally, [P'] is the Coq expression
+    X + 1]].  Formally, [P'] is the Rocq expression
 
     fun st =>
       (fun st' => st' X <= 5)
-      (X !-> aeval st (X + 1) ; st),
+      (X !-> aeval st (X + 1); st),
 
     which simplifies to
 
@@ -644,13 +669,15 @@ Module ExampleAssertionSub.
 Example equivalent_assertion1 :
   {{ (X <= 5) [X |-> 3] }} <<->> {{ 3 <= 5 }}.
 Proof.
-  split; unfold assert_implies, assertion_sub; intros st H; simpl in *; apply H.
+  split; unfold assert_implies, assertion_sub; intros st H;
+  simpl in *; apply H.
 Qed.
 
 Example equivalent_assertion2 :
   {{ (X <= 5) [X |-> X + 1] }} <<->> {{ (X + 1) <= 5 }}.
 Proof.
-  split; unfold assert_implies, assertion_sub; intros st H; simpl in *; apply H.
+  split; unfold assert_implies, assertion_sub; intros st H;
+  simpl in *; apply H.
 Qed.
 End ExampleAssertionSub.
 
@@ -670,7 +697,7 @@ Proof.
   inversion HE. subst.
   unfold assertion_sub in HQ. simpl in HQ. assumption.  Qed.
 
-(** Here's a first formal proof using this rule. *)
+(** Here's a first formal proof of a Hoare triple using this rule. *)
 
 Example assertion_sub_example :
   {{(X < 5) [X |-> X + 1]}}
@@ -679,8 +706,7 @@ Example assertion_sub_example :
 Proof.
   apply hoare_asgn.  Qed.
 
-(** Of course, what we'd probably prefer is to prove this
-    simpler triple:
+(** Of course, we'd probably prefer to work with this simpler triple:
 
       {{X < 4}} X := X + 1 {{X < 5}}
 
@@ -725,7 +751,7 @@ Proof. exists {{ (0 <=  X /\ X <= 5) [X |-> 3] }}. apply hoare_asgn. Qed.
     Give a counterexample showing that this rule is incorrect and use
     it to complete the proof below, showing that it is really a
     counterexample.  (Hint: The rule universally quantifies over the
-    arithmetic expression [a], and your counterexample needs to
+    arithmetic expression [a], so your counterexample needs to
     exhibit an [a] for which the rule doesn't work.) *)
 
 Theorem hoare_asgn_wrong : exists a:aexp,
@@ -745,9 +771,9 @@ Qed.
 
     [] *)
 
-(** **** Exercise: 3 stars, advanced (hoare_asgn_fwd)
+(** **** Exercise: 3 stars, advanced, optional (hoare_asgn_fwd)
 
-    By using a _parameter_ [m] (a Coq number) to remember the
+    By using a _parameter_ [m] (a Rocq number) to remember the
     original value of [X] we can define a Hoare rule for assignment
     that does, intuitively, "work forwards" rather than backwards.
 
@@ -769,7 +795,7 @@ Theorem hoare_asgn_fwd :
   {{P /\ X = m}}
     X := a
   {{ $(fun st => (P (X !-> m ; st)
-             /\ st X = aeval (X !-> m ; st) a))  }}.
+             /\ st X = aeval (X !-> m ; st) a)) }}.
 Proof.
   intros m a P st st' Hceval HP. destruct HP as [HP E].
   inversion Hceval. subst.
@@ -843,7 +869,7 @@ Qed.
 
                 {{P'}} c {{Q}}
                   P <<->> P'
-         -----------------------------   (hoare_consequence_pre_equiv)
+             ---------------------
                 {{P}} c {{Q}}
 *)
 
@@ -969,7 +995,7 @@ Hint Unfold assert_of_Prop Aexp_of_nat Aexp_of_aexp : core.
 
 (** Also recall that [auto] will search for a proof involving [intros]
     and [apply].  By default, the theorems that it will apply include
-    any of the local hypotheses, as well as theorems in a core
+    any of the local hypotheses, as well as theorems in the "core" hint
     database. *)
 
 (** The proof of [hoare_consequence_pre], repeated below, looks
@@ -999,7 +1025,7 @@ Proof.
   auto. (* no progress *)
 Abort.
 
-(** The problem is the [apply Hhoare with...] part of the proof.  Coq
+(** The problem is the [apply Hhoare with...] part of the proof.  Rocq
     isn't able to figure out how to instantiate [st] without some help
     from us.  Recall, though, that there are versions of many tactics
     that will use _existential variables_ to make progress even when
@@ -1008,7 +1034,7 @@ Abort.
     Here, the [eapply] tactic will introduce an existential variable
     [?st] as a placeholder for [st], and [eassumption] will
     instantiate [?st] with [st] when it discovers [st] in assumption
-    [Heval].  By using [eapply] we are essentially telling Coq, "Be
+    [Heval].  By using [eapply] we are essentially telling Rocq, "Be
     patient: The missing part is going to be filled in later in the
     proof." *)
 
@@ -1049,9 +1075,9 @@ Proof.
   eauto.
 Qed.
 
-(** We can also use [eapply] to streamline a
-    proof ([hoare_asgn_example1]), that we did earlier as an example
-    of using the consequence rule: *)
+(** We can also use [eapply] to streamline a proof
+    ([hoare_asgn_example1]), that we did earlier as an example of
+    using the consequence rule: *)
 
 Example hoare_asgn_example1' :
   {{True}} X := 1 {{X = 1}}.
@@ -1075,7 +1101,7 @@ Qed.
 
 (** Now we have quite a nice proof script: it simply identifies the
     Hoare rules that need to be used and leaves the remaining
-    low-level details up to Coq to figure out. *)
+    low-level details up to Rocq to figure out. *)
 
 (** By now it might be apparent that the _entire_ proof could be
     automated if we added [hoare_consequence_pre] and [hoare_asgn] to
@@ -1131,7 +1157,7 @@ Qed.
     details of proofs about assertions have been taken care of
     automatically. Of course, [assertion_auto] isn't able to prove
     everything we could possibly want to know about assertions --
-    there's no magic here! But it's good enough so far. *)
+    there's no magic here! But it's pretty good. *)
 
 (** **** Exercise: 2 stars, standard (hoare_asgn_examples_2)
 
@@ -1186,11 +1212,11 @@ Qed.
     rule is as a "decorated program" where the intermediate assertion
     [Q] is written between [c1] and [c2]:
 
-  {{ a = n }}
+              {{ a = n }}
      X := a
               {{ X = n }};    <--- decoration for Q
      skip
-  {{ X = n }}
+              {{ X = n }}
 *)
 (** We'll come back to the idea of decorated programs in much more
     detail in the next chapter. *)
@@ -1282,7 +1308,7 @@ Qed.
     You'll want to instantiate that with the particular [a] and [n]
     you've invented.  You can do that with [assert] and [apply], but
     you may remember (from [Tactics.v] in Logical Foundations)
-    that Coq offers an even easier tactic: [specialize].  If you write
+    that Rocq offers an even easier tactic: [specialize].  If you write
 
        specialize H with (a := your_a) (n := your_n)
 
@@ -1346,7 +1372,7 @@ Qed.
        end
      {{ X <= Y }}
 
-   since the rule tells us nothing about the state in which the
+   since the rule doesn't tell us enough about the state in which the
    assignments take place in the "then" and "else" branches. *)
 
 (** Fortunately, we can say something more precise.  In the
@@ -1416,7 +1442,7 @@ Qed.
 (** *** Example *)
 
 (** Here is a formal proof that the program we used to motivate
-    the rule satisfies the specification we gave. *)
+    the rule satisfies the specification we wanted. *)
 
 Example if_example :
   {{True}}
@@ -1535,7 +1561,7 @@ Qed.
     the material. *)
 
 (** The first step is to extend the syntax of commands and introduce
-    the usual notations.  (We've done this for you.  We use a separate
+    the usual notations.  (We've done this for you, in a separate
     module to prevent polluting the global name space.) *)
 
 Module If1.
@@ -1551,31 +1577,32 @@ Inductive com : Type :=
 Notation "'if1' x 'then' y 'end'" :=
          (CIf1 x y)
              (in custom com at level 0, x custom com at level 99).
-Notation "'skip'"  :=
-         CSkip (in custom com at level 0).
-Notation "x := y"  :=
-         (CAsgn x y)
-            (in custom com at level 0, x constr at level 0,
-             y at level 85, no associativity).
-Notation "x ; y" :=
-         (CSeq x y)
-           (in custom com at level 90, right associativity).
-Notation "'if' x 'then' y 'else' z 'end'" :=
-         (CIf x y z)
-           (in custom com at level 89, x at level 99,
-            y at level 99, z at level 99).
-Notation "'while' x 'do' y 'end'" :=
-         (CWhile x y)
-            (in custom com at level 89, x at level 99, y at level 99).
+Notation "'skip'"  := CSkip
+  (in custom com at level 0) : com_scope.
+Notation "x := y"  := (CAsgn x y)
+  (in custom com at level 0, x constr at level 0, y at level 85, no associativity,
+    format "x  :=  y") : com_scope.
+Notation "x ; y" := (CSeq x y)
+  (in custom com at level 90,
+    right associativity,
+    format "'[v' x ; '/' y ']'") : com_scope.
+Notation "'if' x 'then' y 'else' z 'end'" := (CIf x y z)
+  (in custom com at level 89, x at level 99, y at level 99, z at level 99,
+    format "'[v' 'if'  x  'then' '/  ' y '/' 'else' '/  ' z '/' 'end' ']'") : com_scope.
+Notation "'while' x 'do' y 'end'" := (CWhile x y)
+  (in custom com at level 89, x at level 99, y at level 99,
+    format "'[v' 'while'  x  'do' '/  ' y '/' 'end' ']'") : com_scope.
 
 (** **** Exercise: 2 stars, standard, especially useful (if1_ceval) *)
 
 (** Add two new evaluation rules to relation [ceval], below, for
-    [if1]. Let the rules for [if] guide you.*)
+    [if1]. Let the rules for [if] guide you. *)
 
-Reserved Notation "st '=[' c ']=>'' st'"
+Reserved Notation
+         "st0 '=[' c ']=>' st1 '/' s"
          (at level 40, c custom com at level 99,
-          st constr, st' constr at next level).
+          st0 constr, st1 constr at next level,
+          format "'[hv' st0  =[ '/  ' '[' c ']' '/' ]=>  st1 / s ']'").
 
 Inductive ceval : com -> state -> state -> Prop :=
   | E_Skip : forall st,
@@ -1656,7 +1683,7 @@ Notation "{{ P }} c {{ Q }}" :=
     in a premise should syntactically be a part of the command
     in the conclusion.
 
-    Hint: if you encounter difficulty getting Coq to parse part of
+    Hint: if you encounter difficulty getting Rocq to parse part of
     your rule as an assertion, try manually indicating that it should
     be in the assertion scope.  For example, if you want [e] to be
     parsed as an assertion, write it as [(e)%assertion]. *)
@@ -1670,8 +1697,8 @@ Proof.
   inversion HE; subst; eauto.
 Qed.
 
-(** For full credit, prove formally ([hoare_if1_good]) that your rule is
-    precise enough to show the following Hoare triple is valid:
+(** For example ([hoare_if1_good]) your rule should be strong
+    enough to show the following Hoare triple is valid:
 
   {{ X + Y = Z }}
     if1 Y <> 0 then
@@ -1761,9 +1788,9 @@ End If1.
       ---------------------------
       {{P} while b do c end {{P}}
 
-    That rule is valid: if [P] is a command invariant of [c], as the premise
-    requires, then no matter how many times the loop body executes,
-    [P] is going to be true when the loop finally finishes.
+    This rule is valid: if [P] is a command invariant of [c], as the
+    premise requires, then, no matter how many times the loop body
+    executes, [P] is going to be true when the loop finally finishes.
 
     But the rule also omits two crucial pieces of information.  First,
     the loop terminates when [b] becomes false.  So we can strengthen
@@ -1796,11 +1823,12 @@ Theorem hoare_while : forall P (b:bexp) c,
   {{P}} while b do c end {{P /\ ~ b}}.
 Proof.
   intros P b c Hhoare st st' Heval HP.
-  (* We proceed by induction on [Heval], because, in the "keep looping" case,
-     its hypotheses talk about the whole loop instead of just [c]. The
-     [remember] is used to keep the original command in the hypotheses;
-     otherwise, it would be lost in the [induction]. By using [inversion]
-     we clear away all the cases except those involving [while]. *)
+  (* We proceed by induction on [Heval], because, in the "keep
+     looping" case, its hypotheses talk about the whole loop instead
+     of just [c]. The [remember] is used to keep the original command
+     in the hypotheses; otherwise, it would be lost in the
+     [induction]. By using [inversion] we clear away all the cases
+     except those involving [while]. *)
   remember <{while b do c end}> as original_command eqn:Horig.
   induction Heval;
     try (inversion Horig; subst; clear Horig);
@@ -1912,22 +1940,21 @@ Notation "'repeat' e1 'until' b2 'end'" :=
           (CRepeat e1 b2)
               (in custom com at level 0,
                e1 custom com at level 99, b2 custom com at level 99).
-Notation "'skip'"  :=
-         CSkip (in custom com at level 0).
-Notation "x := y"  :=
-         (CAsgn x y)
-            (in custom com at level 0, x constr at level 0,
-             y at level 85, no associativity).
-Notation "x ; y" :=
-         (CSeq x y)
-           (in custom com at level 90, right associativity).
-Notation "'if' x 'then' y 'else' z 'end'" :=
-         (CIf x y z)
-           (in custom com at level 89, x at level 99,
-            y at level 99, z at level 99).
-Notation "'while' x 'do' y 'end'" :=
-         (CWhile x y)
-            (in custom com at level 89, x at level 99, y at level 99).
+Notation "'skip'"  := CSkip
+  (in custom com at level 0) : com_scope.
+Notation "x := y"  := (CAsgn x y)
+  (in custom com at level 0, x constr at level 0, y at level 85, no associativity,
+    format "x  :=  y") : com_scope.
+Notation "x ; y" := (CSeq x y)
+  (in custom com at level 90,
+    right associativity,
+    format "'[v' x ; '/' y ']'") : com_scope.
+Notation "'if' x 'then' y 'else' z 'end'" := (CIf x y z)
+  (in custom com at level 89, x at level 99, y at level 99, z at level 99,
+    format "'[v' 'if'  x  'then' '/  ' y '/' 'else' '/  ' z '/' 'end' ']'") : com_scope.
+Notation "'while' x 'do' y 'end'" := (CWhile x y)
+  (in custom com at level 89, x at level 99, y at level 99,
+    format "'[v' 'while'  x  'do' '/  ' y '/' 'end' ']'") : com_scope.
 
 (** Add new rules for [REPEAT] to [ceval] below.  You can use the rules
     for [while] as a guide, but remember that the body of a [REPEAT]
@@ -2071,13 +2098,13 @@ Definition manual_grade_for_hoare_repeat : option (nat*string) := None.
                 {{P}} c {{Q}}
 *)
 
-(** Our task in this chapter has been to _define_ the rules of Hoare
-    logic, and prove that the definitions are sound.  Having done so,
-    we can now work _within_ Hoare logic to prove that particular
-    programs satisfy particular Hoare triples.  In the next chapter,
-    we'll see how Hoare logic is can be used to prove that more
-    interesting programs satisfy interesting specifications of their
-    behavior.
+(** Our main task in this chapter has been to _define_ the rules of
+    Hoare logic, and prove that the definitions are sound.  Having
+    done so, we can go on and work _within_ Hoare logic to prove that
+    particular programs satisfy particular Hoare triples.  In the next
+    chapter, we'll see how Hoare logic is can be used to prove that
+    more interesting programs satisfy interesting specifications of
+    their behavior.
 
     Crucially, we will do so without ever again [unfold]ing the
     definition of Hoare triples -- i.e., we will take the rules of
@@ -2108,22 +2135,21 @@ Inductive com : Type :=
 
 Notation "'havoc' l" := (CHavoc l)
                           (in custom com at level 60, l constr at level 0).
-Notation "'skip'"  :=
-         CSkip (in custom com at level 0).
-Notation "x := y"  :=
-         (CAsgn x y)
-            (in custom com at level 0, x constr at level 0,
-             y at level 85, no associativity).
-Notation "x ; y" :=
-         (CSeq x y)
-           (in custom com at level 90, right associativity).
-Notation "'if' x 'then' y 'else' z 'end'" :=
-         (CIf x y z)
-           (in custom com at level 89, x at level 99,
-            y at level 99, z at level 99).
-Notation "'while' x 'do' y 'end'" :=
-         (CWhile x y)
-            (in custom com at level 89, x at level 99, y at level 99).
+Notation "'skip'"  := CSkip
+  (in custom com at level 0) : com_scope.
+Notation "x := y"  := (CAsgn x y)
+  (in custom com at level 0, x constr at level 0, y at level 85, no associativity,
+    format "x  :=  y") : com_scope.
+Notation "x ; y" := (CSeq x y)
+  (in custom com at level 90,
+    right associativity,
+    format "'[v' x ; '/' y ']'") : com_scope.
+Notation "'if' x 'then' y 'else' z 'end'" := (CIf x y z)
+  (in custom com at level 89, x at level 99, y at level 99, z at level 99,
+    format "'[v' 'if'  x  'then' '/  ' y '/' 'else' '/  ' z '/' 'end' ']'") : com_scope.
+Notation "'while' x 'do' y 'end'" := (CWhile x y)
+  (in custom com at level 89, x at level 99, y at level 99,
+    format "'[v' 'while'  x  'do' '/  ' y '/' 'end' ']'") : com_scope.
 
 Inductive ceval : com -> state -> state -> Prop :=
   | E_Skip : forall st,
@@ -2256,22 +2282,21 @@ Notation "'assert' l" := (CAssert l)
                            (in custom com at level 8, l custom com at level 0).
 Notation "'assume' l" := (CAssume l)
                           (in custom com at level 8, l custom com at level 0).
-Notation "'skip'"  :=
-         CSkip (in custom com at level 0).
-Notation "x := y"  :=
-         (CAsgn x y)
-            (in custom com at level 0, x constr at level 0,
-             y at level 85, no associativity).
-Notation "x ; y" :=
-         (CSeq x y)
-           (in custom com at level 90, right associativity).
-Notation "'if' x 'then' y 'else' z 'end'" :=
-         (CIf x y z)
-           (in custom com at level 89, x at level 99,
-            y at level 99, z at level 99).
-Notation "'while' x 'do' y 'end'" :=
-         (CWhile x y)
-            (in custom com at level 89, x at level 99, y at level 99).
+Notation "'skip'"  := CSkip
+  (in custom com at level 0) : com_scope.
+Notation "x := y"  := (CAsgn x y)
+  (in custom com at level 0, x constr at level 0, y at level 85, no associativity,
+    format "x  :=  y") : com_scope.
+Notation "x ; y" := (CSeq x y)
+  (in custom com at level 90,
+    right associativity,
+    format "'[v' x ; '/' y ']'") : com_scope.
+Notation "'if' x 'then' y 'else' z 'end'" := (CIf x y z)
+  (in custom com at level 89, x at level 99, y at level 99, z at level 99,
+    format "'[v' 'if'  x  'then' '/  ' y '/' 'else' '/  ' z '/' 'end' ']'") : com_scope.
+Notation "'while' x 'do' y 'end'" := (CWhile x y)
+  (in custom com at level 89, x at level 99, y at level 99,
+    format "'[v' 'while'  x  'do' '/  ' y '/' 'end' ']'") : com_scope.
 
 (** To define the behavior of [assert] and [assume], we need to add
     notation for an error, which indicates that an assertion has
@@ -2555,4 +2580,4 @@ End HoareAssertAssume.
 
 
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:33 *)

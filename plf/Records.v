@@ -81,7 +81,7 @@ Inductive ty : Type :=
   | Arrow    : ty -> ty -> ty
   | TRcd     : (alist ty) -> ty.
 
-(** Unfortunately, we encounter here a limitation in Coq: this type
+(** Unfortunately, we encounter here a limitation in Rocq: this type
     does not automatically give us the induction principle we expect:
     the induction hypothesis in the [TRcd] case doesn't give us
     any information about the [ty] elements of the list, making it
@@ -100,14 +100,14 @@ Inductive ty : Type :=
 
 End FirstTry.
 
-(** It is possible to get a better induction principle out of Coq, but
+(** It is possible to get a better induction principle out of Rocq, but
     the details of how this is done are not very pretty, and the
-    principle we obtain is not as intuitive to use as the ones Coq
+    principle we obtain is not as intuitive to use as the ones Rocq
     generates automatically for simple [Inductive] definitions.
 
     Fortunately, there is a different way of formalizing records that
     is, in some ways, even simpler and more natural: instead of using
-    the standard Coq [list] type, we can essentially incorporate its
+    the standard Rocq [list] type, we can essentially incorporate its
     constructors ("nil" and "cons") in the syntax of our types. *)
 
 Inductive ty : Type :=
@@ -423,7 +423,7 @@ Hint Constructors has_type : core.
 
 (** **** Exercise: 2 stars, standard (examples)
 
-    Finish the proofs below.  Feel free to use Coq's automation
+    Finish the proofs below.  Feel free to use Rocq's automation
     features in this proof.  However, if you are not confident about
     how the type system works, you may want to carry out the proofs
     first using the basic features ([apply] instead of [eapply], in
@@ -756,4 +756,4 @@ Qed.
 
 End STLCExtendedRecords.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

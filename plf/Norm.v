@@ -556,7 +556,7 @@ Qed.
     values satisfying the property at the input type to values satisfying
     the property at the output type.
 
-    When we come to formalize the definition of [R] in Coq, we hit a
+    When we come to formalize the definition of [R] in Rocq, we hit a
     problem.  The most obvious formulation would be as a parameterized
     Inductive proposition like this:
 
@@ -569,7 +569,7 @@ Qed.
                       (forall s, R T1 s -> R T2 (app t s)) ->
                       R (Arrow T1 T2) t.
 
-    Unfortunately, Coq rejects this definition because it violates the
+    Unfortunately, Rocq rejects this definition because it violates the
     _strict positivity requirement_ for inductive definitions, which says
     that the type being defined must not occur to the left of an arrow in
     the type of a constructor argument. Here, it is the third argument to
@@ -579,9 +579,9 @@ Qed.
     applying this rule; otherwise we could never have genuinely inductive
     properties at all!)  The reason for the rule is that types defined
     with non-positive recursion can be used to build non-terminating
-    functions, which as we know would be a disaster for Coq's logical
+    functions, which as we know would be a disaster for Rocq's logical
     soundness. Even though the relation we want in this case might be
-    perfectly innocent, Coq still rejects it because it fails the
+    perfectly innocent, Rocq still rejects it because it fails the
     positivity test.
 
     Fortunately, it turns out that we _can_ define [R] using a
@@ -738,7 +738,7 @@ Qed.
     substitutions on term [t] and _multiple_ extensions of the typing
     context.  In particular, we must be precise about the order in which
     the substitutions occur and how they act on each other.  Often these
-    details are simply elided in informal paper proofs, but of course Coq
+    details are simply elided in informal paper proofs, but of course Rocq
     won't let us do that. Since here we are substituting closed terms, we
     don't need to worry about how one substitution might affect the term
     put in place by another.  But we still do need to worry about the
@@ -1144,4 +1144,4 @@ Proof.
   eapply V_nil.
 Qed.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

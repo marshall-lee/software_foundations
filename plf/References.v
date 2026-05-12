@@ -9,7 +9,7 @@
     well as imperative languages such as C and object-oriented
     languages such as Java, C[#], and Scala.
 
-    However, most practical languages also include various _impure_
+    Most practical languages also include various _impure_
     features that cannot be described in the simple semantic framework
     we have used so far.  In particular, besides just yielding
     results, computation in these languages may assign to mutable
@@ -48,11 +48,11 @@ Import Nat.
 
 (** Pretty much every programming language provides some form of
     assignment operation that changes the contents of a previously
-    allocated piece of storage.  (Coq's internal language Gallina is a
+    allocated piece of storage.  (Rocq's internal language Gallina is a
     rare exception!)
 
     In some languages -- notably ML and its relatives -- the
-    mechanisms for name-binding and those for assignment are kept
+    mechanisms for name binding and those for assignment are kept
     separate.  We can have a variable [x] whose _value_ is the number
     [5], or we can have a variable [y] whose value is a
     _reference_ (or _pointer_) to a mutable cell whose current
@@ -91,7 +91,7 @@ Module STLCRef.
          an initial value for the new cell.
 
          For example, [ref 5] creates a new cell containing the value
-         [5], and reduces to a reference to that cell.
+         [5] and reduces to a reference to that cell.
 
        - To read the current value of this cell, we use the
          dereferencing operator [!].
@@ -108,11 +108,10 @@ Module STLCRef.
 (** *** Types *)
 
 (** We start with the simply typed lambda calculus over the
-    natural numbers. Besides the base natural number type and arrow
-    types, we need to add two more types to deal with
-    references. First, we need the _unit type_, which we will use as
-    the result type of an assignment operation.  We then add
-    _reference types_. *)
+    natural numbers. Besides the base natural-number type and arrow
+    types, we add two more types to deal with references. First, we
+    need the _unit type_, which we will use as the result type of an
+    assignment operation.  We then add _reference types_. *)
 
 (** If [T] is a type, then [Ref T] is the type of references to
     cells holding values of type [T].
@@ -134,7 +133,7 @@ Inductive ty : Type :=
 
 (** Besides the usual variables, abstractions, applications,
     terms related to natural numbers, and [unit], we need four
-    more sorts of terms in order to handle mutable references:
+    more sorts of terms to handle mutable references:
 
       t ::= ...              Terms
           | ref t              allocation
@@ -168,7 +167,8 @@ Notation "x" := x (in custom stlc_ty at level 0, x global) : stlc_scope.
 Notation "<{{ x }}>" := x (x custom stlc_ty).
 
 Notation "( t )" := t (in custom stlc_ty at level 0, t custom stlc_ty) : stlc_scope.
-Notation "S -> T" := (Ty_Arrow S T) (in custom stlc_ty at level 99, right associativity) : stlc_scope.
+Notation "S -> T" :=
+  (Ty_Arrow S T) (in custom stlc_ty at level 99, right associativity) : stlc_scope.
 
 Notation "$( t )" := t (in custom stlc_ty at level 0, t constr) : stlc_scope.
 
@@ -177,7 +177,9 @@ Notation "x" := x (in custom stlc_tm at level 0, x constr at level 0) : stlc_sco
 Notation "<{ e }>" := e (e custom stlc_tm at level 200) : stlc_scope.
 Notation "( x )" := x (in custom stlc_tm at level 0, x custom stlc_tm) : stlc_scope.
 
-Notation "x y" := (tm_app x y) (in custom stlc_tm at level 10, left associativity) : stlc_scope.
+Notation "x y" :=
+  (tm_app x y) (in custom stlc_tm at level 10, left associativity)
+  : stlc_scope.
 Notation "\ x : t , y" :=
   (tm_abs x t y) (in custom stlc_tm at level 200, x global,
                      t custom stlc_ty,
@@ -238,7 +240,7 @@ Open Scope stlc_scope.
 (** *** Typing (Preview) *)
 
 (** Informally, the typing rules for allocation, dereferencing, and
-    assignment will look like this:
+    assignment look roughly like this:
 
                            Gamma |-- t1 \in T1
                        ---------------------------                    (T_Ref)
@@ -261,7 +263,13 @@ Open Scope stlc_scope.
 (** *** Values and Substitution *)
 
 (** Besides abstractions, numbers, and the unit value, we have one new
-    type of value: locations.  *)
+    type of value: locations.
+
+    A location is a concrete pointer value -- think of it like an address
+    in memory. Locations should never be written directly by programmers;
+    they are used to keep track of the intermediate states of programs
+    involving references. In particular, the result of a [ref] expression
+    is a location. *)
 
 Inductive value : tm -> Prop :=
   | v_abs : forall x T2 t1,
@@ -276,11 +284,11 @@ Inductive value : tm -> Prop :=
 Hint Constructors value : core.
 
 (** Extending substitution to handle the new syntax of terms is
-    straightforward: substituting in a pointer leaves it
+    straightforward: substituting into a pointer leaves it
     unchanged.  *)
-Reserved Notation "'[' x ':=' s ']' t" (in custom stlc_tm at level 5, x global, s custom stlc_tm,
+Reserved Notation "'[' x ':=' s ']' t"
+     (in custom stlc_tm at level 5, x global, s custom stlc_tm,
       t custom stlc_tm at next level, right associativity).
-
 
 Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
   match t with
@@ -304,7 +312,7 @@ Fixpoint subst (x : string) (s : tm) (t : tm) : tm :=
       <{if0 [x := s] t1 then [x := s] t2 else [x := s] t3}>
   (* unit *)
   | <{ unit }> =>
-    <{ unit }>
+    t
   (* references *)
   | <{ ref t1 }> =>
       <{ ref ([x:=s] t1) }>
@@ -370,7 +378,7 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc_tm at level 3) : stlc_scope.
     in the store that is pointed to by this reference.
 
     If we make a copy of [r], for example by binding its value to
-    another variable [s], what gets copied is only the _reference_,
+    another variable [s], what gets copied is only the reference,
     not the contents of the cell itself.
 
     For example, after reducing
@@ -459,7 +467,7 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc_tm at level 3) : stlc_scope.
 
       let c1 = newcounter unit in
       let c2 = newcounter unit in
-      // Note that we've allocated two separate storage cells now!
+      // we've allocated two separate storage cells now!
       let r1 = c1.i unit in
       let r2 = c2.i unit in
       r2  // yields 1, not 2!
@@ -481,8 +489,8 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc_tm at level 3) : stlc_scope.
 (** A reference cell need not contain just a number: the primitives
     we've defined above allow us to create references to values of any
     type, including functions.  For example, we can use references to
-    functions to give an (inefficient) implementation of arrays
-    of numbers, as follows.
+    functions to give a(n inefficient) implementation of arrays of
+    numbers as follows.
 
     Write [NatArray] for the type [Ref (Nat->Nat)]. *)
 
@@ -503,15 +511,15 @@ Notation "t1 ; t2" := (tseq t1 t2) (in custom stlc_tm at level 3) : stlc_scope.
       newarray = \_:Unit, ref (\n:Nat,0)
 *)
 
-(** To look up an element of an array, we simply apply
-    the function to the desired index.
+(** To look up an element of an array, we apply the function
+    to the desired index.
 
       lookup = \a:NatArray, \n:Nat, (!a) n
 *)
 
 (** The interesting part of the encoding is the [update] function.  It
     takes an array, an index, and a new value to be stored at that index, and
-    does its job by creating (and storing in the reference) a new function
+    it does its job by creating (and storing in the reference) a new function
     that, when it is asked for the value at this very index, returns the new
     value that was given to [update], while on all other indices it passes the
     lookup to the function that was previously stored in the reference.
@@ -553,7 +561,7 @@ Definition manual_grade_for_compact_update : option (nat*string) := None.
     languages: the fact that any pointer might be null means that any
     dereference operation in the program can potentially fail.
 
-    Even in ML-like languages, there are occasionally situations where
+    Even in ML-like languages, there are sometimes situations where
     we may or may not have a valid pointer in our hands.  Fortunately,
     there is no need to extend the basic mechanisms of references to
     represent such situations: the sum types introduced in the
@@ -579,13 +587,14 @@ Definition manual_grade_for_compact_update : option (nat*string) := None.
 
 (** This is _not_ just a question of taste in language design: it is
     extremely difficult to achieve type safety in the presence of an
-    explicit deallocation operation.  One reason for this is the
-    familiar _dangling reference_ problem: we allocate a cell holding
-    a number, save a reference to it in some data structure, use it
-    for a while, then deallocate it and allocate a new cell holding a
-    boolean, possibly reusing the same storage.  Now we can have two
-    names for the same storage cell -- one with type [Ref Nat] and the
-    other with type [Ref Bool]. *)
+    explicit deallocation operation.
+
+    One reason for this is the familiar _dangling reference_ problem:
+    we allocate a cell holding a number, save a reference to it in
+    some data structure, use it for a while, then deallocate it and
+    allocate a new cell holding a boolean, possibly reusing the same
+    storage.  Now we can have two names for the same storage cell --
+    one with type [Ref Nat] and the other with type [Ref Bool]. *)
 
 (** **** Exercise: 2 stars, standard (type_safety_violation)
 
@@ -615,7 +624,7 @@ Definition manual_grade_for_type_safety_violation : option (nat*string) := None.
 
     The run-time store in most programming-language implementations is
     essentially just a big array of bytes.  The run-time system keeps
-    track of which parts of this array are currently in use; when we
+    track of which parts of this array are currently in use.  When we
     need to allocate a new reference cell, we allocate a large enough
     segment from the free region of the store (4 bytes for integer
     cells, 8 bytes for cells storing [Float]s, etc.), record somewhere
@@ -629,7 +638,7 @@ Definition manual_grade_for_type_safety_violation : option (nat*string) := None.
     run-time representations of different values.  A reference, then,
     is simply an index into the store.  (If we like, we can even
     abstract away from the fact that these indices are numbers, but
-    for purposes of formalization in Coq it is convenient to use
+    for purposes of formalization in Rocq it is convenient to use
     numbers.)  We use the word _location_ instead of _reference_ or
     _pointer_ to emphasize this abstract quality.
 
@@ -671,7 +680,7 @@ Definition store := list tm.
 (** We use [store_lookup n st] to retrieve the value of the reference
     cell at location [n] in the store [st].  Note that we must give a
     default value to [nth] in case we try looking up an index which is
-    too large. (In fact, we will never actually do this, but _proving_
+    too large. (In fact, we never actually do this, but _proving_
     that we don't will require a bit of work.) *)
 
 Definition store_lookup (n:nat) (st:store) :=
@@ -898,7 +907,7 @@ Qed.
     Here are the rules again, formally: *)
 
 Reserved Notation "t '/' st '-->' t' '/' st'"
-  (at level 40, st at level 39, t' at level 39).
+  (at level 40, st at next level, t' at next level, left associativity).
 
 Inductive step : tm * store -> tm * store -> Prop :=
   | ST_AppAbs : forall x T2 t1 v2 st,
@@ -993,20 +1002,20 @@ Definition context := partial_map ty.
 (** Having extended our syntax and reduction rules to accommodate
     references, our last job is to write down typing rules for the new
     constructs (and, of course, to check that these rules are sound!).
-Naturally, the key question is, "What is the type of a location?"
+
+    Naturally, the key question is, "What is the type of a location?"
 *)
 
-(**
-    First of all, notice that this question doesn't arise when
-    typechecking terms that programmers actually
-    write.  Concrete location constants arise only in terms that are
-    the intermediate results of reduction; they are not in the
-    language that programmers write.  So we only need to determine the
-    type of a location when we're in the middle of a reduction
-    sequence, e.g., trying to apply the progress or preservation
-    lemmas.  Thus, even though we normally think of typing as a
-    _static_ program property, it makes sense for the typing of
-    locations to depend on the _dynamic_ progress of the program too.
+(** First of all, notice that this question doesn't arise when
+    typechecking terms that programmers actually write.  Concrete
+    location constants arise only in terms that are the intermediate
+    results of reduction; they are not in the language that
+    programmers write.  So we only need to determine the type of a
+    location when we're in the middle of a reduction sequence, e.g.,
+    trying to apply the progress or preservation lemmas.  Thus, even
+    though we normally think of typing as a _static_ program property,
+    it makes sense for the typing of locations to depend on the
+    _dynamic_ progress of the program too.
 
     As a first try, note that when we reduce a term containing
     concrete locations, the type of the result depends on the contents
@@ -1018,12 +1027,11 @@ Naturally, the key question is, "What is the type of a location?"
     has type [Unit->Unit]. This observation leads us immediately to a
     first attempt at a typing rule for locations:
 
-                             Gamma |-- lookup  l st : T1
-                             ---------------------------
+                             Gamma |-- lookup l st : T1
+                             --------------------------
                              Gamma |-- loc l : Ref T1
 *)
-(**
-    That is, to find the type of a location [l], we look up the
+(** That is, to find the type of a location [l], we look up the
     current contents of [l] in the store and calculate the type [T1]
     of the contents.  The type of the location is then [Ref T1].
 
@@ -1118,8 +1126,7 @@ Definition store_Tlookup (n:nat) (ST:store_ty) :=
                    ----------------------------------------------
                    Gamma; ST |-- loc l : Ref (store_Tlookup l ST)
 *)
-(**
-    That is, as long as [l] is a valid location, we can compute the
+(** That is, as long as [l] is a valid location, we can compute the
     type of [l] just by looking it up in [ST].  Typing is again a
     four-place relation, but it is parameterized on a store _typing_
     rather than a concrete store.  The rest of the typing rules are
@@ -1135,8 +1142,8 @@ Definition store_Tlookup (n:nat) (ST:store_ty) :=
 (**
 
                                l < |ST|
-                  ----------------------------------------------        (T_Loc)
-                  Gamma; ST |-- loc l : Ref (store_Tlookup l ST)
+             ----------------------------------------------             (T_Loc)
+             Gamma; ST |-- loc l : Ref (store_Tlookup l ST)
 
                          Gamma; ST |-- t1 : T1
                      -----------------------------                      (T_Ref)
@@ -1153,7 +1160,8 @@ Definition store_Tlookup (n:nat) (ST:store_ty) :=
 *)
 
 Notation "x '|->' v ';' m " := (update m x v)
-  (in custom stlc_tm at level 0, x constr at level 0, v  custom stlc_ty, right associativity) : stlc_scope.
+  (in custom stlc_tm at level 0, x constr at level 0,
+   v custom stlc_ty, right associativity) : stlc_scope.
 
 Notation "x '|->' v " := (update empty x v)
   (in custom stlc_tm at level 0, x constr at level 0, v custom stlc_ty) : stlc_scope.
@@ -1256,36 +1264,37 @@ Hint Constructors has_type : core.
     and store typings without saying anything about how they are
     related -- i.e., this is wrong: *)
 
-Theorem preservation_wrong1 : forall ST T t st t' st',
+Theorem preservation_wrong : forall ST T t st t' st',
   <{ empty / ST |-- t \in T }> ->
   t / st --> t' / st' ->
   <{ empty / ST |-- t' \in T }>.
 Abort.
 
-(** If we typecheck with respect to some set of assumptions about the
-    types of the values in the store and then reduce with respect to
-    a store that violates these assumptions, the result will be
-    disaster.  We say that a store [st] is _well typed_ with respect a
-    store typing [ST] if the term at each location [l] in [st] has the
-    type at location [l] in [ST].  Since only closed terms ever get
-    stored in locations (why?), it suffices to type them in the empty
-    context. The following definition of [store_well_typed] formalizes
-    this.  *)
+(** If we typecheck with respect to some set of assumptions
+    about the types of the values in the store and then reduce with
+    respect to a store that violates these assumptions, the result
+    will be disaster.  We say that a store [st] is _well typed_ with
+    respect a store typing [ST] if the term at each location [l] in
+    [st] has the type at location [l] in [ST].  Since only closed
+    terms ever get stored in locations (why?), it suffices to type
+    them in the empty context. The following definition of
+    [store_well_typed] formalizes this.  *)
 
 
 Definition store_well_typed (ST:store_ty) (st:store) :=
   length ST = length st /\
   (forall l, l < length st ->
-     <{ empty / ST |-- $(store_lookup l st) \in $(store_Tlookup l ST) }>).
+     <{ empty / ST |-- $(store_lookup l st)
+                           \in $(store_Tlookup l ST) }>).
 
 (** Informally, we will write [ST |-- st] for [store_well_typed ST st]. *)
 
 (** Intuitively, a store [st] is consistent with a store typing
     [ST] if every value in the store has the type predicted by the
-    store typing.  The only subtle point is the fact that, when
-    typing the values in the store, we supply the very same store
-    typing to the typing relation.  This allows us to type circular
-    stores like the one we saw above. *)
+    store typing.  The only subtle point is the fact that, when typing
+    the values in the store, we supply the very same store typing to
+    the typing relation.  This allows us to type circular stores like
+    the one we saw above. *)
 
 (** **** Exercise: 3 stars, standard (store_not_unique)
 
@@ -1307,7 +1316,7 @@ Proof.
 (** We can now state something closer to the desired preservation
     property: *)
 
-Theorem preservation_wrong2 : forall ST T t st t' st',
+Theorem preservation_lesswrong : forall ST T t st t' st',
   <{ empty / ST |-- t \in T }> ->
   t / st --> t' / st' ->
   store_well_typed ST st ->
@@ -1322,14 +1331,18 @@ Abort.
     domain of [ST], and it will not be the case that [t'] (which
     definitely mentions [l]) is typable under [ST]. *)
 
+(** For example, the term [ref 5] is typeable in the empty context and
+    empty store typing, but it steps to [loc 0], which is not typeable
+    with an empty store typing. *)
+
 (* ================================================================= *)
 (** ** Extending Store Typings *)
 
-(** Evidently, since the store can increase in size during reduction,
-    we need to allow the store typing to grow as well.  This motivates
-    the following definition.  We say that the store type [ST']
-    _extends_ [ST] if [ST'] is just [ST] with some new types added to
-    the end. *)
+(** Evidently, since the store can increase in size during
+    reduction, we need to allow the store _typing_ to grow during
+    reduction as well. This motivates the following definition.  We
+    say that the store type [ST'] _extends_ [ST] if [ST'] is just [ST]
+    with some new types added to the end. *)
 
 Inductive extends : store_ty -> store_ty -> Prop :=
   | extends_nil  : forall ST',
@@ -1337,6 +1350,9 @@ Inductive extends : store_ty -> store_ty -> Prop :=
   | extends_cons : forall x ST' ST,
       extends ST' ST ->
       extends (x::ST') (x::ST).
+
+(** For example, the store typing [ [Nat] ] with a single location of
+    type [Nat] extends the empty store typing. *)
 
 Hint Constructors extends : core.
 
@@ -1411,18 +1427,18 @@ Definition preservation_theorem := forall ST t t' T st st',
      <{ empty / ST' |-- t' \in T }> /\
      store_well_typed ST' st'.
 
-(** Note that the preservation theorem merely asserts that there is
-    _some_ store typing [ST'] extending [ST] (i.e., agreeing with [ST]
-    on the values of all the old locations) such that the new term
-    [t'] is well typed with respect to [ST']; it does not tell us
+(** Note that the preservation theorem merely asserts that there
+    is _some_ store typing [ST'] extending [ST] (i.e., agreeing with
+    [ST] on the values of all the old locations) such that the new
+    term [t'] is well typed with respect to [ST']; it does not tell us
     exactly what [ST'] is.  It is intuitively clear, of course, that
-    [ST'] is either [ST] or else exactly [ST ++ T1::nil], where
-    [T1] is the type of the value [v1] in the extended store [st ++
-    v1::nil], but stating this explicitly would complicate the statement of
-    the theorem without actually making it any more useful: the weaker
-    version above is already in the right form (because its conclusion
-    implies its hypothesis) to "turn the crank" repeatedly and
-    conclude that every _sequence_ of reduction steps preserves
+    [ST'] is either [ST] or else exactly [ST ++ T1::nil], where [T1]
+    is the type of the value [v1] in the extended store [st ++
+    v1::nil], but stating this explicitly would complicate the
+    statement of the theorem without making it any more useful: the
+    weaker version above is already in the right form (because its
+    conclusion implies its hypothesis) to "turn the crank" repeatedly
+    and conclude that every _sequence_ of reduction steps preserves
     well-typedness.  Combining this with the progress property, we
     obtain the usual guarantee that "well-typed programs never go
     wrong."
@@ -1518,12 +1534,7 @@ Qed.
 (** Finally, we need a lemma on store typings, stating that, if a
     store typing is extended with a new location, the extended one
     still allows us to assign the same types to the same terms as the
-    original.
-
-    (The lemma is called [store_weakening] because it resembles the
-    "weakening" lemmas found in proof theory, which show that adding a
-    new assumption to some logical theory does not decrease the set of
-    provable theorems.) *)
+    original. *)
 
 Lemma store_weakening : forall Gamma ST ST' t T,
   extends ST' ST ->
@@ -1685,14 +1696,14 @@ Proof with eauto using store_weakening, extends_refl.
     exists ST'...
 Qed.
 
-(** **** Exercise: 3 stars, standard (preservation_informal)
+(** **** Exercise: 3 stars, standard, optional (preservation_informal)
 
     Write a careful informal proof of the preservation theorem,
     concentrating on the [T_App], [T_Deref], [T_Assign], and [T_Ref]
     cases.
 
 (* FILL IN HERE *)
- *)
+*)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_preservation_informal : option (nat*string) := None.
@@ -1800,9 +1811,9 @@ Qed.
 (* ################################################################# *)
 (** * References and Nontermination *)
 
-(** An important fact about the STLC (proved in chapter [Norm]) is
-    that it is is _normalizing_ -- that is, every well-typed term can
-    be reduced to a value in a finite number of steps.
+(** An important fact about the STLC (proved in chapter [Norm])
+    is that it is is _normalizing_ -- that is, every well-typed term
+    can be reduced to a value in a finite number of steps.
 
     What about STLC + references?  Surprisingly, adding references
     causes us to lose the normalization property: there exist
@@ -1819,16 +1830,16 @@ Qed.
    (ref (\x:Unit,unit))
 *)
 
-(** First, [ref (\x:Unit,unit)] creates a reference to a cell of type
-    [Unit -> Unit].  We then pass this reference as the argument to a
-    function which binds it to the name [r], and assigns to it the
-    function [\x:Unit,(!r) unit] -- that is, the function which ignores
-    its argument and calls the function stored in [r] on the argument
-    [unit]; but of course, that function is itself!  To start the
-    divergent loop, we execute the function stored in the cell by
+(** First, [ref (\x:Unit,unit)] creates a reference to a cell of
+    type [Unit -> Unit].  We then pass this reference as the argument
+    to a function which binds it to the name [r], and assigns to it
+    the function [\x:Unit,(!r) unit] -- that is, the function which
+    ignores its argument and calls the function stored in [r] on the
+    argument [unit]; but of course, that function is itself!  To start
+    the divergent loop, we execute the function stored in the cell by
     evaluating [(!r) unit].
 
-   Here is the divergent term in Coq: *)
+   Here is the divergent term in Rocq: *)
 
 Module ExampleVariables.
 
@@ -1848,7 +1859,10 @@ Definition loop_fun :=
   <{ \x : Unit, (!r) unit }>.
 
 Definition loop :=
-  <{ (\r : Ref (Unit -> Unit), (( r := loop_fun ); ( (! r) unit ) )) (ref (\x : Unit, unit)) }> .
+  <{ (\r : Ref (Unit -> Unit),
+        (( r := loop_fun );
+        ( (! r) unit ) ))
+     (ref (\x : Unit, unit)) }> .
 (** This term is well typed: *)
 
 Import ListNotations.
@@ -1964,11 +1978,11 @@ Qed.
 
     Challenge problem: modify our formalization to include an account
     of garbage collection, and prove that it satisfies whatever nice
-    properties you can think to prove about it. *)
+    properties you can think to prove about it.
 
-(** [] *)
+    [] *)
 
 End RefsAndNontermination.
 End STLCRef.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

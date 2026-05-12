@@ -950,7 +950,7 @@ Proof.
 (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** The following facts are mostly easy to prove in Coq.  To get
+(** The following facts are mostly easy to prove in Rocq.  To get
     full benefit from the exercises, make sure you also
     understand how to prove them on paper! *)
 
@@ -1027,7 +1027,7 @@ Import Examples.
 
 (** Do the following exercises after you have added product types to
     the language.  For each informal typing judgement, write it as a
-    formal statement in Coq and prove it. *)
+    formal statement in Rocq and prove it. *)
 
 (** **** Exercise: 1 star, standard, optional (typing_example_0) *)
 (* empty |-- ((\z:A,z), (\z:B,z)) \in (A->A * B->B) *)
@@ -1546,32 +1546,32 @@ Qed.
 
                            <{ Gamma |-- t \in S1->S2
                     S1 <: T1     T1 <: S1      S2 <: T2
-                    -----------------------------------    (T_Funny1)
+                    -----------------------------------     (T_Funny1)
                            <{ Gamma |-- t \in T1->T2
 
     - Suppose we add the following reduction rule:
 
-                             --------------------         (ST_Funny21)
+                             --------------------          (ST_Funny2)
                              unit --> (\x:Top. x)
 
     - Suppose we add the following subtyping rule:
 
-                               ----------------          (S_Funny3)
+                               ----------------            (S_Funny3)
                                Unit <: Top->Top
 
     - Suppose we add the following subtyping rule:
 
-                               ----------------          (S_Funny4)
+                               ----------------            (S_Funny4)
                                Top->Top <: Unit
 
     - Suppose we add the following reduction rule:
 
-                             ---------------------      (ST_Funny5)
+                             ---------------------        (ST_Funny5)
                              (unit t) --> (t unit)
 
     - Suppose we add the same reduction rule _and_ a new typing rule:
 
-                             ---------------------       (ST_Funny5)
+                             ---------------------        (ST_Funny5)
                              (unit t) --> (t unit)
 
                            ---------------------------     (T_Funny6)
@@ -1579,8 +1579,8 @@ Qed.
 
     - Suppose we _change_ the arrow subtyping rule to:
 
-                          S1 <: T1 S2 <: T2
-                          -----------------              (S_Arrow')
+                          S1 <: T1   S2 <: T2
+                          -------------------              (S_Arrow')
                           S1->S2 <: T1->T2
 
 *)
@@ -1816,4 +1816,4 @@ End FormalThoughtExercises.
 
 End STLCSub.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

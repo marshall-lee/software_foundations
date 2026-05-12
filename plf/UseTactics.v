@@ -1,13 +1,13 @@
-(** * UseTactics: Tactic Library for Coq: A Gentle Introduction *)
+(** * UseTactics: Tactic Library for Rocq: A Gentle Introduction *)
 
 (* Chapter written and maintained by Arthur Chargueraud *)
 
-(** Coq comes with a set of builtin tactics, such as [reflexivity],
+(** Rocq comes with a set of builtin tactics, such as [reflexivity],
     [intros], [inversion] and so on. While it is possible to conduct
     proofs using only those tactics, you can significantly increase
     your productivity by working with a set of more powerful tactics.
     This chapter describes a number of such useful tactics, which, for
-    various reasons, are not yet available by default in Coq.  These
+    various reasons, are not yet available by default in Rocq.  These
     tactics are defined in the [LibTactics.v] file. *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
@@ -35,7 +35,7 @@ Import LibTactics.
           "SSReflect" package.
         - "SSReflect" entirely rethinks the presentation of tactics,
           whereas "LibTactics" mostly stick to the traditional
-          presentation of Coq tactics, simply providing a number of
+          presentation of Rocq tactics, simply providing a number of
           additional tactics.  For this reason, "LibTactics" is
           probably easier to get started with than "SSReflect". *)
 
@@ -130,7 +130,7 @@ Import Maps.
 Import Imp.
 Import Equiv.
 
-(** The [inversion] tactic of Coq is not very satisfying for
+(** The [inversion] tactic of Rocq is not very satisfying for
     three reasons. First, it produces a bunch of equalities
     which one typically wants to substitute away, using [subst].
     Second, it introduces meaningless names for hypotheses.
@@ -286,7 +286,7 @@ End InvertsExamples1.
 (* ################################################################# *)
 (** * Tactics for N-ary Connectives *)
 
-(** Because Coq encodes conjunctions and disjunctions using binary
+(** Because Rocq encodes conjunctions and disjunctions using binary
     constructors [/\] and [\/], working with a conjunction or a
     disjunction of [N] facts can sometimes be quite cumbursome.
     For this reason, "LibTactics" provides tactics offering direct
@@ -342,7 +342,7 @@ End NaryExamples.
 (* ################################################################# *)
 (** * Tactics for Working with Equality *)
 
-(** One of the major weaknesses of Coq compared with other interactive
+(** One of the major weaknesses of Rocq compared with other interactive
     proof assistants is its relatively poor support for reasoning
     with equalities. The tactics described next aims at simplifying
     pieces of proof scripts manipulating equalities. *)
@@ -703,7 +703,7 @@ End SortExamples.
     to spend time figuring out how many underscore symbols you need to
     write. *)
 
-(** In this section, we'll use a useful feature of Coq for decomposing
+(** In this section, we'll use a useful feature of Rocq for decomposing
     conjunctions and existentials. In short, a tactic like [intros] or
     [destruct] can be provided with a pattern [(H1 & H2 & H3 & H4 & H5)],
     which is a shorthand for [ [H1 [H2 [H3 [H4 H5] ] ] ] ]. For example,
@@ -898,7 +898,7 @@ End ExamplesLets.
     - [admits], [admit_rewrite] and [admit_goal] give the flexibility to
       choose which subgoals to try and discharge first.
 
-    Making use of these tactics can boost one's productivity in Coq proofs.
+    Making use of these tactics can boost one's productivity in Rocq proofs.
 
     If you are interested in using [LibTactics.v] in your own developments,
     make sure you get the lastest version from:
@@ -906,4 +906,4 @@ End ExamplesLets.
 
 *)
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)

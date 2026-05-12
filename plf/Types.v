@@ -5,10 +5,10 @@
     their results.  We'll begin with a typed version of the simplest
     imaginable language, to introduce the basic ideas of types and
     typing rules and the fundamental theorems about type systems:
-    _type preservation_ and _progress_.  In chapter [Stlc] we'll move
+    _type preservation_ and _progress_. In chapter [Stlc] we'll move
     on to the _simply typed lambda-calculus_, which lives at the core
     of every modern functional programming language (including
-    Coq!). *)
+    Rocq!). *)
 
 Set Warnings "-notation-overridden,-parsing,-deprecated-hint-without-locality".
 From Stdlib Require Import Arith.
@@ -167,6 +167,9 @@ Inductive step : tm -> tm -> Prop :=
 where "t '-->' t'" := (step t t').
 
 Hint Constructors step : core.
+
+(** The [nvalue] conditions in [ST_PredSucc] and [ST_IszeroSucc] are
+    needed for determinism (will be proved in an optional exercise below). *)
 
 (** Notice that the [step] relation doesn't care about whether the
     expression being stepped makes global sense -- it just checks that
@@ -335,8 +338,13 @@ Qed.
     what happens when the term is reduced -- in particular, it does
     not calculate the type of its normal form. *)
 
-Example has_type_not :
+Example not_has_type :
   ~ <{ |-- if false then 0 else true \in Bool }>.
+Proof.
+  intros Contra. solve_by_inverts 2.  Qed.
+
+Example not_has_type' :
+  ~ <{ |-- if iszero (succ 0) then succ false else true \in Bool }>.
 Proof.
   intros Contra. solve_by_inverts 2.  Qed.
 
@@ -409,7 +417,7 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 3 stars, advanced (finish_progress_informal)
+(** **** Exercise: 3 stars, advanced, optional (finish_progress_informal)
 
     Complete the corresponding informal proof: *)
 
@@ -457,19 +465,18 @@ Theorem preservation : forall t t' T,
   t --> t' ->
   <{ |-- t' \in T }>.
 
-(** Complete the formal proof of the [preservation] property.  (Again,
-    make sure you understand the informal proof fragment in the
-    following exercise first.) *)
+(** Complete the formal proof of the [preservation] property.
+    (Again, make sure you understand the informal proof fragment in
+    the following exercise first.) *)
 
 Proof.
   intros t t' T HT HE.
   generalize dependent t'.
   induction HT;
-         (* every case needs to introduce a couple of things *)
-         intros t' HE;
-         (* and we can deal with several impossible
-            cases all at once *)
-         try solve_by_invert.
+    (* every case needs to introduce a couple of things... *)
+       intros t' HE;
+    (* and we can deal with several impossible cases at once... *)
+       try solve_by_invert.
     - (* T_If *) inversion HE; subst; clear HE.
       + (* ST_IFTrue *) assumption.
       + (* ST_IfFalse *) assumption.
@@ -478,7 +485,7 @@ Proof.
     (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 3 stars, advanced (finish_preservation_informal)
+(** **** Exercise: 3 stars, advanced, optional (finish_preservation_informal)
 
     Complete the following informal proof: *)
 
@@ -711,4 +718,4 @@ Definition manual_grade_for_prog_pres_bigstep : option (nat*string) := None.
 (** [] *)
 End TM.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:33 *)

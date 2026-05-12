@@ -71,15 +71,6 @@ Print Assumptions TM.progress.
 Goal True.
 idtac " ".
 
-idtac "-------------------  finish_progress_informal  --------------------".
-idtac " ".
-
-idtac "#> Manually graded: TM.finish_progress_informal".
-idtac "Advanced".
-idtac "Possible points: 3".
-print_manual_grade TM.manual_grade_for_finish_progress_informal.
-idtac " ".
-
 idtac "-------------------  finish_preservation  --------------------".
 idtac " ".
 
@@ -92,15 +83,6 @@ idtac "Assumptions:".
 Abort.
 Print Assumptions TM.preservation.
 Goal True.
-idtac " ".
-
-idtac "-------------------  finish_preservation_informal  --------------------".
-idtac " ".
-
-idtac "#> Manually graded: TM.finish_preservation_informal".
-idtac "Advanced".
-idtac "Possible points: 3".
-print_manual_grade TM.manual_grade_for_finish_preservation_informal.
 idtac " ".
 
 idtac "-------------------  preservation_alternate_proof  --------------------".
@@ -173,7 +155,7 @@ idtac " ".
 idtac " ".
 
 idtac "Max points - standard: 21".
-idtac "Max points - advanced: 33".
+idtac "Max points - advanced: 27".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -214,14 +196,10 @@ idtac "---------- remove_pred0 ---------".
 idtac "MANUAL".
 idtac "".
 idtac "********** Advanced **********".
-idtac "---------- finish_progress_informal ---------".
-idtac "MANUAL".
-idtac "---------- finish_preservation_informal ---------".
-idtac "MANUAL".
 idtac "---------- prog_pres_bigstep ---------".
 idtac "MANUAL".
 Abort.
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)

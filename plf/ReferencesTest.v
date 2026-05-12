@@ -95,14 +95,6 @@ Print Assumptions STLCRef.store_not_unique.
 Goal True.
 idtac " ".
 
-idtac "-------------------  preservation_informal  --------------------".
-idtac " ".
-
-idtac "#> Manually graded: STLCRef.preservation_informal".
-idtac "Possible points: 3".
-print_manual_grade STLCRef.manual_grade_for_preservation_informal.
-idtac " ".
-
 idtac "-------------------  factorial_ref  --------------------".
 idtac " ".
 
@@ -129,8 +121,8 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 19".
-idtac "Max points - advanced: 19".
+idtac "Max points - standard: 16".
+idtac "Max points - advanced: 16".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -159,8 +151,6 @@ idtac "---------- STLCRef.cyclic_store ---------".
 Print Assumptions STLCRef.cyclic_store.
 idtac "---------- STLCRef.store_not_unique ---------".
 Print Assumptions STLCRef.store_not_unique.
-idtac "---------- preservation_informal ---------".
-idtac "MANUAL".
 idtac "---------- STLCRef.RefsAndNontermination.factorial ---------".
 Print Assumptions STLCRef.RefsAndNontermination.factorial.
 idtac "---------- STLCRef.RefsAndNontermination.factorial_type ---------".
@@ -169,6 +159,6 @@ idtac "".
 idtac "********** Advanced **********".
 Abort.
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)

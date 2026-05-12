@@ -161,7 +161,8 @@ Proof.
     interesting proofs), the story goes like this:
 
       - The _preservation theorem_ is proved by induction on a typing
-        derivation, pretty much as we did in the [Types] chapter.
+        derivation and case analysis on the step relation,
+        pretty much as we did in the [Types] chapter.
         The one case that is significantly different is the one for
         the [ST_AppAbs] rule, whose definition uses the substitution
         operation.  To see that this step preserves typing, we need to
@@ -179,7 +180,7 @@ Proof.
       - _weakening_ lemma, showing that typing is preserved under
         "extensions" to the context [Gamma].
 
-   To make Coq happy, of course, we need to formalize the story in the
+   To make Rocq happy, though, we need to formalize the story in the
    opposite order, starting with weakening... *)
 
 (* ================================================================= *)
@@ -224,10 +225,7 @@ Qed.
     that we've shown that [v] has type [U].  Then, since [v] satisfies
     the assumption we made about [x] when typing [t], we can
     substitute [v] for each of the occurrences of [x] in [t] and
-    obtain a new term that still has type [T].
-
-    _Lemma_: If [x|->U; Gamma |-- t \in T] and [|-- v \in U],
-    then [Gamma |-- [x:=v]t \in T]. *)
+    obtain a new term that still has type [T]. *)
 
 Lemma substitution_preserves_typing : forall Gamma x U t v T,
   <{ x |-> U ; Gamma |-- t \in T }> ->
@@ -683,7 +681,7 @@ Proof.
 
     (Officially optional, but strongly recommended!) Without peeking
     at their statements above, write down the progress and
-    preservation theorems for the simply typed lambda-calculus (as Coq
+    preservation theorems for the simply typed lambda-calculus (as Rocq
     theorems).  You can write [Admitted] for the proofs. *)
 
 (* FILL IN HERE *)
@@ -942,12 +940,12 @@ Coercion tm_const : nat >-> tm.
     It will be necessary to also fill in "Reserved Notation", "Notation",
     and "Hint Constructors".
 
-    Hint: If you get an error "STLC.tm" found instead of term "tm" then Coq
+    Hint: If you get an error "STLC.tm" found instead of term "tm" then Rocq
     is picking up the old notation for ie: subst instead of the new
     notation for STLCArith, so you need to overwrite the old with the
     notation before you can use it.
 
-    Make sure Coq accepts the whole file before submitting. *)
+    Make sure Rocq accepts the whole file before submitting. *)
 
 (** **** Exercise: 5 stars, standard (STLCArith.subst) *)
 Fixpoint subst (x : string) (s : tm) (t : tm) : tm
@@ -1041,4 +1039,4 @@ Proof with eauto. (* FILL IN HERE *) Admitted.
 
 End STLCArith.
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:33 *)

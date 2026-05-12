@@ -99,14 +99,6 @@ Print Assumptions assign_aequiv.
 Goal True.
 idtac " ".
 
-idtac "-------------------  equiv_classes  --------------------".
-idtac " ".
-
-idtac "#> Manually graded: equiv_classes".
-idtac "Possible points: 2".
-print_manual_grade manual_grade_for_equiv_classes.
-idtac " ".
-
 idtac "-------------------  CIf_congruence  --------------------".
 idtac " ".
 
@@ -233,8 +225,8 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 27".
-idtac "Max points - advanced: 48".
+idtac "Max points - standard: 25".
+idtac "Max points - advanced: 46".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -265,8 +257,6 @@ idtac "---------- while_true ---------".
 Print Assumptions while_true.
 idtac "---------- assign_aequiv ---------".
 Print Assumptions assign_aequiv.
-idtac "---------- equiv_classes ---------".
-idtac "MANUAL".
 idtac "---------- CIf_congruence ---------".
 Print Assumptions CIf_congruence.
 idtac "---------- fold_constants_com_sound ---------".
@@ -291,6 +281,6 @@ idtac "---------- Himp.p3_p4_inequiv ---------".
 Print Assumptions Himp.p3_p4_inequiv.
 Abort.
 
-(* 2025-08-24 14:28 *)
+(* 2026-01-07 13:34 *)
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)

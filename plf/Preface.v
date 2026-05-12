@@ -5,7 +5,7 @@
 
 (** This electronic book is a survey of basic concepts in the
     mathematical study of programs and programming languages.  Topics
-    include advanced use of the Coq proof assistant, operational
+    include advanced use of the Rocq proof assistant, operational
     semantics, Hoare logic, and static type systems.  The exposition
     is intended for a broad range of readers, from advanced
     undergraduates to PhD students and researchers.  No specific
@@ -14,10 +14,10 @@
 
     As with all of the books in the _Software Foundations_ series,
     this one is one hundred percent formalized and machine-checked:
-    the entire text is literally a script for Coq.  It is intended to
-    be read alongside (or inside) an interactive session with Coq.
-    All the details in the text are fully formalized in Coq, and most
-    of the exercises are designed to be worked using Coq.
+    the entire text is literally a script for Rocq.  It is intended to
+    be read alongside (or inside) an interactive session with Rocq.
+    All the details in the text are fully formalized in Rocq, and most
+    of the exercises are designed to be worked using Rocq.
 
     The files are organized into a sequence of core chapters, covering
     about one half semester's worth of material and organized into a
@@ -127,7 +127,7 @@
     This also completes a full circle with the beginning of the book:
     the language whose properties we study in this part, the _simply
     typed lambda-calculus_, is essentially a simplified model of the
-    core of Coq itself!
+    core of Rocq itself!
 *)
 
 (* ================================================================= *)
@@ -160,9 +160,9 @@
     title        =   "Programming Language Foundations",
     series       =   "Software Foundations",
     volume       =   "2",
-    year         =   "2025",
+    year         =   "2026",
     publisher    =   "Electronic textbook",
-    note         =   {Version 6.7,
+    note         =   {Version 7.0,
                       \URL{http://softwarefoundations.cis.upenn.edu} },
     }
 *)
@@ -183,4 +183,4 @@
     NSF Expeditions grant 1521523, _The Science of Deep
     Specification_. *)
 
-(* 2025-08-20 18:04 *)
+(* 2026-01-07 13:33 *)

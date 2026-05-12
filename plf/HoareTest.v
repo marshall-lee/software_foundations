@@ -46,20 +46,6 @@ Print Assumptions hoare_post_true.
 Goal True.
 idtac " ".
 
-idtac "-------------------  hoare_pre_false  --------------------".
-idtac " ".
-
-idtac "#> hoare_pre_false".
-idtac "Possible points: 1".
-check_type @hoare_pre_false (
-(forall (P Q : Assertion) (c : com) (_ : forall st : state, not (P st)),
- valid_hoare_triple P c Q)).
-idtac "Assumptions:".
-Abort.
-Print Assumptions hoare_pre_false.
-Goal True.
-idtac " ".
-
 idtac "-------------------  hoare_asgn_wrong  --------------------".
 idtac " ".
 
@@ -77,32 +63,6 @@ check_type @hoare_asgn_wrong (
 idtac "Assumptions:".
 Abort.
 Print Assumptions hoare_asgn_wrong.
-Goal True.
-idtac " ".
-
-idtac "-------------------  hoare_asgn_fwd  --------------------".
-idtac " ".
-
-idtac "#> hoare_asgn_fwd".
-idtac "Advanced".
-idtac "Possible points: 3".
-check_type @hoare_asgn_fwd (
-(forall (m : nat) (a : aexp) (P : Assertion),
- valid_hoare_triple
-   (fun st : state =>
-    and ((P : Assertion) st)
-      (((fun st0 : state =>
-         @eq nat ((Aexp_of_aexp (AId X) : Aexp) st0)
-           ((Aexp_of_nat m : Aexp) st0))
-        :
-        Assertion) st))
-   (CAsgn X a)
-   (fun st : state =>
-    and (P (@Maps.t_update nat st X m))
-      (@eq nat (st X) (aeval (@Maps.t_update nat st X m) a))))).
-idtac "Assumptions:".
-Abort.
-Print Assumptions hoare_asgn_fwd.
 Goal True.
 idtac " ".
 
@@ -385,8 +345,8 @@ idtac " ".
 
 idtac " ".
 
-idtac "Max points - standard: 25".
-idtac "Max points - advanced: 40".
+idtac "Max points - standard: 24".
+idtac "Max points - advanced: 36".
 idtac "".
 idtac "Allowed Axioms:".
 idtac "functional_extensionality".
@@ -409,8 +369,6 @@ idtac "".
 idtac "********** Standard **********".
 idtac "---------- hoare_post_true ---------".
 Print Assumptions hoare_post_true.
-idtac "---------- hoare_pre_false ---------".
-Print Assumptions hoare_pre_false.
 idtac "---------- hoare_asgn_wrong ---------".
 Print Assumptions hoare_asgn_wrong.
 idtac "---------- assertion_sub_ex1' ---------".
@@ -439,8 +397,6 @@ idtac "---------- HoareAssertAssume.assert_assume_example ---------".
 Print Assumptions HoareAssertAssume.assert_assume_example.
 idtac "".
 idtac "********** Advanced **********".
-idtac "---------- hoare_asgn_fwd ---------".
-Print Assumptions hoare_asgn_fwd.
 idtac "---------- invalid_triple ---------".
 Print Assumptions invalid_triple.
 idtac "---------- Himp.hoare_havoc ---------".
@@ -449,6 +405,6 @@ idtac "---------- Himp.havoc_post ---------".
 Print Assumptions Himp.havoc_post.
 Abort.
 
-(* 2025-08-24 14:28 *)
+(* 2026-01-07 13:34 *)
 
-(* 2025-08-24 14:29 *)
+(* 2026-01-07 13:34 *)

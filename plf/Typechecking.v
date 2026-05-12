@@ -503,7 +503,7 @@ Definition assert (b : bool) (a : option tm) : option tm :=
   if b then a else None.
 
 (** **** Exercise: 3 stars, standard, optional (stepf_defn) *)
-(* Operational semantics as a Coq function. *)
+(* Operational semantics as a Rocq function. *)
 Fixpoint stepf (t : tm) : option tm :=
   match t with
   (* pure STLC *)
@@ -685,4 +685,4 @@ Import StepFunction.
 End StlcImpl.
 (** [] *)
 
-(* 2025-08-24 13:47 *)
+(* 2026-01-07 13:34 *)
