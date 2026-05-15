@@ -515,7 +515,33 @@ where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc_tm).
 Inductive substi (s : tm) (x : string) : tm -> tm -> Prop :=
   | s_var1 :
       substi s x (tm_var x) s
-  (* FILL IN HERE *)
+  | s_var2 :
+      forall y : string,
+        y <> x ->
+        substi s x (tm_var y) (tm_var y)
+  | s_app :
+      forall t1 t2 t1' t2': tm,
+        substi s x t1 t1' ->
+        substi s x t2 t2' ->
+        substi s x (tm_app t1 t2) (tm_app t1' t2')
+  | s_abs1 :
+      forall (T : ty) (t : tm),
+        substi s x (tm_abs x T t) (tm_abs x T t)
+  | s_abs2 :
+      forall (y : string) (T : ty) (t t' : tm),
+        y <> x ->
+        substi s x t t' ->
+        substi s x (tm_abs y T t) (tm_abs y T t')
+  | s_true :
+      substi s x tm_true tm_true
+  | s_false :
+      substi s x tm_false tm_false
+  | s_if :
+      forall t t1 t2 t' t1' t2' : tm,
+        substi s x t t' ->
+        substi s x t1 t1' ->
+        substi s x t2 t2' ->
+        substi s x (tm_if t t1 t2) (tm_if t' t1' t2')
 .
 
 Hint Constructors substi : core.
@@ -523,7 +549,30 @@ Hint Constructors substi : core.
 Theorem substi_correct : forall s x t t',
   <{ [x:=s]t }> = t' <-> substi s x t t'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros s x t t'.
+  split.
+  - intros Eqn; subst. induction t as [ y | | y T t | | | ].
+    + destruct (eqb x y) eqn:E; simpl; rewrite E.
+      * apply String.eqb_eq in E. rewrite E. apply s_var1.
+      * apply String.eqb_neq in E. apply s_var2. auto.
+    + simpl. apply s_app; assumption.
+    + destruct (eqb x y) eqn:E; simpl; rewrite E.
+      * apply String.eqb_eq in E. rewrite E. apply s_abs1.
+      * apply String.eqb_neq in E. apply s_abs2; auto.
+    + apply s_true.
+    + apply s_false.
+    + simpl. apply s_if; assumption.
+  - intros H.
+    induction H as [ | y H | t1 t2 t1' t2' _ IH1 _ IH2 | | y T t t' Hne H IH | | | t t1 t2 t' t1' t2' _ IHt _ IHt1 _ IHt2]; simpl.
+    + rewrite String.eqb_refl. reflexivity.
+    + apply String.eqb_neq in H. rewrite String.eqb_sym. rewrite H. reflexivity.
+    + rewrite IH1. rewrite IH2. reflexivity.
+    + rewrite String.eqb_refl. reflexivity.
+    + apply String.eqb_neq in Hne. rewrite String.eqb_sym. rewrite Hne. rewrite IH. reflexivity.
+    + reflexivity.
+    + reflexivity.
+    + rewrite IHt. rewrite IHt1. rewrite IHt2. reflexivity.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
@@ -724,13 +773,18 @@ Lemma step_example5 :
        <{idBBBB idBB idB}>
   -->* idB.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply multi_step.
+  - apply ST_App1. apply ST_AppAbs. apply v_abs.
+  - eapply multi_step.
+    + apply ST_AppAbs. apply v_abs.
+    + eapply multi_refl.
+Qed.
 
 Lemma step_example5_with_normalize :
        <{idBBBB idBB idB}>
   -->* idB.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  normalize. Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -894,7 +948,16 @@ Example typing_example_2_full :
           (y (y x)) \in
     Bool -> (Bool -> Bool) -> Bool }>.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply T_Abs.
+  apply T_Abs.
+  apply T_App with <{{ Bool }}>.
+  - apply T_Var. rewrite update_eq. reflexivity.
+  - apply T_App with <{{ Bool }}>.
+    + apply T_Var. rewrite update_eq. reflexivity.
+    + apply T_Var. rewrite update_permute.
+      * apply update_eq.
+      * apply eqb_neq. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (typing_example_3)
@@ -916,7 +979,15 @@ Example typing_example_3 :
                (y (x z)) \in
       T }>.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  exists <{{ (Bool -> Bool) -> (Bool -> Bool) -> Bool -> Bool }}>.
+  apply T_Abs. apply T_Abs. apply T_Abs. apply T_App with <{{ Bool }}>.
+  - apply T_Var. rewrite update_permute.
+    + apply update_eq.
+    + apply eqb_neq. reflexivity.
+  - apply T_App with <{{ Bool }}>.
+    + apply T_Var. apply update_neq. apply eqb_neq. reflexivity.
+    + apply T_Var. apply update_eq.
+Qed.
 (** [] *)
 
 (** We can also show that some terms are _not_ typable.  For example,
@@ -958,7 +1029,20 @@ Example typing_nonexample_3 :
       <{ empty |--
           \x:S, x x \in T }>).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros Hc. destruct Hc as [S [T Hc]].
+  inversion Hc; subst; clear Hc.
+  inversion H4; subst; clear H4.
+  inversion H5; subst; clear H5.
+  rewrite update_eq in H1.
+  inversion H2; subst; clear H2.
+  rewrite update_eq in H3.
+  rewrite H1 in H3.
+  inversion H1; clear H1.
+  inversion H3; clear H3. subst.
+  induction T2.
+  - discriminate H1.
+  - inversion H1; subst. apply IHT2_1. assumption.
+Qed.
 (** [] *)
 
 End STLC.
